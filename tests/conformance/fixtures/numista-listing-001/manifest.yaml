@@ -1,0 +1,32 @@
+# Conformance fixture for the Numista listing extractor.
+#
+# Source: synthesised from a public en.numista.com catalogue listing page,
+# trimmed to the `div.description_piece` structure the extractor parses —
+# flag image (issuer code + name), title link (catalogue id), year range,
+# `<em>` object type, and the physical / catalogue-reference text lines.
+# No API key is involved on this path.
+fixture_id: numista-listing-001
+source_type: NUMISTA_LISTING_HTML
+expected_acceptors:
+  - numista-listing-extractor
+notes: |
+  Two `description_piece` divs, exercising the flag-image issuer derivation
+  (`/design/pays/ddr.png` → code "ddr" → suffix "GDR"), the bullet-separated
+  physical line (material / weight / diameter), and both reference counts.
+
+  This extractor is the reason a spec section exists. Its **only** output
+  shape is the entity infobox, so under a literal reading —
+  "mark their particles STRUCTURED-canonical" — it would gain nothing at all
+  while still taking an EXTRACTOR_VERSION bump that re-extracts everything it
+  has ever produced. Every particle here is therefore `canonical_form: PROSE`
+  carrying the `rdf:type nmo:NumismaticObject` annotation: `content` states
+  every parsed property, and a triple states one, so the
+  particle cannot honestly be structure-canonical.
+
+  Expect zero STRUCTURED particles and 100 % structured-claim coverage. That
+  combination is the point of the fixture: coverage and canonicality are
+  independent axes, and this is the corpus's only extractor that scores full
+  marks on the first while scoring nothing on the second.
+
+  Every particle is EPISTEMIC, so the diversity rule flags this
+  extractor by design — the standing structured-extractor result.

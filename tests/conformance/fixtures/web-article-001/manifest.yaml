@@ -1,0 +1,31 @@
+# Conformance fixture for the general extractor's prose path.
+#
+# Source: entirely self-authored. Fernwood Systems, its engineers, and every
+# number in the article are invented for this fixture — no third-party article
+# prose is reproduced here, and nothing in it is a claim about a real company.
+# It is written in the shape of the modal WEB_PAGE deposit: an engineering blog
+# post with a headline, a byline, section headings, hard numbers, a pull quote,
+# and a paragraph about a road not taken.
+#
+# The first article-class fixture in the corpus: every other fixture feeds a
+# domain extractor a structured API blob or a platform-shaped thread, so before
+# this one the corpus could not exercise prose claim mining at all — the
+# general extractor's whole contract.
+fixture_id: web-article-001
+source_type: WEB_PAGE
+expected_acceptors:
+  - general-extractor
+notes: |
+  Exercises the general extractor's HTML → Markdown → single-pass prose path
+  ; at 2.6 KB it stays well under extraction.html_chunk_size (15000)
+  so the whole-document path runs, not the chunked carry-forward.
+
+  The prose is deliberately mixed so claim mining has to discriminate rather
+  than transcribe: hard falsifiable metrics (14 min → 3 min 20 s median build,
+  82 % hit rate, $310 → $1,900 per month, 41 build files, six weeks), a
+  mechanism claim (artifacts keyed on the SHA-256 hash of declared inputs), a
+  causal explanation (undeclared environment reads were the commonest miss),
+  an evaluative pull quote (the hard part was input honesty, not hashing), a
+  declined alternative (remote execution, rejected for now — the polarity surface), and a forward-looking plan (Q3 2026 rollout). Boilerplate
+  the extractor must NOT mine as claims: the nav bar, the tag link, and the
+  copyright footer.

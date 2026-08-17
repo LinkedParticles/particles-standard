@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000003",
+  "captured_at": "2026-01-01T00:00:00+00:00",
+  "content_hash": "d571c3ac98f65e3057e7fc8e8697a02560bf1e6f8d640ed37eb2ec4ca1e047b0",
+  "etag": "\"hackernews-thread-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": "hn:asker",
+  "author_role": null,
+  "content_published_at": "2025-01-01T00:00:00+00:00"
+}

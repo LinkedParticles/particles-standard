@@ -1,0 +1,18 @@
+# Conformance fixture for the Trust-lens extractor.
+#
+# A minimal TrustLensDefinition exercising all three portable policy
+# layers (SOURCE_TYPE-scoped statement, domain + url_pattern URL rules,
+# extractor-weight override) and the "kind" sentinel detection. The
+# TrustLensExtractor produces zero particles by design, so the
+# field-population thresholds in the conformance contract are vacuous;
+# this fixture confirms the accept-and-materialise contract instead.
+fixture_id: trust-lens-001
+source_type: TRUST_LENS_DEFINITION
+expected_acceptors:
+  - trust-lens-extractor
+notes: |
+  Minimal TrustLensDefinition with one statement, two URL rules, and one
+  extractor-weight override. Confirms that the extractor accepts
+  ``TRUST_LENS_DEFINITION``, parses the JSON, validates through the
+  Pydantic model, and returns zero candidates (lenses are policy, not
+  claims).

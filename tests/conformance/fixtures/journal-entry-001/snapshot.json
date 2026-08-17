@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000006",
+  "captured_at": "2026-01-01T00:00:00+00:00",
+  "content_hash": "96bfbb9d6e9ee647cc66e6f299fb716cd6cc262eba90a900dc603844d3c3bff6",
+  "etag": "\"journal-entry-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2025-08-05T00:00:00+00:00"
+}

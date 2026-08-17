@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000005",
+  "captured_at": "2026-01-01T00:00:00+00:00",
+  "content_hash": "f555713d413728fc782b9b49c4d0f7e54dc3cf56b3fe985e7dab5395c89a5e46",
+  "etag": "\"reddit-thread-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": "reddit:samuelcolvin",
+  "author_role": null,
+  "content_published_at": "2025-01-01T00:00:00+00:00"
+}

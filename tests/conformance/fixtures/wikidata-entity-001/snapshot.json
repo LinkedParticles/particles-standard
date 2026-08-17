@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000008",
+  "captured_at": "2026-01-01T00:00:00+00:00",
+  "content_hash": "577bc31511e0fa175fec3afeaa6e80fb1c01041766b42cf54c7cd0af0dcdceb4",
+  "etag": "\"wikidata-entity-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": null
+}

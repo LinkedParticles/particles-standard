@@ -1,0 +1,40 @@
+# Conformance fixture for the Wikidata extractor.
+#
+# Source: synthesised, not fetched — a Wikibase REST v1 item response trimmed to
+# one statement per interesting value type. The identifiers are real (Q42 /
+# Q350 and the five property ids), so the labels the extractor fetches for
+# `content` resolve against live Wikidata exactly as they would in production.
+fixture_id: wikidata-entity-001
+source_type: WIKIDATA_API
+expected_acceptors:
+  - wikidata-extractor
+notes: |
+  The second structure-canonical fixture in the corpus, and the one
+  whose triples are entity-resolvable: every particle carries a
+  `structured_claim` of `wd:` / `wdt:` IRIs stamped `wikidata-extractor@0.2.0`,
+  and `canonical_form: STRUCTURED` — the triple is the assertion Wikidata
+  published, `content` is this SDK's verbalization of it.
+
+  Branch coverage, one statement per value type: an item value (`P19 → Q350`)
+  producing a two-subject graph edge and an IRI object term; a time value
+  (`P569`) normalised to an `xsd:dateTime` literal; monolingual text (`P1477`)
+  as a language-tagged literal; a `url` value (`P856`) serialised as an IRI node
+  the way Wikidata's own truthy form does; an `external-id` (`P214`) as an
+  untyped literal; and a `commonsMedia` value (`P18`) that must be skipped twice
+  over — it is in both `_SKIP_PROPERTY_IDS` and `_SKIP_DATA_TYPES`.
+
+  **This fixture is the one in the corpus whose conform run touches the
+  network.** The extractor fetches English labels for each property and each
+  item-valued object, because a Wikibase entity blob carries labels for itself
+  and for nothing it references (the extractor's module docstring records why
+  that is compatible with `STRUCTURED`, and why the *triple* half stays
+  offline-derived). Run `particles extractor conform wikidata-extractor` with
+  network available; run it offline and the report degrades honestly — property
+  labels fall back to their P-ids and item-valued statements drop out entirely,
+  which is fewer particles, not wrong ones.
+
+  Note the deliberate `uncertainty_nature` uniformity: every particle is
+  EPISTEMIC, because a structured reading reports what a source states and the
+  residual uncertainty is about the world, never about sampling. The diversity rule therefore flags this extractor, exactly as it flags
+  `rdf-extractor` and `numista-coin-extractor` — the standing shape for every
+  structured extractor, not a regression.

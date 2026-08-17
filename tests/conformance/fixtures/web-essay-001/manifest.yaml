@@ -1,0 +1,27 @@
+# Conformance fixture for the general extractor's prose path — argumentative
+# essay variant (suite prose-article-seed-001 v0.2.0).
+#
+# Source: entirely self-authored. Priya Raghunathan, Bracken & Doyle, and every
+# figure in the essay are invented for this fixture — no third-party prose is
+# reproduced here, and nothing in it is a claim about a real person or firm.
+#
+# Why an essay fixture: web-article-001 and -002 are report-shaped — their
+# facts arrive labelled as facts. An essay embeds its facts inside an argument,
+# so the miner has to separate the falsifiable substrate (four years, 9,000
+# workers, a cancelled $2M rewrite) from the evaluative thesis it is deployed
+# to support ("stewardship compounds and novelty mostly does not").
+fixture_id: web-essay-001
+source_type: WEB_PAGE
+expected_acceptors:
+  - general-extractor
+notes: |
+  First-person argumentative essay. The factual claims are embedded in
+  narrative and contrast structure rather than stated as findings: tenure
+  (2019-2023, four years), system scale (9,000 workers, 23 sites, ~30,000
+  assignments/week), the failed-rewrite arc (approved 2021, budgeted 18
+  months, cancelled after 14 months and ~$2M with nothing shipped), and the
+  counter-arc (three-person team, 41 releases, incidents 31 -> 6 per quarter
+  over the same window). The evaluative thesis claims are legitimately
+  extractable but must be carried as the author's position, not as world
+  facts. At 3.0 KB the whole-document path runs. Boilerplate that must NOT
+  become claims: nav, tag link, copyright footer.

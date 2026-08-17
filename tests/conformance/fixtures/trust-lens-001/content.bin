@@ -1,0 +1,15 @@
+{
+  "kind": "TrustLensDefinition",
+  "name": "conformance-lens",
+  "version": 1,
+  "publisher": "conformance-fixture",
+  "description": "Minimal lens exercising all three portable policy layers.",
+  "statements": [
+    {"domain": "numismatics", "source_type": "NUMISTA_API_COIN", "trust_rank": 0.4}
+  ],
+  "url_rules": [
+    {"scope": "domain", "pattern": "sketchy.example", "score": 0.2},
+    {"scope": "url_pattern", "pattern": "/sponsored/", "modifier": -0.3}
+  ],
+  "extractor_weights": {"general-extractor": 0.8}
+}

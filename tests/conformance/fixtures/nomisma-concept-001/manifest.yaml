@@ -1,0 +1,34 @@
+# Conformance fixture for the Nomisma extractor.
+#
+# Source: synthesised from the JSON-LD nomisma.org serves under content
+# negotiation for a concept URI — `@context` prefix map plus an `@graph`
+# node list, the entity's `@id` in `nm:` prefixed form, and the geo
+# coordinates on the separate `#this` node linked via `geo:location`.
+fixture_id: nomisma-concept-001
+source_type: NOMISMA_API
+expected_acceptors:
+  - nomisma-extractor
+notes: |
+  One concept (a mint), exercising the prefixed-`@id` expansion, the English
+  `skos:prefLabel` selection out of a multi-language list, the definition
+  branch of the content template, the Wikidata `skos:exactMatch` pick, and
+  the `#this` geo-node lookup.
+
+  The best-keyed member of the Numista/Nomisma family: the
+  structured claim's subject term is the real entity IRI
+  `http://nomisma.org/id/berlin`, not a label, and the candidate carries a
+  matching `nomisma` ExternalRef — so `bind_subject_id`'s URI rung
+  binds `subject_id`, which the label-subject Numista extractors reach
+  only through the name rung. Nomisma publishes entity IRIs where Numista
+  publishes catalogue *page* URLs, and that difference is what decides the
+  rung rather than the mere presence of a stable identifier.
+
+  `canonical_form: PROSE`: with a definition present, `content` renders the
+  class *and* the definition — two facts, one triple — so it fails the §2.1
+  test. The predicate is spelled as the absolute SKOS IRI rather than the
+  `skos:` CURIE the properties dict uses, because the spec publishes
+  only `nmo:` and `nuds:` in context.jsonld and an unpublished prefix would
+  have to degrade to TOKEN (owns the registry housekeeping).
+
+  Every particle is EPISTEMIC, so the diversity rule flags this
+  extractor by design — the standing structured-extractor result.

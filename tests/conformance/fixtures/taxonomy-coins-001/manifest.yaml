@@ -1,0 +1,18 @@
+# Conformance fixture for the Taxonomy extractor (Phase A).
+#
+# A minimal Coins TaxonomyDefinition with a 3-level subtree, exercising
+# parent-path validation, root vs. non-root nodes, and the JSON load path.
+# The TaxonomyExtractor produces zero particles by design, so the
+# field-population thresholds in the conformance contract are vacuous
+# (no candidates → no field rates to compute); this fixture confirms the
+# accept-and-materialise contract instead.
+fixture_id: taxonomy-coins-001
+source_type: TAXONOMY_DEFINITION
+expected_acceptors:
+  - taxonomy-extractor
+notes: |
+  Minimal Coins TaxonomyDefinition with three tags: ``coins`` (root),
+  ``coins/by-region`` (intermediate), ``coins/by-region/germany`` (leaf).
+  Confirms that the extractor accepts ``TAXONOMY_DEFINITION``, parses the
+  JSON, validates parent-path consistency through the Pydantic model,
+  and returns zero candidates (taxonomies are configuration, not claims).

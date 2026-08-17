@@ -1,0 +1,30 @@
+{
+  "@context": {
+    "nm": "http://nomisma.org/id/",
+    "nmo": "http://nomisma.org/ontology#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "nm:berlin",
+      "@type": "nmo:Mint",
+      "skos:prefLabel": [
+        {"@language": "en", "@value": "Berlin"},
+        {"@language": "de", "@value": "Berlin"}
+      ],
+      "skos:definition": {
+        "@language": "en",
+        "@value": "The mint of Berlin, active from the thirteenth century to the present day."
+      },
+      "skos:exactMatch": {"@id": "http://www.wikidata.org/entity/Q64"},
+      "geo:location": {"@id": "nm:berlin#this"}
+    },
+    {
+      "@id": "nm:berlin#this",
+      "geo:lat": {"@type": "xsd:decimal", "@value": "52.52"},
+      "geo:long": {"@type": "xsd:decimal", "@value": "13.405"}
+    }
+  ]
+}

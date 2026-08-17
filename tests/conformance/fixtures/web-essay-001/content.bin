@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>In praise of the maintainer — Salt Marsh Notes</title>
+  <meta name="description" content="An essay on why software maintenance is undervalued, argued from four years inside one scheduling system.">
+</head>
+<body>
+  <nav><a href="/">Salt Marsh Notes</a> · <a href="/archive">Archive</a> · <a href="/about">About</a></nav>
+
+  <article>
+    <h1>In praise of the maintainer</h1>
+    <p class="byline">By Priya Raghunathan · 4 November 2025</p>
+
+    <p>Every conference talk I have ever sat through celebrates the person
+    who built the thing. Nobody gives a keynote about the person who kept
+    it running. I want to argue that this is exactly backwards, and I want
+    to argue it from the only evidence I have: the four years, from 2019
+    to 2023, that I spent maintaining the shift-scheduling system at
+    Bracken &amp; Doyle, a warehouse logistics firm.</p>
+
+    <p>The system was not glamorous. It assigned shifts to about 9,000
+    warehouse workers across 23 sites, and in a normal week it processed
+    roughly 30,000 shift assignments. It was written before I arrived and
+    it will outlive everyone who currently touches it. My team — there
+    were three of us — did not build it. We kept it honest.</p>
+
+    <p>In 2021 the company approved a full rewrite, budgeted at eighteen
+    months. The rewrite was cancelled after fourteen months, with roughly
+    $2 million spent and nothing shipped to production. I do not tell this
+    story to gloat. The rewrite team was talented, and the plan was not
+    absurd. It failed for the boring reason most rewrites fail: the old
+    system's real specification lived in a decade of accumulated fixes
+    that no document recorded.</p>
+
+    <p>Here is the part that never makes it into the keynote. Over the
+    same fourteen months, our three-person maintenance team shipped 41
+    releases, and the production incident count fell from 31 in the
+    quarter the rewrite started to 6 in the quarter it was cancelled. The
+    unglamorous work was not merely cheaper. It was the only work that
+    was actually improving the thing the business ran on.</p>
+
+    <p>The lesson I draw is that stewardship compounds and novelty mostly
+    does not. A maintainer who closes one confusing failure mode makes
+    every future incident easier to diagnose; a greenfield team learns
+    things the production system already knew. I think the industry's
+    rewards — promotion criteria, conference programs, the word
+    "impact" itself — are calibrated to the wrong one of these two
+    curves.</p>
+
+    <p>I left Bracken &amp; Doyle in 2023, and the scheduling system is
+    still running. I consider that the proudest line on my résumé, and I
+    have stopped apologizing for it.</p>
+  </article>
+
+  <footer>
+    <p>© 2025 Priya Raghunathan. Posted in <a href="/tag/essays">Essays</a>.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Conformance fixture for the RDF parsing extractor.
+#
+# Source: synthesised, not fetched — a small numismatic Turtle graph written to
+# exercise every branch of the extractor in one blob. Deliberately reuses the
+# subject matter of `numista-coin-001` so the two fixtures can be read side by
+# side: the same coin, once as a prose-canonical API reading and once as a
+# structure-canonical triple set.
+fixture_id: rdf-graph-001
+source_type: RDF_GRAPH
+expected_acceptors:
+  - rdf-extractor
+notes: |
+  Exercises the full structure-canonical path. Six particles are emitted, each
+  with `canonical_form: STRUCTURED` and a `structured_claim` stamped
+  `rdf-extractor@0.2.0` — the only fixture in the corpus where the triple is
+  the assertion and `content` is the derived verbalization.
+
+  Branch coverage: document-carried `rdfs:label` (rung 1 of the label ladder,
+  and the reason `content` reads as prose rather than as IRIs); camelCase
+  predicate verbalization (`ex:wasMintedAt` → "was minted at"); an IRI object
+  producing a two-subject graph edge (`ex:coin5pf ex:wasIssuedBy wd:Q16957`);
+  a typed literal (`xsd:decimal` weight) and a language-tagged literal
+  (`"Aluminium"@en`, which must NOT get a "(en)" suffix); two Wikidata IRIs
+  that map onto `wikidata` external refs (Q64, Q16957) so subject alignment is
+  checked; an RDF 1.1 reification bundle whose `p:confidenceValue 0.72`
+  overrides the 0.95 parser default and whose five plumbing triples are
+  consumed rather than emitted; and an `owl:Ontology` header with
+  `owl:versionInfo`, both of which are document metadata and must not become
+  claims.
+
+  Note the deliberate `uncertainty_nature` uniformity: every particle is
+  EPISTEMIC, because a parser reports what a source states and the residual
+  uncertainty is about the world, never about sampling. The diversity
+  rule will therefore flag this extractor, and that is correct behaviour to
+  observe rather than a defect to paper over — see the baseline note.

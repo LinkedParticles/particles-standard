@@ -1,0 +1,60 @@
+{
+  "id": "Q42",
+  "type": "item",
+  "labels": {
+    "en": "Douglas Adams"
+  },
+  "descriptions": {
+    "en": "English science fiction writer and humourist (1952-2001)"
+  },
+  "statements": {
+    "P19": [
+      {
+        "rank": "normal",
+        "property": {"id": "P19", "data_type": "wikibase-item"},
+        "value": {"type": "value", "content": "Q350"}
+      }
+    ],
+    "P569": [
+      {
+        "rank": "preferred",
+        "property": {"id": "P569", "data_type": "time"},
+        "value": {
+          "type": "value",
+          "content": {"time": "+1952-03-11T00:00:00Z", "precision": 11}
+        }
+      }
+    ],
+    "P1477": [
+      {
+        "rank": "normal",
+        "property": {"id": "P1477", "data_type": "monolingualtext"},
+        "value": {
+          "type": "value",
+          "content": {"text": "Douglas Noel Adams", "language": "en"}
+        }
+      }
+    ],
+    "P856": [
+      {
+        "rank": "normal",
+        "property": {"id": "P856", "data_type": "url"},
+        "value": {"type": "value", "content": "https://douglasadams.com/"}
+      }
+    ],
+    "P214": [
+      {
+        "rank": "normal",
+        "property": {"id": "P214", "data_type": "external-id"},
+        "value": {"type": "value", "content": "113230702"}
+      }
+    ],
+    "P18": [
+      {
+        "rank": "normal",
+        "property": {"id": "P18", "data_type": "commonsMedia"},
+        "value": {"type": "value", "content": "Douglas adams portrait cropped.jpg"}
+      }
+    ]
+  }
+}

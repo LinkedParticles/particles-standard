@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000004",
+  "captured_at": "2026-01-15T00:00:00+00:00",
+  "content_hash": "67289beeb8a817524be87f3ef93d216c802ea6391e33b1e0b7eed48f7c5ede26",
+  "etag": "\"mastodon-thread-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": "mastodon:joinmastodon",
+  "author_role": null,
+  "content_published_at": "2025-01-15T09:30:00+00:00"
+}

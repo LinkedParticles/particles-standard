@@ -1,0 +1,19 @@
+# Conformance fixture for the Hacker News extractor.
+#
+# Source: synthesised in the shape the HackerNewsImporter writes — a single
+# JSON object with ``story`` (the root submission item) and ``comments`` (a
+# {id_str: item} map covering the kids tree). Picked an "Ask HN" with low
+# engagement (12 points, 3 comments) so the fixture stays small and
+# non-controversial.
+fixture_id: hackernews-thread-001
+source_type: HACKERNEWS_THREAD
+expected_acceptors:
+  - hackernews-extractor
+notes: |
+  Exercises the story-meta synthesis path: the extractor MUST emit one
+  candidate particle whose ``properties`` carry the dual-emission
+  keys (``hn:hasPoints`` + ``social:hasScore``, etc.) plus N free-text
+  particles from the LLM over the comment thread. Story is an Ask HN
+  post (no external URL) so ``content:hasUrl`` will be None. One
+  comment is nested (44000002 replies to 44000001) so the prose
+  rendering exercises the indented-DFS path.

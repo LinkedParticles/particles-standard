@@ -1,0 +1,30 @@
+{
+  "id": 3022,
+  "title": "5 Pfennigs",
+  "min_year": 1948,
+  "max_year": 1950,
+  "issuer": {"code": "ddr", "name": "German Democratic Republic"},
+  "value": {
+    "text": "5 Pfennigs",
+    "currency": {"id": 229, "name": "Mark", "full_name": "Mark (1948-1990)"}
+  },
+  "type": "Standard circulation coins",
+  "category": "coin",
+  "composition": {"text": "Aluminium"},
+  "weight": 1.1,
+  "size": 19.0,
+  "thickness": 1.5,
+  "shape": {"text": "Round"},
+  "technique": {"text": "Milled"},
+  "orientation": "medal",
+  "edge": {"description": "Plain"},
+  "demonetization": {"is_demonetized": true, "demonetization_date": "1990-12-31"},
+  "references": [
+    {"catalogue": {"code": "KM"}, "number": "2"},
+    {"catalogue": {"code": "Schön"}, "number": "2"}
+  ],
+  "obverse": {"description": "Ear of rye"},
+  "reverse": {"description": "Face value"},
+  "mints": [{"id": 5, "name": "Berlin"}],
+  "comments": ""
+}

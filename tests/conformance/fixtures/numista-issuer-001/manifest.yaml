@@ -1,0 +1,30 @@
+# Conformance fixture for the Numista issuer extractor.
+#
+# Source: synthesised from a real Numista /types?issuer=ddr response as the
+# importer stores it — the paginated pages joined into one envelope carrying
+# issuer_code / issuer_name / types[]. Trimmed to the summary fields the
+# issuer extractor actually reads, so the blob doubles as inline
+# documentation of the schema it depends on.
+fixture_id: numista-issuer-001
+source_type: NUMISTA_API_ISSUER
+expected_acceptors:
+  - numista-issuer-extractor
+notes: |
+  Two coin types, exercising both branches of the object-type parse (`type`
+  string on the first, nested `object_type.name` on the second) and both
+  catalogue-reference counts (two refs, then one).
+
+  Structure-canonical shape after: each coin yields one infobox
+  particle carrying the `nmo:` properties dict — `canonical_form: PROSE`,
+  because its `content` states every parsed property while a triple states
+  one — annotated with the `rdf:type nmo:NumismaticObject` triple that
+  `subject_classes` already asserts. Each catalogue reference yields a
+  `STRUCTURED` particle whose `content` renders exactly its
+  `nuds:references` triple. So the three catalogue refs are the extractor's
+  structure-canonical output and the two infoboxes are not, which is the
+  §2.1 rule visible in one fixture.
+
+  Every particle is EPISTEMIC: a parser reports what a source states, so the
+  residual uncertainty is about the world rather than about sampling. The diversity rule flags that by design — the same standing result
+  every structured extractor produces, not a defect to fix by fabricating an
+  ALEATORY classification.

@@ -1,0 +1,67 @@
+# Conformance fixture corpus manifest.
+#
+# This file is informational — the *authoritative* corpus hash is computed
+# by ``particles.conformance.fixtures.compute_corpus_hash`` and surfaced
+# inside every ConformanceReport's ``fixture_corpus_hash`` field. Reports
+# are only comparable when their hashes match, so corpus growth is a
+# deliberate, reviewed event.
+#
+# Discovery does NOT read this file: ``iter_fixtures`` walks the corpus
+# directory and loads every subdirectory that has a ``manifest.yaml``. A
+# fixture omitted here is still live in every conform run and still in the
+# corpus hash — so an unregistered fixture under-reports the corpus rather
+# than disabling it. Keep the list complete.
+#
+# Adding a fixture: create a new sibling directory with manifest.yaml +
+# content.bin + snapshot.json, then update this list. Removing or
+# renaming a fixture invalidates every prior report.
+
+fixtures:
+  - id: numista-coin-001
+    source_type: NUMISTA_API_COIN
+    expected_acceptors: [numista-coin-extractor]
+  - id: numista-issuer-001
+    source_type: NUMISTA_API_ISSUER
+    expected_acceptors: [numista-issuer-extractor]
+  - id: numista-listing-001
+    source_type: NUMISTA_LISTING_HTML
+    expected_acceptors: [numista-listing-extractor]
+  - id: nomisma-concept-001
+    source_type: NOMISMA_API
+    expected_acceptors: [nomisma-extractor]
+  - id: taxonomy-coins-001
+    source_type: TAXONOMY_DEFINITION
+    expected_acceptors: [taxonomy-extractor]
+  - id: hackernews-thread-001
+    source_type: HACKERNEWS_THREAD
+    expected_acceptors: [hackernews-extractor]
+  - id: mastodon-thread-001
+    source_type: MASTODON_THREAD
+    expected_acceptors: [mastodon-extractor]
+  - id: reddit-thread-001
+    source_type: REDDIT_POST
+    expected_acceptors: [reddit-extractor]
+  - id: journal-entry-001
+    source_type: JOURNAL
+    expected_acceptors: [journal-extractor]
+  - id: rdf-graph-001
+    source_type: RDF_GRAPH
+    expected_acceptors: [rdf-extractor]
+  - id: wikidata-entity-001
+    source_type: WIKIDATA_API
+    expected_acceptors: [wikidata-extractor]
+  - id: web-article-001
+    source_type: WEB_PAGE
+    expected_acceptors: [general-extractor]
+  - id: web-article-002
+    source_type: WEB_PAGE
+    expected_acceptors: [general-extractor]
+  - id: web-essay-001
+    source_type: WEB_PAGE
+    expected_acceptors: [general-extractor]
+  - id: web-interview-001
+    source_type: WEB_PAGE
+    expected_acceptors: [general-extractor]
+  - id: trust-lens-001
+    source_type: TRUST_LENS_DEFINITION
+    expected_acceptors: [trust-lens-extractor]

@@ -1,0 +1,39 @@
+# Conformance fixture for the RDF parsing extractor.
+#
+# A small numismatic graph in Turtle, deliberately shaped to exercise every
+# branch of the extractor in one blob: document-carried labels, camelCase
+# predicate verbalization, an IRI object (graph edge), a typed literal, a
+# language-tagged literal, a Wikidata IRI that maps onto a Subject Authority
+# external ref, an RDF 1.1 reification bundle carrying an annotated
+# confidence, and an ontology header that must not become a claim.
+
+@prefix ex:    <http://example.org/coins/> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix wd:    <http://www.wikidata.org/entity/> .
+@prefix p:     <https://linkedparticles.org/vocab#> .
+
+<http://example.org/coins/> a owl:Ontology ;
+    owl:versionInfo "1.0" .
+
+ex:coin5pf   rdfs:label "5 Pfennigs (1948-1950) GDR" .
+ex:berlinMint rdfs:label "Berlin Mint" .
+wd:Q64        rdfs:label "Berlin" .
+wd:Q16957     rdfs:label "German Democratic Republic" .
+
+ex:coin5pf ex:wasMintedAt   ex:berlinMint .
+ex:coin5pf ex:hasWeight     "1.1"^^xsd:decimal .
+ex:coin5pf ex:hasMaterial   "Aluminium"@en .
+ex:coin5pf ex:wasIssuedBy   wd:Q16957 .
+ex:berlinMint ex:locatedIn  wd:Q64 .
+
+# Reified statement with a publisher-supplied confidence: folds to exactly one
+# particle at 0.72, and its five plumbing triples are consumed.
+_:demonetization
+    a rdf:Statement ;
+    rdf:subject   ex:coin5pf ;
+    rdf:predicate ex:wasDemonetized ;
+    rdf:object    "1990-12-31"^^xsd:date ;
+    p:confidenceValue 0.72 .

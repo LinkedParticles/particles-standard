@@ -1,0 +1,42 @@
+{
+  "comments": {
+    "44000001": {
+      "by": "early_responder",
+      "id": 44000001,
+      "kids": [44000002],
+      "parent": 44000000,
+      "text": "I&#x27;ve been using fzf piped through ripgrep for years. Lightweight, no daemon, works everywhere. The combo handles 99% of what I need without learning yet another tool.",
+      "time": 1735689700,
+      "type": "comment"
+    },
+    "44000002": {
+      "by": "asker",
+      "id": 44000002,
+      "kids": [],
+      "parent": 44000001,
+      "text": "Thanks &mdash; do you have a particular ripgrep + fzf invocation you reach for? I keep rewriting the same alias from memory.",
+      "time": 1735689800,
+      "type": "comment"
+    },
+    "44000003": {
+      "by": "vim_user",
+      "id": 44000003,
+      "kids": [],
+      "parent": 44000000,
+      "text": "Telescope.nvim inside neovim covers files, buffers, git history, and LSP symbols with one keybinding. The downside is it&#x27;s only useful if you&#x27;re already in neovim.",
+      "time": 1735689900,
+      "type": "comment"
+    }
+  },
+  "story": {
+    "by": "asker",
+    "descendants": 3,
+    "id": 44000000,
+    "kids": [44000001, 44000003],
+    "score": 12,
+    "text": "I keep losing track of project files across ~15 active repos. Looking for something lightweight that searches file <i>contents</i>, not just names, and that I won&#x27;t have to retrain my muscle memory for every six months.",
+    "time": 1735689600,
+    "title": "Ask HN: What's your favourite lightweight code-search tool in 2025?",
+    "type": "story"
+  }
+}

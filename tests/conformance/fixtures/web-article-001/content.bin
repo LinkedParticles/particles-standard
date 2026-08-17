@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Content-addressed build caching at Fernwood Systems — Fernwood Engineering</title>
+  <meta name="description" content="How a 40-person infrastructure company rebuilt its CI cache around input hashes.">
+</head>
+<body>
+  <nav><a href="/">Home</a> · <a href="/engineering">Engineering</a> · <a href="/careers">Careers</a></nav>
+
+  <article>
+    <h1>Content-addressed build caching at Fernwood Systems</h1>
+    <p class="byline">By Dana Okonkwo · 12 March 2026</p>
+
+    <p>Fernwood Systems is a 40-person infrastructure company based in Halifax,
+    Nova Scotia. In January 2026 we replaced our timestamp-based build cache
+    with a content-addressed one, and the change turned out to be less about
+    storage and more about honesty.</p>
+
+    <h2>What changed</h2>
+
+    <p>The old cache keyed each artifact on the modification time of the files
+    that produced it. The new cache keys every artifact on the SHA-256 hash of
+    its declared inputs, so two builds with identical inputs are guaranteed to
+    resolve to the same cache entry regardless of when they ran.</p>
+
+    <p>Median CI build time on our main branch fell from 14 minutes to 3 minutes
+    20 seconds after the migration. The cache hit rate on that branch now sits
+    at 82 percent, measured over the eight weeks since the cutover.</p>
+
+    <h2>What it cost</h2>
+
+    <p>The migration took six weeks of one engineer's time and required
+    rewriting 41 build files to declare their inputs explicitly. Roughly a third
+    of those files were reading configuration from the environment without
+    declaring it — the single most common source of cache misses we found.</p>
+
+    <p>Storage costs rose from $310 to $1,900 per month, because we retain
+    evicted cache entries for 30 days so that a bisect across a release window
+    still hits warm entries.</p>
+
+    <blockquote>
+      <p>The hardest part was not the hashing. It was teaching the build to be
+      honest about its inputs.</p>
+    </blockquote>
+
+    <h2>What we did not do</h2>
+
+    <p>We evaluated moving to a remote execution cluster at the same time and
+    decided against it for now: the cache alone recovered most of the wall-clock
+    win, and remote execution would have added a second failure domain to every
+    build. We expect to revisit that decision once the cache hit rate stops
+    improving.</p>
+
+    <p>The rollout to the other three engineering teams is planned for the third
+    quarter of 2026.</p>
+  </article>
+
+  <footer>
+    <p>© 2026 Fernwood Systems. Posted in <a href="/engineering/tag/ci">CI</a>.</p>
+  </footer>
+</body>
+</html>

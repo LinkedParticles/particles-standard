@@ -1,0 +1,32 @@
+# Conformance fixture for the general extractor's prose path — interview /
+# quote-bearing variant (suite prose-article-seed-001 v0.2.0).
+#
+# Source: entirely self-authored. Maren Kaldestad, the Kvitholm Institute, the
+# Meridian Rose, Tidewrack Quarterly, and the Stray Light Foundation are all
+# invented for this fixture — no third-party prose is reproduced here, and
+# nothing in it is a claim about a real person, wreck, or institution.
+#
+# Why an interview fixture: attribution is the axis the other prose fixtures
+# cannot exercise. A Q&A transcript's claims are all speech — some are the
+# speaker reporting established findings (depth, dendrochronology, coin
+# counts), one is explicitly flagged by the speaker herself as her reading
+# rather than a finding (storm loss vs grounding, with a named dissent). The
+# miner has to keep those tiers apart: promoting the hedged claim to a bare
+# world-fact is the attribution failure this fixture exists to catch.
+fixture_id: web-interview-001
+source_type: WEB_PAGE
+expected_acceptors:
+  - general-extractor
+notes: |
+  Edited Q&A transcript with interviewer/interviewee turns. Confident,
+  attributable findings: wreck at 41 m, discovered 2023 by sonar survey, oak
+  timbers felled 1684 (dendrochronology), sinking dated to/after 1687, 612
+  silver coins over two seasons (mostly Spanish eight-real pieces — a deliberate
+  numismatic echo the general extractor, not the domain extractors, must
+  handle), recovered salt + copper ingot cargo, 15-person peak team, EUR 2.4M
+  Stray Light Foundation grant through 2027, third season summer 2027, Bergen
+  maritime museum display in 2028. The storm-loss claim is self-flagged
+  speculation with a named dissenting reading — it should surface attributed
+  and/or at visibly lower confidence, never as a bare world-fact. At 2.9 KB
+  the whole-document path runs. Boilerplate that must NOT become claims: nav,
+  subscribe link, copyright footer.

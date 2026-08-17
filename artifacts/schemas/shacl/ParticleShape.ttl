@@ -1,0 +1,374 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix particles:  <https://linkedparticles.org/vocab#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+
+particles:ParticleShape
+    a sh:NodeShape ;
+    sh:targetClass particles:Particle ;
+    sh:description "Normative SHACL shape for the Core Particle schema (§6.2)." ;
+
+    # id — required UUID string
+    sh:property [
+        sh:path particles:id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Particle must have exactly one id (UUID string)." ;
+    ] ;
+
+    # content — required non-empty string
+    sh:property [
+        sh:path particles:content ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "Particle must have a non-empty content field." ;
+    ] ;
+
+    # confidenceValue — required float [0,1]
+    sh:property [
+        sh:path particles:confidenceValue ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "confidence.value must be a float in [0,1]." ;
+    ] ;
+
+    # uncertaintyNature — required, ALEATORY or EPISTEMIC
+    sh:property [
+        sh:path particles:uncertaintyNature ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "ALEATORY" "EPISTEMIC" ) ;
+        sh:message "uncertainty_nature must be ALEATORY or EPISTEMIC." ;
+    ] ;
+
+    # assertedBy — required
+    sh:property [
+        sh:path particles:assertedBy ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Particle must have assertedBy." ;
+    ] ;
+
+    # assertedAt — required dateTime
+    sh:property [
+        sh:path particles:assertedAt ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "Particle must have assertedAt as a dateTime." ;
+    ] ;
+
+    # status — required
+    sh:property [
+        sh:path particles:status ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "ACTIVE" "SUPERSEDED" "RETRACTED" "PROVENANCE_STALE" "INCONSISTENCY" ) ;
+        sh:message "status must be one of: ACTIVE, SUPERSEDED, RETRACTED, PROVENANCE_STALE, INCONSISTENCY." ;
+    ] ;
+
+    # statusReason — optional; cause of the current non-ACTIVE status.
+    # Enum mirrors particles/core/status.py StatusReason exactly (F2.2).
+    sh:property [
+        sh:path particles:statusReason ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "RETRACTED_DEPENDENCY" "CORPUS_ENTRY_MISSING" "TRUST_DEMOTED"
+                "LOWER_TRUST_SOURCE" "SUPERSEDED_BY_REINDEX" "VALIDITY_EXPIRED"
+                "CONFLICT_RESOLVED" "CONFLICT_PENDING" "EXPLICIT_RETRACTION"
+                "SOURCE_RETRACTED" "EXPLICIT_SUPERSESSION" "DOCUMENT_SUPERSEDED"
+                "DUPLICATE_MERGED" ) ;
+        sh:message "status_reason, when present, must be one of the thirteen StatusReason values." ;
+    ] ;
+
+    # particleType — optional; CLAIM default, REVIEW for review annotation
+    # records (§9.6), NARRATIVE for prose-level connective tissue over claims
+    #, ACTION / ANNOTATION reserved.
+    sh:property [
+        sh:path particles:particleType ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "CLAIM" "REVIEW" "NARRATIVE" "ACTION" "ANNOTATION" ) ;
+        sh:message "particle_type, when present, must be CLAIM, REVIEW, NARRATIVE, ACTION, or ANNOTATION." ;
+    ] ;
+
+    # assertionModality — optional truth-aptness axis; FALSIFIABLE
+    # default. Only FALSIFIABLE particles are truth-arbitrated by the engine.
+    sh:property [
+        sh:path particles:assertionModality ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "FALSIFIABLE" "EVALUATIVE" "EXPERIENTIAL" "CONSTITUTIVE" ) ;
+        sh:message "assertion_modality, when present, must be FALSIFIABLE, EVALUATIVE, EXPERIENTIAL, or CONSTITUTIVE." ;
+    ] ;
+
+    # canonicalForm — optional marker of which of the prose/structured pair is
+    # the assertion; PROSE default. STRUCTURED additionally requires
+    # a structuredClaim to be present — a cardinality the shape cannot express
+    # without a SPARQL constraint, so it is enforced by the Core model validator.
+    sh:property [
+        sh:path particles:canonicalForm ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "PROSE" "STRUCTURED" ) ;
+        sh:message "canonical_form, when present, must be PROSE or STRUCTURED." ;
+    ] ;
+
+    # structuredClaim — optional DERIVED S-P-O annotation. At most
+    # one, conforming to StructuredClaimShape. Absence is a legal permanent
+    # state: no minCount, and no operation degrades without it.
+    sh:property [
+        sh:path particles:structuredClaim ;
+        sh:maxCount 1 ;
+        sh:node particles:StructuredClaimShape ;
+        sh:message "structured_claim, when present, must be a well-formed structured claim." ;
+    ] ;
+
+    # extractionProviderModel — the "<provider>:<model>" pairing that produced
+    # this particle. At most one, and deliberately NO minCount:
+    # absence is a legal *permanent* state, not a defect to repair. A
+    # deterministic extractor invokes no model, an operator/agent assertion is
+    # not extracted at all, and every particle minted before the field existed
+    # is unrecoverable — the pairing is historical, not derived, so unlike a
+    # structured claim it cannot be regenerated. Nothing lints for its absence
+    # and no operation degrades without it; re-extraction, not backfill, is how
+    # an unstamped particle acquires one.
+    #
+    # This was the first constraint any shape placed on extractor-side
+    # provenance; the ExtractorRefShape below was added, closing
+
+    sh:property [
+        sh:path particles:extractionProviderModel ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "extraction_provider_model, when present, must be a non-empty \"<provider>:<model>\" string." ;
+    ] ;
+
+    # schemaVersion — required semver string
+    sh:property [
+        sh:path particles:schemaVersion ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:pattern "^\\d+\\.\\d+\\.\\d+$" ;
+        sh:message "schema_version must be a semver string (e.g. 0.2.0)." ;
+    ] ;
+
+    # subject_ids — optional; zero or more links to canonical Subjects
+    sh:property [
+        sh:path particles:subject ;
+        sh:nodeKind sh:IRIOrLiteral ;
+        sh:message "subject_ids, when present, reference canonical Subject entities." ;
+    ] ;
+
+    # extractorRef — optional Core reference to the producing extractor
+    # (§6.2). Deliberately NO sh:minCount: a particle asserted
+    # directly by an operator or an authorized agent (§9.1a) has no
+    # extractor and carries no ref. The shape constrains the ref when there is
+    # one; it says nothing about there being one.
+    sh:property [
+        sh:path particles:extractorRef ;
+        sh:maxCount 1 ;
+        sh:node particles:ExtractorRefShape ;
+        sh:message "extractor_ref, when present, must be a well-formed ExtractorRef (§6.2)." ;
+    ] ;
+
+    # contributors — optional Extension D/E attribution
+    sh:property [
+        sh:path particles:contributors ;
+        sh:node particles:ContributorRefShape ;
+        sh:message "contributors, when present, are ContributorRef nodes." ;
+    ] .
+
+
+# ExtractorRef — the Core §6.2 reference to the producing extractor.
+# Both keys are REQUIRED here even though the field itself is optional: a ref
+# that names an extractor without a version cannot scope re-extraction (§9.5),
+# and a version with no name cannot join the registry (§14.3) — a half-ref
+# serves neither operation it exists for.
+particles:ExtractorRefShape
+    a sh:NodeShape ;
+    sh:description "Normative shape for an ExtractorRef (§6.2, §14.3)." ;
+
+    sh:property [
+        sh:path particles:extractorName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "ExtractorRef.name must be a non-empty registered extractor id." ;
+    ] ;
+
+    # Semver is a Violation, not a Warning (owner decision at
+    # sign-off). §14.3 already defines an extractor version as semver and
+    # builds re-extraction eligibility on ordering it; a version that cannot
+    # be ordered silently breaks that contract rather than degrading it. The
+    # accepted cost is that a third-party extractor versioning by date is
+    # non-conformant on this field and must adopt semver.
+    sh:property [
+        sh:path particles:extractorVersion ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:pattern "^\\d+\\.\\d+\\.\\d+" ;
+        sh:message "ExtractorRef.version must be a semver version (§14.3)." ;
+    ] .
+
+
+# ContributorRef — Extension D/E attribution. Validated only when a
+# particle carries contributors; the role vocabulary is OPEN, so an
+# unrecognized role is a Warning, never a Violation.
+particles:ContributorRefShape
+    a sh:NodeShape ;
+    sh:description "Normative shape for a ContributorRef (Extension D/E)." ;
+
+    sh:property [
+        sh:path particles:id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "ContributorRef.id must be a non-empty platform:identifier string." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:role ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:in ( "author" "extractor" "curator" "reviewer" "importer" "agent" ) ;
+        sh:severity sh:Warning ;
+        sh:message "ContributorRef.role is outside the recommended vocabulary (open set; warning only)." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:at ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "ContributorRef.at must be a timestamp." ;
+    ] .
+
+
+# ---------------------------------------------------------------------------
+# StructuredClaim / ClaimTerm — the derived S-P-O annotation.
+#
+# These shapes constrain the ANNOTATION, never the claim. Nothing here bears on
+# `content`, `confidence` or provenance: a malformed triple is a tooling defect
+# to regenerate, not evidence about the belief. The stamp is required because a
+# structured claim is born stamped — there is no legacy tier and no
+# grandfathered default (contrast the embedding marker).
+# ---------------------------------------------------------------------------
+
+particles:StructuredClaimShape
+    a sh:NodeShape ;
+    sh:description "Normative shape for a derived structured claim." ;
+
+    sh:property [
+        sh:path rdf:subject ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:node particles:ClaimTermShape ;
+        sh:message "StructuredClaim.subject must be exactly one claim term." ;
+    ] ;
+
+    sh:property [
+        sh:path rdf:predicate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:node particles:ClaimTermShape ;
+        sh:message "StructuredClaim.predicate must be exactly one claim term." ;
+    ] ;
+
+    sh:property [
+        sh:path rdf:object ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:node particles:ClaimTermShape ;
+        sh:message "StructuredClaim.object must be exactly one claim term." ;
+    ] ;
+
+    # subjectId — optional. Absent means the subject term resolved to no
+    # Subject, which is legal; when present it SHOULD be one of the particle's
+    # own subject_ids (the L-STR-11 lint check, which SHACL cannot express
+    # because it spans two nodes).
+    sh:property [
+        sh:path particles:subjectId ;
+        sh:maxCount 1 ;
+        sh:message "StructuredClaim.subject_id, when present, is a single Subject reference." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:structurizerId ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "StructuredClaim.structurizer_id must name what produced the triple." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:structurizerVersion ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "StructuredClaim.structurizer_version must record the generator's version." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:generatedAt ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "StructuredClaim.generated_at must be a timestamp." ;
+    ] .
+
+
+particles:ClaimTermShape
+    a sh:NodeShape ;
+    sh:description "Normative shape for one term of a structured claim." ;
+
+    sh:property [
+        sh:path particles:termKind ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "URI" "TOKEN" "LITERAL" ) ;
+        sh:message "ClaimTerm.kind must be URI, TOKEN, or LITERAL." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:termValue ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "ClaimTerm.value must be a non-empty string." ;
+    ] ;
+
+    # datatype / language — LITERAL terms only, and mutually exclusive (the RDF
+    # rule). Position and exclusivity are enforced by the Core model validator;
+    # the shape pins cardinality.
+    sh:property [
+        sh:path particles:datatype ;
+        sh:maxCount 1 ;
+        sh:message "ClaimTerm.datatype, when present, is a single datatype IRI (LITERAL terms only)." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:language ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "ClaimTerm.language, when present, is a single BCP-47 tag (LITERAL terms only)." ;
+    ] .

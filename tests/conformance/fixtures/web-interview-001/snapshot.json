@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000015",
+  "captured_at": "2026-05-21T00:00:00+00:00",
+  "content_hash": "16be9f80852f5fed203475397b06ff586cecdb97adee86cd76d719a9dcb5f473",
+  "etag": "\"web-interview-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2026-05-21T00:00:00+00:00"
+}

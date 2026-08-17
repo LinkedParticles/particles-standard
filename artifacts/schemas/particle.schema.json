@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linkedparticles.org/schemas/particle.schema.json",
+  "title": "Particle",
+  "description": "Core particle schema for the Particles standard v1.0",
+  "type": "object",
+  "required": [
+    "id",
+    "content",
+    "confidence",
+    "uncertainty_nature",
+    "asserted_by",
+    "asserted_at",
+    "status",
+    "schema_version"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Globally unique particle identifier (UUID)"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The assertion — a single falsifiable claim"
+    },
+    "confidence": {
+      "$ref": "#/$defs/Confidence"
+    },
+    "uncertainty_nature": {
+      "type": "string",
+      "enum": ["ALEATORY", "EPISTEMIC"],
+      "description": "PSUM UncertaintyNature"
+    },
+    "provenance": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ProvenanceRef" },
+      "description": "Ordered chain of sources, agents, and prior particles"
+    },
+    "asserted_by": {
+      "type": "string",
+      "description": "Agent ID making this assertion (PSUM BeliefAgent)"
+    },
+    "asserted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 creation timestamp"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED", "PROVENANCE_STALE", "INCONSISTENCY"],
+      "description": "Lifecycle status per §6.6 normative table"
+    },
+    "status_reason": {
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "RETRACTED_DEPENDENCY",
+        "CORPUS_ENTRY_MISSING",
+        "TRUST_DEMOTED",
+        "LOWER_TRUST_SOURCE",
+        "SUPERSEDED_BY_REINDEX",
+        "VALIDITY_EXPIRED",
+        "CONFLICT_RESOLVED",
+        "CONFLICT_PENDING",
+        "EXPLICIT_RETRACTION",
+        "SOURCE_RETRACTED",
+        "EXPLICIT_SUPERSESSION",
+        "DOCUMENT_SUPERSEDED",
+        "DUPLICATE_MERGED"
+      ],
+      "description": "Cause of the current non-ACTIVE status"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Particles schema version under which this particle was created"
+    },
+    "particle_type": {
+      "type": "string",
+      "enum": ["CLAIM", "REVIEW", "NARRATIVE", "ACTION", "ANNOTATION"],
+      "default": "CLAIM",
+      "description": "Extension A: CLAIM (default); REVIEW for human review annotation records (§9.6); NARRATIVE for prose-level structural connective tissue over claims; ACTION and ANNOTATION are reserved"
+    },
+    "assertion_modality": {
+      "type": "string",
+      "enum": ["FALSIFIABLE", "EVALUATIVE", "EXPERIENTIAL", "CONSTITUTIVE"],
+      "default": "FALSIFIABLE",
+      "description": "Extension A: truth-aptness axis. FALSIFIABLE (default) is observer-independent and truth-apt; EVALUATIVE (value/preference), EXPERIENTIAL (first-person inner state), and CONSTITUTIVE (a rule a document establishes) are not. The engine applies truth-semantics (§6.6 contradiction, L-SEM-01, L-IDX-01) only to FALSIFIABLE particles. Orthogonal to the document-scope axis."
+    },
+    "uncertainty_kind": {
+      "type": ["string", "null"],
+      "description": "Extension A: PSUM UncertaintyKind, e.g. CONTENT, ENVIRONMENT, GEOGRAPHICAL_LOCATION, OCCURRENCE, TIME (open string; not constrained to an enum)"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Core: expiry for time-bounded claims (lazy query-time filter, §9.3)"
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Core: prior particle UUID this one revises"
+    },
+    "basis": {
+      "type": ["object", "null"],
+      "description": "Extension A: PSUM Basis / EvidenceType structured record"
+    },
+    "extractor_ref": {
+      "oneOf": [{ "$ref": "#/$defs/ExtractorRef" }, { "type": "null" }],
+      "description": "Core: semver reference to the extractor that produced this particle (§14.3); omitted for operator-asserted particles. Modelled — through 1.109.x this was an open untyped object whose {name, version} key set was stated only in this description, where no validator read it"
+    },
+    "extraction_provider_model": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "default": null,
+      "description": "Core: the \"<provider>:<model>\" pairing that produced this particle — a sibling of extractor_ref, not a key inside it (extractor_ref names the code; this names the runtime substrate that code invoked, and one extractor version runs under many models). Null means UNRECORDED — no completion provider produced it (a deterministic extractor, or an operator/agent assertion), or it predates the field. Never backfilled and never defaulted: absence is a legal permanent state"
+    },
+    "sequence_context": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "format": "uuid" },
+      "description": "Extension A: adjacent particle UUIDs from the same extraction pass providing narrative context"
+    },
+    "subject_ids": {
+      "type": "array",
+      "items": { "type": "string", "format": "uuid" },
+      "description": "Core: UUIDs of the Subjects this particle is about. A CLAIM particle SHOULD reference at least one subject (§6.7); zero is permitted but flagged by lint (L-STR-09)."
+    },
+    "tags": {
+      "type": ["array", "null"],
+      "items": { "type": "string" },
+      "description": "Extension C: operator-assigned folksonomy labels"
+    },
+    "context_fingerprint": {
+      "type": ["string", "null"],
+      "description": "Extension C: Merkle root of dependency subgraph"
+    },
+    "properties": {
+      "type": ["object", "null"],
+      "description": "Extension A: ontology-keyed structured data emitted by domain extractors; keys are ontology IRIs, e.g. nmo:hasWeight. Never used for conflict detection."
+    },
+    "contributors": {
+      "type": ["array", "null"],
+      "items": { "$ref": "#/$defs/ContributorRef" },
+      "description": "Extension D/E: ordered, append-only contributor attribution"
+    },
+    "contested": {
+      "type": ["string", "null"],
+      "description": "Query-time-only marker: id of an open INCONSISTENCY particle referencing this one, surfaced by the read tools so an agent sees a contested belief at recall. Never stored; default null."
+    },
+    "structured_claim": {
+      "oneOf": [{ "$ref": "#/$defs/StructuredClaim" }, { "type": "null" }],
+      "default": null,
+      "description": "Extension A: a DERIVED, regenerable subject-predicate-object rendering of `content`, stamped with the generator that produced it. An annotation, never an assertion — `content`, `confidence` and provenance are untouched by it, and its fidelity is a property of the annotation, not evidence about the claim. Absence is a legal PERMANENT state: prose with no honest triple is left unannotated, and no operation degrades without it."
+    },
+    "canonical_form": {
+      "type": "string",
+      "enum": ["PROSE", "STRUCTURED"],
+      "default": "PROSE",
+      "description": "Extension A: which of the prose/structured pair is the assertion. PROSE (default) — `content` is asserted and any structured_claim is derived. STRUCTURED — the triple is asserted and `content` is a derived verbalization, produced by a structure-native source such as an RDF deposit; requires structured_claim to be present. STRUCTURED does NOT make `content` mutable: 'derived' states what a regeneration pass may produce, not that a stored value may be rewritten. A derived `content` is regenerated by re-extracting the source and reconciling through the §6.6 ladder, and must still satisfy the non-empty constraint on `content`."
+    }
+  },
+  "$defs": {
+    "ExtractorRef": {
+      "type": "object",
+      "description": "Reference to the extractor that produced a particle (§6.2, §14.3). additionalProperties is deliberately left open, as for ContributorRef and StructuredClaim: a registry may carry extra hints on the ref: only the two keys the standard's operations read are pinned.",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registered extractor id, e.g. general-extractor. The join key into the extractor registry (§14.3) and the trust-weighting lookup"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "That extractor's semver version at extraction time; a superseded version is the re-extraction scope (§9.5, §14.3)"
+        }
+      }
+    },
+    "ClaimTerm": {
+      "type": "object",
+      "description": "One term (subject, predicate or object) of a structured claim.",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["URI", "TOKEN", "LITERAL"],
+          "description": "URI — an absolute IRI or a CURIE in a published context prefix. TOKEN — an unresolved lexical name for an entity or relation; the export layer mints a local-namespace IRI for it. LITERAL — a lexical value; legal in object position only."
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The IRI/CURIE, the lexical name, or the literal's lexical form"
+        },
+        "datatype": {
+          "type": ["string", "null"],
+          "description": "xsd datatype IRI. LITERAL terms only, and never together with a language tag"
+        },
+        "language": {
+          "type": ["string", "null"],
+          "description": "BCP-47 language tag. LITERAL terms only, and never together with a datatype"
+        }
+      }
+    },
+    "StructuredClaim": {
+      "type": "object",
+      "description": "A derived, regenerable S-P-O rendering of a particle's content. Generated in exactly two places — the extraction pipeline and the structured-claim backfill — and stamped with both in either case.",
+      "required": ["subject", "predicate", "object", "structurizer_id", "structurizer_version", "generated_at"],
+      "properties": {
+        "subject": {
+          "allOf": [{ "$ref": "#/$defs/ClaimTerm" }],
+          "description": "The subject term. MUST NOT be a LITERAL."
+        },
+        "predicate": {
+          "allOf": [{ "$ref": "#/$defs/ClaimTerm" }],
+          "description": "The relation term. MUST NOT be a LITERAL."
+        },
+        "object": {
+          "allOf": [{ "$ref": "#/$defs/ClaimTerm" }],
+          "description": "The object term. May be a URI, a TOKEN, or a LITERAL."
+        },
+        "subject_id": {
+          "type": ["string", "null"],
+          "format": "uuid",
+          "description": "The resolved Subject UUID when the subject term names one of the particle's subjects; null when it resolved to nothing (a legal state, not an error). Store-local: never carried across an interchange boundary."
+        },
+        "structurizer_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What produced the triple — an extractor id for extraction-time annotation, or the standalone structurizer's id for backfill"
+        },
+        "structurizer_version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "That generator's version at generation time; a superseded version is the regeneration scope"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the triple was produced"
+        }
+      }
+    },
+    "ContributorRef": {
+      "type": "object",
+      "description": "One contributor's attributed act on a record. Extension D/E.",
+      "required": ["id", "role", "at"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "platform:identifier identity string, normalized (§6.5), e.g. github:torvalds"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Open vocabulary; recommended values: author, extractor, curator, reviewer, importer, agent. Unrecognized roles are valid (no enum)."
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp of when this contributor performed the act"
+        }
+      }
+    },
+    "Confidence": {
+      "type": "object",
+      "required": ["value", "calibration_source"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Extractor-stated raw confidence value — stored immutably"
+        },
+        "variance": {
+          "type": ["number", "null"],
+          "minimum": 0.0,
+          "description": "Confidence uncertainty estimate"
+        },
+        "calibration_source": {
+          "type": "string",
+          "enum": ["EXTRACTOR_DIRECT", "AGENT_ASSERTED", "CALIBRATED_BENCHMARK", "HUMAN_REVIEW", "DERIVED"]
+        },
+        "calibration_method": {
+          "type": ["string", "null"],
+          "description": "e.g. temperature_scaling, isotonic_regression, platt_scaling"
+        },
+        "calibration_ref": {
+          "type": ["string", "null"],
+          "description": "Reference to calibration_history entry"
+        }
+      }
+    },
+    "ProvenanceRef": {
+      "type": "object",
+      "required": ["type", "corpus_entry_id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["SOURCE", "PARTICLE", "AGENT"]
+        },
+        "corpus_entry_id": {
+          "type": "string"
+        },
+        "snapshot_id": {
+          "type": ["string", "null"]
+        },
+        "location": {
+          "type": ["string", "null"],
+          "description": "Byte range, paragraph number, comment ID, etc."
+        },
+        "chunk_hash": {
+          "type": ["string", "null"],
+          "description": "SHA-256 of the source chunk that produced this particle, for incremental re-extraction carry-forward"
+        }
+      }
+    },
+    "ExternalRef": {
+      "type": "object",
+      "description": "A reference to an entity in an external ontology or catalogue.",
+      "required": ["namespace", "id"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "Ontology/catalogue namespace, e.g. wikidata, numista, km_catalog"
+        },
+        "id": {
+          "type": "string",
+          "description": "Identifier within the namespace, e.g. Q16957, N1004"
+        },
+        "uri": {
+          "type": ["string", "null"],
+          "description": "Canonical URI if the namespace publishes one"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 1.0
+        }
+      }
+    },
+    "Subject": {
+      "type": "object",
+      "description": "A canonical real-world entity a particle is a statement about.",
+      "required": ["id", "canonical_name", "asserted_by", "created_at"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Globally unique subject identifier (UUID)"
+        },
+        "canonical_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Authoritative display name"
+        },
+        "description": {
+          "type": ["string", "null"]
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Alternative names used during subject resolution"
+        },
+        "external_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ExternalRef" },
+          "description": "Cross-references to external ontologies (Wikidata, Numista, …)"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "asserted_by": {
+          "type": "string",
+          "description": "Agent ID that created this subject entry"
+        },
+        "subject_class": {
+          "type": ["string", "null"],
+          "description": "Nomisma ontology class for exporter template selection"
+        },
+        "contributors": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/ContributorRef" },
+          "description": "Extension D/E: ordered, append-only contributor attribution"
+        }
+      }
+    }
+  }
+}

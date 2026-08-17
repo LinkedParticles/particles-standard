@@ -1,0 +1,16 @@
+# Conformance fixture for the Numista coin extractor.
+#
+# Source: synthesised from the real Numista /types/3022 response (5 Pfennigs,
+# GDR, 1948-1950). Trimmed of optional fields the coin extractor does not
+# read, so the blob doubles as inline documentation of the schema the
+# extractor depends on.
+fixture_id: numista-coin-001
+source_type: NUMISTA_API_COIN
+expected_acceptors:
+  - numista-coin-extractor
+notes: |
+  Exercises the full structured-particle path: properties dict with
+  nmo:hasIssuer / nmo:hasMaterial / nmo:hasWeight / etc., plus the
+  free-text obverse/reverse/edge/mint descriptive particles. Issuer code
+  "ddr" → suffix "GDR". A coin with no rulers, exercising the fallback
+  to issuer_name as the issuer subject.

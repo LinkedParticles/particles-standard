@@ -1,0 +1,468 @@
+# Particles Conformance Profile — machine-readable companion
+#
+# Governs: docs/spec/conformance-profile.md. This file is the
+# automatable mirror of that document's §2 constants, §4 formulas, the §3
+# embedding/similarity contract, and the §5 deterministic algorithms. It is the
+# SINGLE SOURCE OF TRUTH for the behavioural/quantitative conformance surface;
+# the reference SDK keeps it in sync with particles/config.py via a drift-guard
+# test (tests/test_conformance_profile.py) that asserts every constant's
+# `value` equals the live default at its `config_path`.
+#
+# An implementation self-certifies by running `particles conformance check`,
+# which loads this file and the referenced similarity_vectors.json and reports a
+# per-level (L1–L4) PASS / FAIL / SKIPPED verdict.
+#
+# Versioning: `profile_version` carries this artifact's own stamp, decoupled
+# from the spec's narrative cadence — bump it when a default is re-tuned or the
+# vector set grows.
+
+profile_version: "1.2"
+
+# --- L2 float-equality tolerance (decision #6) -----------------------
+# Absolute tolerance on the [0, 1] scale: two deterministic-compute outputs are
+# conformant-equal iff |a - b| <= float_tolerance. Loose enough to absorb
+# cross-language pow/exp rounding, tight enough that a real formula divergence
+# fails. Applies to every §4 formula (effective_confidence, recency_factor,
+# calibration apply, the noisy-OR merge).
+float_tolerance: 1.0e-9
+
+# --- Embedding & similarity contract (L3) ---------------------------
+# The reference profile the SDK ships. Other encoders conform via the bands in
+# similarity_vectors.json, not by matching this model.
+embedding_profile:
+  reference:
+    model: all-MiniLM-L6-v2
+    dim: 384
+    normalization: l2
+
+similarity_scale:
+  metric: cosine
+  range: [0.0, 1.0]
+  clamp_negative: true        # a negative cosine is clamped to 0 (§8.5)
+
+# The frozen similarity test vectors (bands + top-k membership) live in a
+# sibling file shipped. The runner loads it for the L3 checks.
+similarity_vectors_ref: similarity_vectors.json
+
+# --- Normative constants (§2) -------------------------------------------------
+# Each entry carries `value` (the published normative default), `config_path`
+# (the dotted attribute on get_config() the drift-guard test introspects),
+# `level` (lowest conformance level that observes it), and `spec` (governing
+# section / ADR). Constants with no config_path are code-level (noted).
+constants:
+  # § 2.1 Confidence & calibration
+  - name: max_asserted_confidence
+    value: 0.90
+    config_path: mcp.write.max_asserted_confidence
+    level: L2
+    spec: "§9.1a"
+  - name: agent_trust_rank
+    value: 0.80
+    config_path: mcp.write.agent_trust_rank
+    level: L2
+    spec: "§9.1a"
+
+  # § 2.2 Trust, demotion & cascade
+  - name: trust_differential_threshold
+    value: 0.15
+    config_path: trust.differential_threshold
+    level: L2
+    spec: "§6.4 rung 2"          # canonical; §6.4/§9.4 prose "0.2" was stale
+  - name: cascade_max_per_run
+    value: 500
+    config_path: trust.cascade_max_per_run
+    level: L2
+    spec: "§15.1"
+  - name: cascade_min_reviewer_confirmations
+    value: 3
+    config_path: trust.cascade_min_reviewer_confirmations
+    level: L2
+    spec: "§15.1"
+  - name: reviewer_trust_rank
+    value: 0.80
+    config_path: trust.reviewer_trust_rank
+    level: L2
+    spec: "§9.6"
+  - name: conformance_trust_weight_cap
+    value: 0.50
+    config_path: conformance.trust_cap.cap_value
+    level: L2
+    spec: "Profile"
+  - name: authority_confidence_preferred
+    value: 0.99
+    config_path: wikidata.rank_confidence.preferred
+    level: L2
+    spec: "§6.7"
+  - name: authority_confidence_normal
+    value: 0.85
+    config_path: wikidata.rank_confidence.normal
+    level: L2
+    spec: "§6.7"
+  - name: authority_confidence_deprecated
+    value: 0.30
+    config_path: wikidata.rank_confidence.deprecated
+    level: L2
+    spec: "§6.7"
+
+  # § 2.5 Query ranking & lint (deterministic given retrieval)
+  - name: default_top_k
+    value: 40
+    config_path: query.default_top_k
+    level: L3
+    spec: "§9.3"                 # ordering non-normative across profiles
+  - name: default_min_confidence
+    value: 0.0
+    config_path: query.default_min_confidence
+    level: L2
+    spec: "§9.3"
+  - name: similarity_weight
+    value: 0.60
+    config_path: query.similarity_weight
+    level: L3
+    spec: "§9.3"                 # weighted sum, not product
+  - name: confidence_weight
+    value: 0.40
+    config_path: query.confidence_weight
+    level: L3
+    spec: "§9.3"
+  - name: lint_recency_decay_threshold
+    value: 0.50
+    config_path: lint.recency_decay_threshold
+    level: L2
+    spec: "§9.4"
+  - name: lint_variance_threshold
+    value: 0.15
+    config_path: lint.variance_threshold
+    level: L2
+    spec: "§9.4"
+  - name: contestedness_callout_threshold
+    value: 0.20
+    config_path: contestedness.callout_threshold
+    level: L2
+    spec: "§6.9"      # draft §2.5 mislabeled this `review.callout_threshold`
+
+  # § 2.6 Benchmark match semantics — §13.3. Code-level constants
+  # (no config_path — they are module-level defaults in particles/benchmark/,
+  # not config knobs). Pinned here so two conformant benchmark runners score the
+  # same claim-equivalence assignment and the same ECE binning, which is the
+  # precondition for their reported precision / recall / calibration_error being
+  # comparable at all. tests/test_conformance_profile.py checks each against the
+  # live benchmark default the same way the drift guard checks config-bound rows.
+  - name: benchmark_equivalence_threshold
+    value: 0.80
+    config_path: null
+    level: L3
+    spec: "§13.3"     # embedding judge: cosine >= this is a match
+  - name: benchmark_llm_prefilter
+    value: 0.65
+    config_path: null
+    level: L3
+    spec: "§13.3"     # LLM judge: only pairs >= this cosine are judged
+  - name: benchmark_ece_bins
+    value: 10
+    config_path: null
+    level: L2
+    spec: "§13.3"     # Expected Calibration Error: equal-width bin count
+
+# § 2.4 Similarity thresholds (L3 — meaningful only on the §3 normalized cosine
+# scale, within a declared profile).
+similarity_thresholds:
+  - name: extraction_conflict
+    value: 0.80
+    config_path: extraction.similarity_threshold
+    level: L3
+    spec: "§9.2 step 7"
+  - name: coevidential_theta
+    value: 0.0
+    config_path: query.equivalence_threshold
+    level: L3
+    spec: "§6.10"
+  - name: contradiction_candidate
+    value: 0.60
+    config_path: lint.contradiction_candidate_threshold
+    level: L3
+    spec: "§9.4 L-SEM-01"
+  - name: find_duplicates
+    value: 0.88
+    config_path: subjects.find_duplicates_similarity_threshold
+    level: L3
+    spec: "§9.4"
+  - name: wikidata_link_suppress
+    value: 0.25
+    config_path: subjects.wikidata_link_suppress_threshold
+    level: L3
+    spec: "§6.7"
+  - name: external_link_abstain
+    value: 0.15
+    config_path: subjects.external_link_abstain_threshold
+    level: L3
+    spec: "§6.7"
+  - name: links_suggest_candidate
+    value: 0.92
+    config_path: links_suggest.candidate_threshold
+    level: L3
+    spec: "Profile"
+
+# § 2.3 Recency decay. recency_factor = max(floor, 0.5 ** (age_days /
+# half_life_days)), per source_type. Any source_type NOT listed here has no
+# decay → recency_factor = 1.0 (the common case: WEB_PAGE, PDFs, papers, local
+# files). config_path_root is the dotted prefix; each entry's half_life_days /
+# floor live at <root>.<SOURCE>.{half_life_days,floor}.
+recency_decay:
+  config_path_root: content_age_decay.sources
+  level: L2
+  sources:
+    REDDIT_POST:  { half_life_days: 60.0,  floor: 0.10 }
+    GITHUB_REPO:  { half_life_days: 365.0, floor: 0.40 }
+    GITHUB_GIST:  { half_life_days: 180.0, floor: 0.20 }
+    GITHUB_PAGES: { half_life_days: 365.0, floor: 0.25 }
+
+# --- Deterministic formulas (§4; L2) ------------------------------------------
+# Pure functions of stored inputs; MUST reproduce within float_tolerance.
+formulas:
+  effective_confidence: "value * extractor_trust_weight * source_trust_rank * recency_factor"
+  recency_factor: "max(floor, 0.5 ** (age_days / half_life_days))   # None/future content_published_at -> 1.0"
+  calibration_apply: "sigmoid(logit(raw) / T)   # logit-space; T fit by NLL over [0.01, 10.0]; 0 and 1 are fixed points"
+  noisy_or_merge: "1 - product over p in G of (1 - eff_conf(p) * source_independence(p))   # source_independence = 1/k for the k-th particle from one source, ranked by descending eff_conf"
+
+# Calibration optimiser bound (calibration.py; code-level, no config_path).
+calibration:
+  temperature_bounds: [0.01, 10.0]
+  fit_objective: nll               # negative log-likelihood, minimize_scalar(method="bounded")
+  # the functional form `temperature` parameterises. `logit` is
+  # sigmoid(logit(p) / T) — Guo et al. (2017) as written. It replaced the
+  # scalar-domain `clamp(p / T, 0, 1)` approximation, which saturated (every
+  # value above T collapsed onto 1.0, destroying order) and degraded without
+  # bound (T=10 divided every confidence by ten). A stored ExtractorCalibration
+  # declares its own form in a `transform` field; a record without one predates
+  # this decision and is not applied.
+  transform: logit
+  # which pairs the NLL fit may consume. A raw confidence at 0.0
+  # or 1.0 is an exact fixed point of the apply — no temperature moves it — so
+  # including one lets evidence the transform cannot act on set the parameter.
+  # Excluded pairs are still scored by the ECE the fit is judged on; they are
+  # dropped from the *fitting* population only.
+  fit_excludes_saturated: true
+  fit_saturation_epsilon: 1.0e-7
+
+# --- Test vectors (§4 formulas + §5 algorithms) -------------------------------
+# The runner recomputes each via the SDK's own functions (core.scoring.confidence,
+# core.scoring.decay, extraction.calibration, core.conflict_resolution,
+# core.fingerprint, core.cascade_gate) and asserts equality — |computed -
+# expected| <= float_tolerance for the numeric families, exact equality for the
+# categorical ones (verdict strings, hex digests, booleans, counts). An external
+# implementation ports the same vectors against its own functions to self-certify
+# L2.
+#
+# Every vector input is PLAIN DATA — scalars, strings, and flat records — never
+# an SDK object. That is the portability contract: a second implementation reads
+# this file and materialises its own types from these fields.
+test_vectors:
+  effective_confidence:
+    # inputs -> compute_effective_confidence(value, ext_tw, src_rank, recency)
+    - { id: ec-01, value: 0.80, extractor_trust_weight: 1.0, source_trust_rank: 0.90, recency_factor: 1.0, expected: 0.72 }
+    - { id: ec-02, value: 0.50, extractor_trust_weight: 0.8, source_trust_rank: 1.0,  recency_factor: 0.5, expected: 0.20 }
+    - { id: ec-03, value: 0.90, extractor_trust_weight: 1.0, source_trust_rank: 1.0,  recency_factor: 1.0, expected: 0.90 }
+    # clamp: product would exceed 1.0 -> clamped to 1.0
+    - { id: ec-04, value: 0.95, extractor_trust_weight: 1.5, source_trust_rank: 1.0,  recency_factor: 1.0, expected: 1.0 }
+  recency_factor:
+    # inputs -> max(floor, 0.5 ** (age_days / half_life_days))
+    - { id: rf-01, age_days: 60.0,  half_life_days: 60.0,  floor: 0.10, expected: 0.5 }
+    - { id: rf-02, age_days: 600.0, half_life_days: 60.0,  floor: 0.10, expected: 0.1 }   # floor
+    - { id: rf-03, age_days: 0.0,   half_life_days: 60.0,  floor: 0.10, expected: 1.0 }   # age<=0 -> 1.0
+    - { id: rf-04, age_days: 365.0, half_life_days: 365.0, floor: 0.40, expected: 0.5 }
+  calibration_apply:
+    # inputs -> sigmoid(logit(raw) / T)
+    # T=10 squashes toward 0.5; it does not divide by ten (was 0.097).
+    - { id: cal-01, raw: 0.97, T: 10.0, expected: 0.5860378586300931 }
+    - { id: cal-02, raw: 0.80, T: 1.0,  expected: 0.80 }   # T=1 is the identity
+    # T<1 sharpens toward 1.0 without ever reaching it (was a clamped 1.0).
+    - { id: cal-03, raw: 0.80, T: 0.5,  expected: 0.9411764705882353 }
+    # 0 and 1 are exact fixed points for every T > 0 (logit is ±inf there).
+    - { id: cal-04, raw: 1.0,  T: 3.0,  expected: 1.0 }
+    - { id: cal-05, raw: 0.0,  T: 0.25, expected: 0.0 }
+  noisy_or_merge:
+    # inputs (list of [eff_conf, source_key]) -> merge_co_evidential_confidence
+    - { id: nor-01, entries: [[0.6, "A"], [0.5, "B"]], expected: 0.80 }                       # two independent sources
+    - { id: nor-02, entries: [[0.6, "A"], [0.6, "A"], [0.6, "A"]], expected: 0.776 }          # one chatty source, 1/k discount
+    - { id: nor-03, entries: [[0.7, "A"], [0.5, "A"], [0.6, "B"]], expected: 0.91 }           # mixed
+    - { id: nor-04, entries: [[0.8, "A"]], expected: 0.80 }                                   # singleton passthrough
+
+  # --- §6.4 conflict-resolution ladder ORDERING ---------------
+  # The ladder's *ordering* is L2-normative; the similarity candidacy that feeds
+  # it is L3 and out of scope here. Each vector is a (existing, new) pair plus
+  # the already-resolved caller inputs, and expects one ConflictVerdict.
+  #
+  # `existing` / `new` are PLAIN-DATA particle stubs, not SDK objects: the only
+  # particle attributes the ladder reads are `assertion_modality` (the §1.7
+  # truth-apt gate — truth-apt iff FALSIFIABLE) and `uncertainty_nature` (the
+  # §1 ALEATORY exclusion). An implementation materialises whatever its own
+  # particle type is from these two fields.
+  #
+  # Defaults when a key is omitted: has_contradiction_signal true,
+  # new_supersedes_existing / existing_supersedes_new false, trust scores null
+  # (rung 2 skipped), trust_differential_threshold 0.15, single_trust_order true.
+  #
+  # Rungs, in order: 1 ALEATORY -> 1.5 document-supersession -> 1.7 truth-apt
+  # gate -> 2 trust differential -> 3 INCONSISTENCY.
+  conflict_ladder:
+    # rung 1 outranks BOTH 1.5 and 2: an irreducible disagreement is never
+    # retired by an editorial relation nor by a trust gap.
+    - id: cl-01
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new_supersedes_existing: true
+      trust_score_existing: 0.20
+      trust_score_new: 0.90
+      expected: INCONSISTENT
+    # rung 1.5 outranks 1.7: an authored "this document replaces that one" is an
+    # editorial fact, so it reaches a superseded CONSTITUTIVE definition the
+    # truth engine cannot see.
+    - id: cl-02
+      existing: { assertion_modality: CONSTITUTIVE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: CONSTITUTIVE, uncertainty_nature: EPISTEMIC }
+      new_supersedes_existing: true
+      expected: DOCUMENT_SUPERSEDES
+    # rung 1.5 outranks 2: supersession wins even when trust favours the loser.
+    - id: cl-03
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new_supersedes_existing: true
+      trust_score_existing: 0.90
+      trust_score_new: 0.20
+      expected: DOCUMENT_SUPERSEDES
+    # rung 1.5, mirror direction.
+    - id: cl-04
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      existing_supersedes_new: true
+      expected: DOCUMENT_SUPERSEDED_BY_EXISTING
+    # a supersession CYCLE (both directions) fires neither branch and falls
+    # through to the rungs below.
+    - id: cl-05
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new_supersedes_existing: true
+      existing_supersedes_new: true
+      expected: INCONSISTENT
+    # rung 1.5 requires the replacement signal: a False signal keeps both claims
+    # (the default-safe direction, cap. 2(c)).
+    - id: cl-06
+      existing: { assertion_modality: CONSTITUTIVE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: CONSTITUTIVE, uncertainty_nature: EPISTEMIC }
+      new_supersedes_existing: true
+      has_contradiction_signal: false
+      expected: CORROBORATES
+    # rung 1.7 outranks 2: a non-truth-apt side leaves the truth engine nothing
+    # to arbitrate, whatever the trust gap.
+    - id: cl-07
+      existing: { assertion_modality: EVALUATIVE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.20
+      trust_score_new: 0.90
+      expected: CORROBORATES
+    # no contradiction signal on a truth-apt pair -> corroboration, above rung 2.
+    - id: cl-08
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      trust_score_existing: 0.20
+      trust_score_new: 0.90
+      expected: CORROBORATES
+    # rung 2 fires: differential above threshold, new wins.
+    - id: cl-09
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.20
+      trust_score_new: 0.90
+      expected: SUPERSEDES
+    # rung 2 boundary: |diff| == threshold is INSIDE the rung (>=, not >), and
+    # the existing side wins on a negative differential. The threshold is
+    # overridden to 0.25 here deliberately: 0.75, 0.50 and 0.25 are all exact
+    # binary fractions, so |diff| == threshold holds identically in every
+    # IEEE-754 implementation. Stating this boundary at the 0.15 default would
+    # pin decimal-to-binary rounding (0.75 - 0.60 = 0.15000000000000002) rather
+    # than the >= semantics the vector is about.
+    - id: cl-10
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.75
+      trust_score_new: 0.50
+      trust_differential_threshold: 0.25
+      expected: SUPERSEDED_BY_EXISTING
+    # rung 2 boundary: just under the threshold falls through to rung 3.
+    - id: cl-11
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.70
+      trust_score_new: 0.60
+      expected: INCONSISTENT
+    # multi-contributor store: no global trust
+    # order, so rung 2 is skipped entirely and disagreement is surfaced.
+    - id: cl-12
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      single_trust_order: false
+      trust_score_existing: 0.20
+      trust_score_new: 0.90
+      expected: INCONSISTENT
+
+  # --- §16.1 context fingerprint -----------------------------------
+  # Procedure: (1) take every ACTIVE particle in the store, (2) sort the UUIDs
+  # lexicographically, (3) SHA-256 the concatenation with NO delimiter; the hex
+  # digest is the fingerprint. "MUST be followed exactly to ensure cross-agent
+  # fingerprint compatibility" — hence these vectors.
+  #
+  # Inputs are plain (id, status) records so the ACTIVE filter (step 1), the
+  # sort (step 2), and the digest (step 3) are each pinned. The ids below are
+  # fixed literals, NOT freshly generated ones: the expected digest is a
+  # function of the exact strings.
+  context_fingerprint:
+    # empty baseline -> SHA-256 of the empty string (canonical fresh store)
+    - id: fp-01
+      particles: []
+      expected: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    # single ACTIVE particle
+    - id: fp-02
+      particles:
+        - { id: 7d3e9a12-4b6c-4f80-9a2d-1c5b3e7f0a44, status: ACTIVE }
+      expected: e9b1059577d8848ea460e102de3a43f419f222d4de369955fffb902b5aab050d
+    # three ACTIVE, supplied OUT of lexicographic order -> pins step 2
+    - id: fp-03
+      particles:
+        - { id: b91f4c33-2d7e-4a15-8c60-9e4d2b1a7f83, status: ACTIVE }
+        - { id: 0f2b6c1e-7a4d-4c9b-8f31-2a5e6d7c8b90, status: ACTIVE }
+        - { id: 7d3e9a12-4b6c-4f80-9a2d-1c5b3e7f0a44, status: ACTIVE }
+      expected: 7dc2c1b11629b09745301c73e4581f0bcc6d5a2dac4b7cadbd2628d26c775d44
+    # same three ACTIVE plus non-ACTIVE noise -> identical digest to fp-03,
+    # pinning step 1 (only ACTIVE particles enter the baseline)
+    - id: fp-04
+      particles:
+        - { id: 0f2b6c1e-7a4d-4c9b-8f31-2a5e6d7c8b90, status: ACTIVE }
+        - { id: 2c8a5f47-9e13-4b6a-8d05-3f7c1e9b4a62, status: RETRACTED }
+        - { id: 7d3e9a12-4b6c-4f80-9a2d-1c5b3e7f0a44, status: ACTIVE }
+        - { id: e4a70b58-6c29-4d3f-91b7-5a8e2c0d6f11, status: SUPERSEDED }
+        - { id: b91f4c33-2d7e-4a15-8c60-9e4d2b1a7f83, status: ACTIVE }
+        - { id: 1a6d3e90-8b47-4c25-a0f6-7d2b9e5c3a18, status: PROVENANCE_STALE }
+      expected: 7dc2c1b11629b09745301c73e4581f0bcc6d5a2dac4b7cadbd2628d26c775d44
+
+  # --- §15.1 cascade gating (Extension B) ---------------------------
+  # The policy gate: OPERATOR_DIRECT / REGISTRY_ENDORSED always cascade;
+  # REVIEWER_DERIVED needs N >= cascade_min_reviewer_confirmations distinct
+  # confirmations for the same (domain, source_ref).
+  cascade_gate:
+    - { id: cg-01, policy_provenance: OPERATOR_DIRECT,   reviewer_confirmations: 0, min_reviewer_confirmations: 3, expected: true }
+    - { id: cg-02, policy_provenance: REGISTRY_ENDORSED, reviewer_confirmations: 0, min_reviewer_confirmations: 3, expected: true }
+    - { id: cg-03, policy_provenance: REVIEWER_DERIVED,  reviewer_confirmations: 2, min_reviewer_confirmations: 3, expected: false }
+    - { id: cg-04, policy_provenance: REVIEWER_DERIVED,  reviewer_confirmations: 3, min_reviewer_confirmations: 3, expected: true }   # N>=3 boundary
+    - { id: cg-05, policy_provenance: REVIEWER_DERIVED,  reviewer_confirmations: 9, min_reviewer_confirmations: 3, expected: true }
+
+  # The per-run cap: a cascade resolves at most cascade_max_per_run
+  # INCONSISTENCY particles; the remainder is left for manual review, never
+  # silently dropped. `expected_capped` is the truncation disclosure.
+  cascade_cap:
+    - { id: cc-01, candidate_count: 0,    max_per_run: 500, expected_processed: 0,   expected_capped: false }
+    - { id: cc-02, candidate_count: 120,  max_per_run: 500, expected_processed: 120, expected_capped: false }
+    - { id: cc-03, candidate_count: 500,  max_per_run: 500, expected_processed: 500, expected_capped: false }  # at the cap, not over
+    - { id: cc-04, candidate_count: 501,  max_per_run: 500, expected_processed: 500, expected_capped: true }
+    - { id: cc-05, candidate_count: 5000, max_per_run: 500, expected_processed: 500, expected_capped: true }

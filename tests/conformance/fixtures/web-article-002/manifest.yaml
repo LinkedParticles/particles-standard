@@ -1,0 +1,29 @@
+# Conformance fixture for the general extractor's prose path — numeric-dense
+# variant (suite prose-article-seed-001 v0.2.0).
+#
+# Source: entirely self-authored. Halcyon Grid Cooperative, its treasurer, and
+# every figure in the post are invented for this fixture — no third-party prose
+# is reproduced here, and nothing in it is a claim about a real organization.
+#
+# Why a second article fixture: the 2026-08-02 provider comparison
+# showed the GPT tier shedding *numeric* claims specifically (the "$310 to
+# $1,900 per month" and "82 percent" rows of web-article-001), so the
+# discriminating genre is prose whose claim surface is almost entirely
+# quantitative. This fixture is that genre distilled: an annual-results post
+# where nearly every sentence carries a figure.
+fixture_id: web-article-002
+source_type: WEB_PAGE
+expected_acceptors:
+  - general-extractor
+notes: |
+  Numeric-dense prose: generation totals (11,208 MWh, 6 % below P50), capacity
+  (8.4 MW across three arrays), degradation (0.6 % vs 0.8 % warranty), a full
+  financial triple (revenue $1.62 M, costs $940,000, surplus $680,000), a
+  refinance pair (7.2 % -> 5.8 %, $86,000/yr saved), unit prices (8.9 c/kWh vs
+  10.5 c/kWh), a savings range ($8-$23/month, average $14), churn (4.1 %), and
+  forward-looking figures (3.1 MW fourth array in 2027, 380-household
+  waitlist). Number transcription fidelity is the whole test: a miner that
+  paraphrases away or mangles a figure fails the claim, not just its polish.
+  At 2.7 KB it stays under extraction.html_chunk_size (15000), so the
+  whole-document path runs. Boilerplate that must NOT become claims: nav,
+  waitlist link, copyright footer.

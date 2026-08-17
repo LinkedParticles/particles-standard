@@ -1,0 +1,79 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix particles:  <https://linkedparticles.org/vocab#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+
+# Normative SHACL shape for Subject records.
+# Subjects became first-class entities (2026-05), after the
+# original four shapes were published (2026-04). This shape closes
+# that drift § Amendment.
+particles:SubjectShape
+    a sh:NodeShape ;
+    sh:targetClass particles:Subject ;
+    sh:description "Normative SHACL shape for Subject records." ;
+
+    # id — required
+    sh:property [
+        sh:path particles:id ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Subject must have an id." ;
+    ] ;
+
+    # canonicalName — required, non-empty
+    sh:property [
+        sh:path particles:canonicalName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "Subject must have a non-empty canonicalName." ;
+    ] ;
+
+    # assertedBy — required
+    sh:property [
+        sh:path particles:assertedBy ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Subject must have assertedBy." ;
+    ] ;
+
+    # createdAt — required dateTime
+    sh:property [
+        sh:path particles:createdAt ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "Subject must have createdAt as a dateTime." ;
+    ] ;
+
+    # description — optional single string
+    sh:property [
+        sh:path particles:description ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "description, when present, is a single string." ;
+    ] ;
+
+    # aliases — optional; zero or more alternative-name strings
+    sh:property [
+        sh:path particles:alias ;
+        sh:datatype xsd:string ;
+        sh:message "aliases, when present, are strings." ;
+    ] ;
+
+    # subjectClass — optional (Nomisma ontology class; absent for generic subjects)
+    sh:property [
+        sh:path particles:subjectClass ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "subjectClass, when present, is a single string (e.g. nmo:NumismaticObject)." ;
+    ] .
+
+# externalIds (particles:externalRef) and contributors are intentionally
+# unconstrained here: each shape file is loaded standalone by
+# particles/conformance/shacl.py, so a cross-file sh:node reference (e.g. to
+# ContributorRefShape in ParticleShape.ttl) would dangle. Their structural
+# validation is JSON Schema's job ($defs/ExternalRef, $defs/ContributorRef
+# in particle.schema.json).

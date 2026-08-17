@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000114",
+  "captured_at": "2026-06-10T00:00:00+00:00",
+  "content_hash": "460474d711d02bf991c6344f90e0c461000040e5fd753f355d06f93875a8e91a",
+  "etag": "\"trust-lens-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2026-06-10T00:00:00+00:00"
+}

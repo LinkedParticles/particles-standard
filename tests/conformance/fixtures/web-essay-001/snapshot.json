@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000014",
+  "captured_at": "2025-11-04T00:00:00+00:00",
+  "content_hash": "a489e7880645148ae523b735bc19f57b242f8005b044fe236fb2e9d372139137",
+  "etag": "\"web-essay-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2025-11-04T00:00:00+00:00"
+}

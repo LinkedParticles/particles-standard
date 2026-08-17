@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000009",
+  "captured_at": "2026-01-01T00:00:00+00:00",
+  "content_hash": "6d1f4b4c3e72fdc569291b12c2d35d755d823ec99bf039d492c51c7248238b9f",
+  "etag": "\"numista-issuer-001-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2026-01-01T00:00:00+00:00"
+}

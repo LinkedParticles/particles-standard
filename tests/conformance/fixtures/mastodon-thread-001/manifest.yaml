@@ -1,0 +1,30 @@
+# Conformance fixture for the Mastodon extractor.
+#
+# Source: synthesised in the shape the MastodonImporter writes — a single
+# JSON object with ``status`` (the focal Status entity), ``context``
+# (ancestors + descendants), and ``instance`` (the home-instance hostname
+# the importer fetched from). Picked a short joinmastodon-style release
+# announcement with low engagement (247 favourites, 4 replies) so the
+# fixture stays small and non-controversial. No content warning, no
+# boost, no external link card — those branches exist on the extractor
+# but require dedicated fixtures (or unit-test coverage, which is where
+# they live today). Federation routing is exercised by one reply whose
+# author handle carries the cross-instance ``@fosstodon.org`` suffix.
+fixture_id: mastodon-thread-001
+source_type: MASTODON_THREAD
+expected_acceptors:
+  - mastodon-extractor
+notes: |
+  Exercises the status-meta synthesis path: the extractor MUST emit one
+  candidate particle whose ``properties`` carry the dual-emission
+  keys (``mastodon:hasFavouritesCount`` + ``social:hasScore``,
+  ``mastodon:hasReblogsCount`` + ``social:hasReactionCount``,
+  ``mastodon:hasRepliesCount`` + ``social:hasReplyCount``,
+  ``mastodon:hasAccountHandle`` + ``social:hasAuthorHandle``) plus N
+  free-text particles from the LLM over the reply thread. The focal
+  status is the root of its chain so ``thread:hasRootId`` = the status's
+  own id and ``thread:hasParentId`` is absent. ``mastodon:hasSpoilerText``
+  is absent (empty spoiler_text). ``mastodon:isReblog`` is False.
+  ``content:hasLanguage`` is "en". ``content:hasUrl`` is absent (no card).
+  One reply has a cross-instance handle so the prose chunks include the
+  ``mastodon/<acct>@<remote>`` subject form.

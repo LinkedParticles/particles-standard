@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "00000000-0000-0000-0000-000000000013",
+  "captured_at": "2026-02-10T00:00:00+00:00",
+  "content_hash": "84a39914567cdd0f834236dccdb7b35e193b7a3250b3d512e37778c512710424",
+  "etag": "\"web-article-002-fixture\"",
+  "last_modified": null,
+  "warc_record_type": "RESPONSE",
+  "archive_path": null,
+  "refers_to": null,
+  "extraction_status": "PENDING",
+  "author_id": null,
+  "author_role": null,
+  "content_published_at": "2026-02-10T00:00:00+00:00"
+}

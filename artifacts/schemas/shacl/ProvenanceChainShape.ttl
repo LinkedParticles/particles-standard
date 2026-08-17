@@ -1,0 +1,30 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix particles:  <https://linkedparticles.org/vocab#> .
+@prefix prov:       <http://www.w3.org/ns/prov#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+
+particles:ProvenanceChainShape
+    a sh:NodeShape ;
+    sh:targetClass particles:ProvenanceRef ;
+    sh:description "Normative SHACL shape for ProvenanceRef records (§7.3). Compatible with W3C PROV-O." ;
+
+    sh:property [
+        sh:path particles:refType ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "SOURCE" "PARTICLE" "AGENT" ) ;
+        sh:message "ProvenanceRef.type must be SOURCE, PARTICLE, or AGENT." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:corpusEntryId ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "ProvenanceRef must have a corpusEntryId." ;
+    ] .
+
+# PROV-O alignment note:
+# ProvenanceRef.corpus_entry_id maps to prov:Entity (the archived resource).
+# ProvenanceRef.snapshot_id maps to prov:Activity (the archival event).
+# The asserting agent maps to prov:Agent.
+# Full PROV-O serialisation is Extension D (§17).

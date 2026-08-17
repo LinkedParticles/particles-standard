@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linkedparticles.org/schemas/interchange.schema.json",
+  "title": "Particle Interchange Unit",
+  "description": "Normative JSON Schema for a single particle-interchange / store-export unit — the self-contained JSON-LD object the interchange codec emits. A unit is either a Particle unit (the immutable substrate of one particle, camelCase wire terms mapped by context.jsonld) or a Subject unit (a standalone subject carried by a store-export bundle). Units carry ONLY the immutable substrate: never derived or per-observer quantities (effective/calibrated confidence, ranks, lens outputs), which are recomputed on import. Cross-store identity travels by external reference, never by store-local UUID; source*Id fields are origin metadata only. This schema mirrors the shipped codec (particles/interchange/codec.py); a Particle unit MUST additionally validate the Core field semantics against particle.schema.json and the SHACL shapes (§6.1).",
+  "oneOf": [
+    { "$ref": "#/$defs/ParticleUnit" },
+    { "$ref": "#/$defs/SubjectUnit" }
+  ],
+  "$defs": {
+    "ParticleUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "@context",
+        "@type",
+        "formatVersion",
+        "schemaVersion",
+        "sourceParticleId",
+        "particleType",
+        "assertionModality",
+        "canonicalForm",
+        "content",
+        "confidenceValue",
+        "calibrationSource",
+        "uncertaintyNature",
+        "assertedBy",
+        "assertedAt",
+        "status",
+        "provenance",
+        "subjects"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@type": { "const": "Particle" },
+        "formatVersion": {
+          "type": "string",
+          "description": "Interchange container version, independent of Core schemaVersion."
+        },
+        "schemaVersion": {
+          "type": "string",
+          "description": "Core particle schema version (frozen at 1.0.0 for this SDK)."
+        },
+        "sourceParticleId": {
+          "type": "string",
+          "description": "Origin store's particle UUID — provenance / back-reference only, never the imported particle's identity."
+        },
+        "particleType": {
+          "enum": ["CLAIM", "REVIEW", "NARRATIVE", "ACTION", "ANNOTATION"]
+        },
+        "assertionModality": {
+          "enum": ["FALSIFIABLE", "EVALUATIVE", "EXPERIENTIAL", "CONSTITUTIVE"]
+        },
+        "canonicalForm": {
+          "enum": ["PROSE", "STRUCTURED"]
+        },
+        "content": { "type": "string", "minLength": 1 },
+        "confidenceValue": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "calibrationSource": {
+          "type": "string",
+          "description": "The confidence's calibration provenance (e.g. EXTRACTOR_DIRECT, AGENT_ASSERTED, CALIBRATED_BENCHMARK, HUMAN_REVIEW, DERIVED). Open string on the wire — the value set grows over time."
+        },
+        "uncertaintyNature": {
+          "enum": ["ALEATORY", "EPISTEMIC"]
+        },
+        "assertedBy": { "type": "string" },
+        "assertedAt": { "type": "string", "format": "date-time" },
+        "status": {
+          "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED", "PROVENANCE_STALE", "INCONSISTENCY"]
+        },
+        "provenance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/provenanceRef" }
+        },
+        "subjects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/subjectRef" }
+        },
+        "variance": { "type": "number", "minimum": 0.0 },
+        "calibrationMethod": { "type": "string" },
+        "calibrationRef": { "type": "string" },
+        "statusReason": {
+          "type": "string",
+          "description": "Why the particle holds its status (e.g. CONFLICT_PENDING, TRUST_DEMOTED). Open string on the wire — the value set grows over time."
+        },
+        "uncertaintyKind": { "type": "string" },
+        "validUntil": { "type": "string", "format": "date-time" },
+        "supersedes": { "type": "string" },
+        "basis": {
+          "type": "object",
+          "description": "PSUM basis object; extractor-defined structured payload."
+        },
+        "extractorRef": { "$ref": "#/$defs/extractorRef" },
+        "extractionProviderModel": {
+          "type": "string",
+          "description": "The '<provider>:<model>' pairing that produced the particle, or absent for a deterministic extractor."
+        },
+        "sequenceContext": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "contextFingerprint": {
+          "type": "string",
+          "description": "SHA-256 over the asserting store's ACTIVE-set UUIDs at creation time (§16.1)."
+        },
+        "properties": {
+          "type": "object",
+          "description": "Ontology-keyed structured data (Extension A); opaque prefix:term payload (§6.8)."
+        },
+        "contributors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contributor" }
+        },
+        "structuredClaim": { "$ref": "#/$defs/structuredClaim" }
+      }
+    },
+    "SubjectUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A standalone subject carried in a store-export bundle's subjects member (codec.subject_to_unit).",
+      "required": [
+        "@context",
+        "@type",
+        "formatVersion",
+        "sourceSubjectId",
+        "canonicalName",
+        "assertedBy",
+        "externalRefs"
+      ],
+      "properties": {
+        "@context": { "$ref": "#/$defs/context" },
+        "@type": { "const": "Subject" },
+        "formatVersion": { "type": "string" },
+        "sourceSubjectId": {
+          "type": "string",
+          "description": "Origin store's subject UUID — origin metadata only."
+        },
+        "canonicalName": { "type": "string" },
+        "assertedBy": { "type": "string" },
+        "externalRefs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/externalRef" }
+        },
+        "description": { "type": "string" },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subjectClass": { "type": "string" }
+      }
+    },
+    "context": {
+      "description": "The published JSON-LD context the unit references (a URL string, or an inline/array context).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object" },
+        { "type": "array" }
+      ]
+    },
+    "provenanceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["refType", "corpusEntryId"],
+      "properties": {
+        "refType": { "enum": ["SOURCE", "PARTICLE", "AGENT"] },
+        "corpusEntryId": { "type": "string" },
+        "snapshotId": { "type": "string" },
+        "location": { "type": "string" },
+        "chunkHash": { "type": "string" }
+      }
+    },
+    "subjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A particle's reference to one subject, portable across stores (§3). A fully-carried subject has canonicalName + externalRefs; an unresolved reference carries only sourceSubjectId.",
+      "properties": {
+        "sourceSubjectId": { "type": "string" },
+        "canonicalName": { "type": "string" },
+        "externalRefs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/externalRef" }
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subjectClass": { "type": "string" }
+      }
+    },
+    "externalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "externalId"],
+      "properties": {
+        "namespace": { "type": "string" },
+        "externalId": { "type": "string" },
+        "uri": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+    "extractorRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extractorName", "extractorVersion"],
+      "properties": {
+        "extractorName": { "type": "string" },
+        "extractorVersion": { "type": "string" }
+      }
+    },
+    "contributor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "at"],
+      "description": "One contributor's attributed act. Extra keys are rejected on decode (interchange is external input).",
+      "properties": {
+        "id": { "type": "string" },
+        "role": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "claimTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["termKind", "termValue"],
+      "properties": {
+        "termKind": { "enum": ["URI", "TOKEN", "LITERAL"] },
+        "termValue": { "type": "string" },
+        "datatype": { "type": "string" },
+        "language": { "type": "string" }
+      }
+    },
+    "structuredClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A stamped, derived (subject, predicate, object) annotation. Travels with its stamp so the importer can see which structurizer produced it and when.",
+      "required": [
+        "subject",
+        "predicate",
+        "object",
+        "structurizerId",
+        "structurizerVersion",
+        "generatedAt"
+      ],
+      "properties": {
+        "subject": { "$ref": "#/$defs/claimTerm" },
+        "predicate": { "$ref": "#/$defs/claimTerm" },
+        "object": { "$ref": "#/$defs/claimTerm" },
+        "structurizerId": { "type": "string" },
+        "structurizerVersion": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

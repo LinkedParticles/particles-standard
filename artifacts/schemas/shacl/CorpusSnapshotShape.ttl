@@ -1,0 +1,46 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix particles:  <https://linkedparticles.org/vocab#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+
+particles:CorpusSnapshotShape
+    a sh:NodeShape ;
+    sh:targetClass particles:Snapshot ;
+    sh:description "Normative SHACL shape for corpus Snapshot records (§7.3)." ;
+
+    sh:property [
+        sh:path particles:snapshotId ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Snapshot must have exactly one snapshotId." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:capturedAt ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "Snapshot must have capturedAt as a dateTime." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:contentHash ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 64 ; sh:maxLength 64 ;
+        sh:message "contentHash must be a 64-character SHA-256 hex string." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:warcRecordType ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "RESPONSE" "REVISIT" ) ;
+        sh:message "warc_record_type must be RESPONSE or REVISIT." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:extractionStatus ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "PENDING" "IN_PROGRESS" "COMPLETE" "FAILED" ) ;
+        sh:message "extraction_status must be one of: PENDING, IN_PROGRESS, COMPLETE, FAILED." ;
+    ] .

@@ -1,0 +1,272 @@
+{
+  "$schema_note": "Frozen embedding-similarity conformance vectors. See README.md.",
+  "profile": {
+    "model": "all-MiniLM-L6-v2",
+    "dim": 384,
+    "normalization": "l2"
+  },
+  "similarity_metric": "cosine over L2-normalized embedding vectors, clamped to [0, 1]",
+  "band_semantics": "A conformant backend, embedding text_a and text_b under the declared profile, MUST land in [lo, hi] inclusive. Bands bracket the reference-model score with margin; they are the conformance contract, not a recorded float.",
+  "pairs": [
+    {
+      "id": "equiv-01",
+      "category": "clear-equivalent",
+      "text_a": "The cat sat on the mat.",
+      "text_b": "A cat is sitting on the mat.",
+      "band": [0.75, 1.0]
+    },
+    {
+      "id": "equiv-02",
+      "category": "clear-equivalent",
+      "text_a": "The meeting starts at nine in the morning.",
+      "text_b": "Our meeting begins at 9 a.m.",
+      "band": [0.65, 1.0]
+    },
+    {
+      "id": "equiv-03",
+      "category": "clear-equivalent",
+      "text_a": "Water boils at 100 degrees Celsius at sea level.",
+      "text_b": "At sea level, the boiling point of water is 100 C.",
+      "band": [0.7, 1.0]
+    },
+    {
+      "id": "equiv-04",
+      "category": "clear-equivalent",
+      "text_a": "The company reported record profits this quarter.",
+      "text_b": "This quarter the firm posted its highest-ever earnings.",
+      "band": [0.55, 1.0]
+    },
+    {
+      "id": "equiv-05",
+      "category": "clear-equivalent",
+      "text_a": "She quickly ran to catch the departing train.",
+      "text_b": "She hurried to board the train before it left.",
+      "band": [0.55, 1.0]
+    },
+    {
+      "id": "equiv-06",
+      "category": "clear-equivalent",
+      "text_a": "The vaccine is administered in two doses.",
+      "text_b": "Two doses are required for the vaccine.",
+      "band": [0.7, 1.0]
+    },
+    {
+      "id": "equiv-07",
+      "category": "clear-equivalent",
+      "text_a": "The coin was minted in 1921 in Philadelphia.",
+      "text_b": "This 1921 coin was struck at the Philadelphia mint.",
+      "band": [0.6, 1.0]
+    },
+    {
+      "id": "equiv-08",
+      "category": "clear-equivalent",
+      "text_a": "Python is a popular programming language for data science.",
+      "text_b": "For data science work, Python is a widely used language.",
+      "band": [0.7, 1.0]
+    },
+    {
+      "id": "unrel-01",
+      "category": "clear-unrelated",
+      "text_a": "The cat sat on the mat.",
+      "text_b": "Quarterly revenue grew by twelve percent.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-02",
+      "category": "clear-unrelated",
+      "text_a": "Photosynthesis converts sunlight into chemical energy.",
+      "text_b": "The stock market closed lower on Tuesday.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-03",
+      "category": "clear-unrelated",
+      "text_a": "He plays the violin every evening.",
+      "text_b": "The bridge spans nearly two kilometers.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-04",
+      "category": "clear-unrelated",
+      "text_a": "The recipe calls for two cups of flour.",
+      "text_b": "Jupiter is the largest planet in the solar system.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-05",
+      "category": "clear-unrelated",
+      "text_a": "The 1921 silver dollar is a numismatic favorite.",
+      "text_b": "Regular exercise improves cardiovascular health.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-06",
+      "category": "clear-unrelated",
+      "text_a": "The committee voted to postpone the decision.",
+      "text_b": "Maple syrup is harvested in early spring.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "unrel-07",
+      "category": "clear-unrelated",
+      "text_a": "Quantum entanglement links particle states.",
+      "text_b": "She painted the fence a bright shade of blue.",
+      "band": [0.0, 0.35]
+    },
+    {
+      "id": "near-01",
+      "category": "near-threshold",
+      "text_a": "The new policy reduces emissions by twenty percent.",
+      "text_b": "The regulation aims to cut pollution significantly.",
+      "band": [0.3, 0.75]
+    },
+    {
+      "id": "near-02",
+      "category": "near-threshold",
+      "text_a": "The dog barked loudly at the mail carrier.",
+      "text_b": "A pet made noise when the delivery arrived.",
+      "band": [0.2, 0.65]
+    },
+    {
+      "id": "near-03",
+      "category": "near-threshold",
+      "text_a": "Interest rates were raised by the central bank.",
+      "text_b": "Borrowing costs increased after the policy meeting.",
+      "band": [0.25, 0.7]
+    },
+    {
+      "id": "near-04",
+      "category": "near-threshold",
+      "text_a": "The author published her third novel last year.",
+      "text_b": "A new book by the writer appeared recently.",
+      "band": [0.25, 0.75]
+    },
+    {
+      "id": "near-05",
+      "category": "near-threshold",
+      "text_a": "The team lost the match in the final minutes.",
+      "text_b": "The game ended in a narrow defeat.",
+      "band": [0.3, 0.75]
+    },
+    {
+      "id": "near-06",
+      "category": "near-threshold",
+      "text_a": "The software update fixes several security flaws.",
+      "text_b": "The new release patches multiple vulnerabilities.",
+      "band": [0.45, 0.9]
+    },
+    {
+      "id": "cross-01",
+      "category": "cross-domain",
+      "text_a": "The orchestra performed a symphony in D minor.",
+      "text_b": "The algorithm sorts the array in logarithmic time.",
+      "band": [0.0, 0.3]
+    },
+    {
+      "id": "cross-02",
+      "category": "cross-domain",
+      "text_a": "The defendant pleaded not guilty to all charges.",
+      "text_b": "The chef seasoned the soup with fresh basil.",
+      "band": [0.0, 0.3]
+    },
+    {
+      "id": "cross-03",
+      "category": "cross-domain",
+      "text_a": "Tectonic plates shift over geological time.",
+      "text_b": "The marketing campaign targeted young adults.",
+      "band": [0.0, 0.3]
+    },
+    {
+      "id": "cross-04",
+      "category": "cross-domain",
+      "text_a": "The telescope captured images of a distant galaxy.",
+      "text_b": "The tailor hemmed the trousers to the right length.",
+      "band": [0.0, 0.3]
+    },
+    {
+      "id": "cross-05",
+      "category": "cross-domain",
+      "text_a": "The treaty was ratified by all member states.",
+      "text_b": "The gardener pruned the rose bushes in autumn.",
+      "band": [0.0, 0.3]
+    },
+    {
+      "id": "self-01",
+      "category": "clear-equivalent",
+      "text_a": "The standard pins cosine over L2-normalized vectors.",
+      "text_b": "The standard pins cosine over L2-normalized vectors.",
+      "band": [0.99, 1.0]
+    },
+    {
+      "id": "self-02",
+      "category": "clear-equivalent",
+      "text_a": "Provenance tracks where each belief came from.",
+      "text_b": "Provenance tracks where each belief came from.",
+      "band": [0.99, 1.0]
+    },
+    {
+      "id": "neg-01",
+      "category": "near-threshold",
+      "text_a": "The store is open on Sundays.",
+      "text_b": "The store is closed on Sundays.",
+      "band": [0.55, 1.0]
+    },
+    {
+      "id": "neg-02",
+      "category": "near-threshold",
+      "text_a": "The medication is safe for children.",
+      "text_b": "The medication is not safe for children.",
+      "band": [0.6, 1.0]
+    }
+  ],
+  "topk": [
+    {
+      "id": "topk-01",
+      "query": "How do I reset my account password?",
+      "corpus": [
+        {"id": "c1", "text": "To change your password, go to account settings and select reset."},
+        {"id": "c2", "text": "Our refund policy allows returns within thirty days."},
+        {"id": "c3", "text": "The forgotten-password link emails you a reset token."},
+        {"id": "c4", "text": "Customer support is available by phone on weekdays."}
+      ],
+      "k": 2,
+      "expected_topk": ["c1", "c3"]
+    },
+    {
+      "id": "topk-02",
+      "query": "What is the boiling point of water?",
+      "corpus": [
+        {"id": "d1", "text": "Water boils at 100 degrees Celsius at sea level."},
+        {"id": "d2", "text": "The capital of France is Paris."},
+        {"id": "d3", "text": "Ice melts at zero degrees Celsius."},
+        {"id": "d4", "text": "The mitochondrion is the powerhouse of the cell."}
+      ],
+      "k": 1,
+      "expected_topk": ["d1"]
+    },
+    {
+      "id": "topk-03",
+      "query": "Tell me about the 1921 silver dollar coin.",
+      "corpus": [
+        {"id": "e1", "text": "The 1921 Morgan silver dollar was struck at three mints."},
+        {"id": "e2", "text": "The recipe needs flour, sugar, and eggs."},
+        {"id": "e3", "text": "Silver dollars from 1921 are popular among collectors."},
+        {"id": "e4", "text": "The weather forecast predicts rain tomorrow."}
+      ],
+      "k": 2,
+      "expected_topk": ["e1", "e3"]
+    },
+    {
+      "id": "topk-04",
+      "query": "How does photosynthesis work in plants?",
+      "corpus": [
+        {"id": "f1", "text": "Plants convert sunlight, water, and carbon dioxide into glucose."},
+        {"id": "f2", "text": "The election results were announced at midnight."},
+        {"id": "f3", "text": "Chlorophyll absorbs light to drive photosynthesis."},
+        {"id": "f4", "text": "The train departs from platform four."}
+      ],
+      "k": 2,
+      "expected_topk": ["f1", "f3"]
+    }
+  ]
+}

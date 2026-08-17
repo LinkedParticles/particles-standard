@@ -1,0 +1,24 @@
+# Conformance fixture for the journal extractor.
+#
+# Source: a synthesised first-person personal-journal entry in the shape a
+# `particles deposit --journal` / `--source-type JOURNAL` deposit writes —
+# plain dated-entry prose, author-agnostic (no byline resolution)
+#. Kept under `extraction.html_chunk_size` (15000) so the normal
+# whole-entry single-pass path is exercised, not the JOURNAL_TRUNCATED
+# truncation branch (that long-input path is separate work).
+fixture_id: journal-entry-001
+source_type: JOURNAL
+expected_acceptors:
+  - journal-extractor
+notes: |
+  Exercises the journal whole-entry path: first-person prose reified into
+  third-person claims about "the author", with all three assertion_modality
+  classes present so the classifier's normal branches run —
+  EXPERIENTIAL (anxiety, feeling small, tiredness, the urge to throw the
+  phone), EVALUATIVE (Balatro is overrated; the layoffs were handled badly;
+  hope is not a strategy), and FALSIFIABLE (the August 5 2025 date, two weeks
+  in New Jersey, the flight home to Seattle, eight lost runs on Friday).
+  Subjects appear on world-facing claims (Balatro, New Jersey, Seattle,
+  Newark, United, the author's sister Dana) and are [] on pure inner-state
+  claims. One coherent arc (a hard travel day got through anyway) so a single
+  NARRATIVE label + ordered narrative_index is emitted over the constituents.

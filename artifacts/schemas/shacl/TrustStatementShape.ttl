@@ -1,0 +1,71 @@
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix particles:  <https://linkedparticles.org/vocab#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+
+particles:TrustStatementShape
+    a sh:NodeShape ;
+    sh:targetClass particles:SourceTrustStatement ;
+    sh:description "Normative SHACL shape for SourceTrustStatement records (§6.4)." ;
+
+    sh:property [
+        sh:path particles:statementId ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "SourceTrustStatement must have a statementId." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:domain ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "SourceTrustStatement must have a non-empty domain." ;
+    ] ;
+
+    # sourceRef — required in the code model (SourceTrustStatement.source_ref).
+    # Presence only: the nested {type, value} terms have no JSON-LD mapping yet
+    # (deferred — `type` would clash with @type), so the node's
+    # internal shape is JSON Schema's job, not SHACL's.
+    sh:property [
+        sh:path particles:sourceRef ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:message "SourceTrustStatement must have a sourceRef ({type, value})." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:trustRank ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "trust_rank must be a float in [0,1]." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:policyProvenance ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "OPERATOR_DIRECT" "REVIEWER_DERIVED" "REGISTRY_ENDORSED" ) ;
+        sh:message "policy_provenance must be OPERATOR_DIRECT, REVIEWER_DERIVED, or REGISTRY_ENDORSED." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:assertedBy ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "SourceTrustStatement must have assertedBy." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:assertedAt ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "SourceTrustStatement must have assertedAt as a dateTime." ;
+    ] .
+
+# Demotion-only rule (§6.4):
+# SourceTrustStatements may only demote confidence — they may never silently suppress
+# conflict visibility. Resolution of an INCONSISTENCY via PREFER must set the lower-trust
+# particle to PROVENANCE_STALE, not omit it from results.
+# This constraint is enforced programmatically in operations/review.py, not via SHACL,
+# because it requires cross-document reasoning over particle status.

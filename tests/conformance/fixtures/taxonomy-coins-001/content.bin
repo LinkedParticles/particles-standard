@@ -1,0 +1,11 @@
+{
+  "name": "Coins",
+  "version": "1.0.0",
+  "author": "conformance-fixture",
+  "domain": "numismatics",
+  "tags": [
+    {"tag": "coins", "description": "Numismatic objects"},
+    {"tag": "coins/by-region", "parent": "coins"},
+    {"tag": "coins/by-region/germany", "parent": "coins/by-region"}
+  ]
+}

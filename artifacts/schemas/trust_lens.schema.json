@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linkedparticles.org/schemas/trust_lens.schema.json",
+  "$defs": {
+    "TrustLensDecayRule": {
+      "description": "One portable content-age decay rule carried by a lens.\n\nSets the recency half-life / floor for content matching ``pattern`` — an\nexact ``source_type`` string (``scope=\"source_type\"``) or a trust-rule-style\nURL regex (``scope=\"url_pattern\"``, e.g. a per-subreddit half-life). Unlike\nthe URL *trust* rule's additive ``modifier``, a decay rule is an **absolute**\n``(half_life_days, floor)`` pair — half-life is not meaningfully additive.\nThe URL layer is more specific than the source_type layer (a per-subreddit\nrule overrides the source-type default in either direction); across adopted\nlenses the most-skeptical rule wins (shortest half-life / lowest floor).",
+      "properties": {
+        "scope": {
+          "enum": [
+            "source_type",
+            "url_pattern"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "pattern": {
+          "minLength": 1,
+          "title": "Pattern",
+          "type": "string"
+        },
+        "half_life_days": {
+          "exclusiveMinimum": 0.0,
+          "title": "Half Life Days",
+          "type": "number"
+        },
+        "floor": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Floor",
+          "type": "number"
+        }
+      },
+      "required": [
+        "scope",
+        "pattern",
+        "half_life_days",
+        "floor"
+      ],
+      "title": "TrustLensDecayRule",
+      "type": "object"
+    },
+    "TrustLensStatement": {
+      "description": "One portable SOURCE_TYPE-scoped trust statement carried by a lens.\n\n``CORPUS_ENTRY``-scoped statements are excluded from lenses by design —\nthey key on store-local entry ids and are not portable.",
+      "properties": {
+        "domain": {
+          "minLength": 1,
+          "title": "Domain",
+          "type": "string"
+        },
+        "source_type": {
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        },
+        "trust_rank": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Trust Rank",
+          "type": "number"
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Basis"
+        }
+      },
+      "required": [
+        "domain",
+        "source_type",
+        "trust_rank"
+      ],
+      "title": "TrustLensStatement",
+      "type": "object"
+    },
+    "TrustLensUrlRule": {
+      "description": "One portable URL trust rule carried by a lens.",
+      "properties": {
+        "scope": {
+          "enum": [
+            "domain",
+            "url_pattern"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "pattern": {
+          "minLength": 1,
+          "title": "Pattern",
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "modifier": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Modifier"
+        }
+      },
+      "required": [
+        "scope",
+        "pattern"
+      ],
+      "title": "TrustLensUrlRule",
+      "type": "object"
+    },
+    "TrustLensUtilityRule": {
+      "description": "One portable usefulness (outcome-learning) utility rule carried by a lens.\n\nWhere a ``decay_rule`` is the *judgment* half of content-age\ndecay, a ``utility_rule`` is the judgment half of **usefulness**: it sets\n*how far* demonstrated use may reorder the projection / digest head, and\n*how fast* unreinforced utility fades. The per-belief utility *evidence*\n(the mined reinforcement count) is store-local and lives outside the lens\n — this rule carries only the tunables.\n\n- ``half_life_uses_days`` — days for a single utility event's weight to halve\n  (the reinforcement half-life; ``> 0``).\n- ``rank_lift`` — the ``λ`` in ``rank_score = effective_confidence\n  + λ·ln(1 + R)`` (``≥ 0``; ``0`` disables the lift). **Promotion-only** by\n  construction — the bonus is never negative, so lack of use withholds the\n  lift rather than demoting.\n\nThis single knob replaced the old ``weight`` / ``floor`` / ``cap`` triple\n when the bounded multiplier was superseded; a lens\npublished under the old vocabulary carries no ``rank_lift`` and is treated\nas silent about utility (the store's local ``utility`` config applies).\n\nAcross adopted lenses the most-skeptical rule wins — *less* promotion:\nshortest ``half_life_uses_days``, lowest ``rank_lift`` (symmetric with the\ndecay rule). ``scope=\"default\"`` is the\nstore-wide rule; ``source_type`` / ``url_pattern`` scopes mirror the decay\nladder for finer control.",
+      "properties": {
+        "scope": {
+          "default": "default",
+          "enum": [
+            "default",
+            "source_type",
+            "url_pattern"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "half_life_uses_days": {
+          "exclusiveMinimum": 0.0,
+          "title": "Half Life Uses Days",
+          "type": "number"
+        },
+        "rank_lift": {
+          "minimum": 0.0,
+          "title": "Rank Lift",
+          "type": "number"
+        }
+      },
+      "required": [
+        "half_life_uses_days",
+        "rank_lift"
+      ],
+      "title": "TrustLensUtilityRule",
+      "type": "object"
+    }
+  },
+  "description": "A depositable corpus artefact bundling portable trust policy.\n\nA community publishes its view of which sources to trust by depositing a\nJSON file; the ``TrustLensExtractor`` materialises it into the\n``trust_lenses`` / ``trust_lens_entries`` tables. Viewers adopt lenses per\nstore; the query-time ``TrustPolicy`` composes the store's local\npolicy over adopted lenses, most-skeptical-wins. Adopting a lens can only\ndemote (ranks are in [0, 1] and silence stays neutral), never promote.\n\nA lens carries a fourth portable layer, ``decay_rules`` —\nper-observer content-age decay (recency half-life / floor), composed through\nthe query-time ``DecayPolicy`` the same most-skeptical-wins way as the trust\nlayers. A lens silent about decay leaves the store's global\n``content_age_decay`` config untouched.\n\nA lens also carries ``utility_rules`` — the usefulness\n(outcome-learning) judgment, composed through the query-time ``UtilityPolicy``\ninto an additive rank-lift on the projection / digest ranking path\nonly. A lens silent about utility leaves the store's local ``utility`` config\nuntouched; with no utility evidence the bonus is ``+0`` (cold-start).",
+  "properties": {
+    "kind": {
+      "const": "TrustLensDefinition",
+      "default": "TrustLensDefinition",
+      "title": "Kind",
+      "type": "string"
+    },
+    "lens_id": {
+      "title": "Lens Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "publisher": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Publisher"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "statements": {
+      "items": {
+        "$ref": "#/$defs/TrustLensStatement"
+      },
+      "title": "Statements",
+      "type": "array"
+    },
+    "url_rules": {
+      "items": {
+        "$ref": "#/$defs/TrustLensUrlRule"
+      },
+      "title": "Url Rules",
+      "type": "array"
+    },
+    "extractor_weights": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Extractor Weights",
+      "type": "object"
+    },
+    "decay_rules": {
+      "items": {
+        "$ref": "#/$defs/TrustLensDecayRule"
+      },
+      "title": "Decay Rules",
+      "type": "array"
+    },
+    "utility_rules": {
+      "items": {
+        "$ref": "#/$defs/TrustLensUtilityRule"
+      },
+      "title": "Utility Rules",
+      "type": "array"
+    },
+    "corpus_entry_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corpus Entry Id"
+    }
+  },
+  "required": [
+    "name",
+    "version"
+  ],
+  "title": "TrustLensDefinition",
+  "type": "object"
+}

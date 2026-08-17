@@ -1,0 +1,20 @@
+# Conformance fixture for the Reddit extractor.
+#
+# Source: synthesised in the shape RedditImporter writes — the two-element
+# array of (post_listing, comments_listing) returned by Reddit's public JSON
+# API. Picked a substantive r/Python self-post about a (fictional) library
+# release so the extractor has factual claims to capture without the
+# political / opinion noise that dominates many high-volume subreddits.
+fixture_id: reddit-thread-001
+source_type: REDDIT_POST
+expected_acceptors:
+  - reddit-extractor
+notes: |
+  Exercises the Reddit prose pipeline: post body + four comment chunks
+  rendered to a single prose document, then sent to the LLM. The fixture
+  is small enough that single-call extraction is exercised (no chunked
+  extract_with_carry_forward path). One comment is "[deleted]" so the
+  filter for deleted/removed comments is exercised; another has a low
+  score (1) so the min_comment_score filter (default 2) drops it.
+  Two structured fields exercise dual-emission (the
+  ``social:hasScore`` / ``reddit:hasScore`` pair on the post).

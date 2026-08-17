@@ -1,0 +1,33 @@
+{
+  "issuer_code": "ddr",
+  "issuer_name": "German Democratic Republic",
+  "types": [
+    {
+      "id": 3022,
+      "title": "5 Pfennigs",
+      "min_year": 1948,
+      "max_year": 1950,
+      "type": "Standard circulation coin",
+      "composition": {"text": "Aluminium"},
+      "weight": 1.1,
+      "size": 19.0,
+      "references": [
+        {"catalogue": {"code": "KM"}, "number": "2"},
+        {"catalogue": {"code": "Schön"}, "number": "2"}
+      ]
+    },
+    {
+      "id": 3023,
+      "title": "10 Pfennigs",
+      "min_year": 1952,
+      "max_year": 1953,
+      "object_type": {"name": "Standard circulation coin"},
+      "composition": {"text": "Aluminium"},
+      "weight": 1.5,
+      "size": 21.0,
+      "references": [
+        {"catalogue": {"code": "KM"}, "number": "6"}
+      ]
+    }
+  ]
+}
