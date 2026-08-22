@@ -26,6 +26,17 @@ from pathlib import Path
 # needed (an image link resolving is checked the same way).
 _MD_LINK_RE = re.compile(r"(?<!\\)\[[^\]]*\]\(([^)]+)\)")
 
+# Pages the site build GENERATES into `docs/`, which therefore do not exist as
+# files in this tree. They are real pages on the built site — `mkdocs build
+# --strict` is what verifies that, and it fails if one of them goes missing — but
+# a checker that walks the source tree cannot see them and would report a link to
+# one as broken. Paths are relative to `docs/`.
+#
+# Keep in sync with the `hooks:` in mkdocs.yml. Today: `vocab.md` is rendered
+# from `artifacts/schemas/context.jsonld` by hooks/copy_schema_artifacts.py, and
+# is the page the `#`-fragment vocabulary identifiers resolve to.
+GENERATED_DOCS = frozenset({"vocab.md"})
+
 
 def check_artifacts(root: Path) -> list[str]:
     errors: list[str] = []
@@ -47,6 +58,7 @@ def check_doc_links(root: Path) -> list[str]:
     docs = root / "docs"
     if not docs.is_dir():
         return errors
+    generated = {(docs / g).resolve() for g in GENERATED_DOCS}
     for md in sorted(docs.rglob("*.md")):
         text = md.read_text(encoding="utf-8")
         for target in _MD_LINK_RE.findall(text):
@@ -59,6 +71,8 @@ def check_doc_links(root: Path) -> list[str]:
             if not rel:
                 continue
             resolved = (md.parent / rel).resolve()
+            if resolved in generated:
+                continue
             if not resolved.exists():
                 errors.append(f"{md.relative_to(root)}: broken link -> {target}")
     return errors

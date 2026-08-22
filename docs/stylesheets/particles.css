@@ -1,0 +1,190 @@
+/*
+ * Particles docs site — Material for MkDocs skinned by the design tokens.
+ *
+ * Every value here is a --p-* token (design/tokens.css, served beside this file
+ * as tokens.css by hooks/copy_design_tokens.py); this file only maps Material's
+ * own variables onto them and restyles the few Material parts that carry
+ * literal colours (admonitions, header, tabs). Light = Material's "default"
+ * scheme, dark = "slate"; the hook re-scopes the tokens under
+ * body[data-md-color-scheme=…], so both blocks below can use the same names.
+ *
+ * Design rules that show up here (design/README.md § Principles):
+ *   - one accent (links, focus, active nav) — no coloured header bar;
+ *   - green / amber / red only ever mean particle state, so admonitions map
+ *     onto the callout family (success / warning / danger / note / info);
+ *   - hairline borders, --p-radius-md on interactive parts, -lg on cards.
+ */
+
+/* ---- Palette mapping (both schemes; the tokens flip underneath) ---------- */
+body[data-md-color-scheme="default"],
+body[data-md-color-scheme="slate"] {
+  /* Header + tabs: the page ground with a hairline, not a coloured bar. */
+  --md-primary-fg-color: var(--p-page);
+  --md-primary-fg-color--light: var(--p-surface-2);
+  --md-primary-fg-color--dark: var(--p-surface);
+  --md-primary-bg-color: var(--p-text);
+  --md-primary-bg-color--light: var(--p-text-muted);
+
+  --md-accent-fg-color: var(--p-accent);
+  --md-accent-fg-color--transparent: var(--p-accent-soft);
+  --md-accent-bg-color: var(--p-on-accent);
+  --md-accent-bg-color--light: var(--p-on-accent);
+
+  --md-default-bg-color: var(--p-page);
+  --md-default-bg-color--light: var(--p-surface);
+  --md-default-bg-color--lighter: var(--p-surface-2);
+  --md-default-bg-color--lightest: var(--p-surface-3);
+  --md-default-fg-color: var(--p-text);
+  --md-default-fg-color--light: var(--p-text-muted);
+  --md-default-fg-color--lighter: var(--p-text-faint);
+  --md-default-fg-color--lightest: var(--p-border);
+
+  --md-typeset-color: var(--p-text);
+  --md-typeset-a-color: var(--p-accent);
+  --md-typeset-table-color: var(--p-border);
+  --md-typeset-table-color--light: var(--p-surface-2);
+  --md-typeset-mark-color: var(--p-amber-soft);
+  --md-typeset-kbd-color: var(--p-surface-2);
+  --md-typeset-kbd-accent-color: var(--p-surface);
+  --md-typeset-kbd-border-color: var(--p-border-strong);
+
+  --md-code-bg-color: var(--p-surface-2);
+  --md-code-fg-color: var(--p-text);
+  --md-code-hl-color: var(--p-accent-soft);
+  --md-code-hl-color--light: var(--p-accent-soft);
+
+  --md-admonition-fg-color: var(--p-text);
+  --md-admonition-bg-color: var(--p-surface);
+
+  --md-footer-bg-color: var(--p-surface);
+  --md-footer-bg-color--dark: var(--p-surface-2);
+  --md-footer-fg-color: var(--p-text);
+  --md-footer-fg-color--light: var(--p-text-muted);
+  --md-footer-fg-color--lighter: var(--p-text-faint);
+
+  --md-warning-bg-color: var(--p-amber-soft);
+  --md-warning-fg-color: var(--p-amber);
+
+  --md-shadow-z1: var(--p-shadow-1);
+  --md-shadow-z2: var(--p-shadow-2);
+  --md-shadow-z3: var(--p-shadow-2);
+
+  --md-text-font: var(--p-font-sans);
+  --md-code-font: var(--p-font-mono);
+}
+
+/* Code highlighting on the dark scheme: Material's slate defaults are tuned
+   for its own greys; keep them but pull the ground from the tokens. */
+body[data-md-color-scheme="slate"] {
+  --md-code-hl-name-color: var(--p-text);
+  --md-code-hl-operator-color: var(--p-text-muted);
+  --md-code-hl-punctuation-color: var(--p-text-muted);
+  --md-code-hl-comment-color: var(--p-text-faint);
+}
+
+/* ---- Header / tabs ------------------------------------------------------- */
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--p-border);
+  background-color: color-mix(in srgb, var(--p-page) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+.md-header__title { font-weight: 700; letter-spacing: -0.015em; }
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg { width: 1.4rem; height: 1.4rem; }
+.md-tabs {
+  background-color: var(--p-page);
+  border-bottom: 1px solid var(--p-border);
+}
+.md-tabs__link { font-weight: 500; opacity: 1; color: var(--p-text-muted); }
+.md-tabs__link--active, .md-tabs__link:hover { color: var(--p-text); }
+.md-tabs__link--active { box-shadow: inset 0 -2px 0 var(--p-accent); }
+.md-search__form { background-color: var(--p-surface-2); border-radius: var(--p-radius-md); }
+.md-search__form:hover { background-color: var(--p-surface-3); }
+.md-search__input::placeholder, .md-search__icon { color: var(--p-text-faint); }
+[data-md-toggle="search"]:checked ~ .md-header .md-search__form { background-color: var(--p-surface); }
+
+/* ---- Typography ---------------------------------------------------------- */
+.md-typeset { font-size: 0.8rem; line-height: 1.65; }
+.md-typeset h1 { font-weight: 600; letter-spacing: -0.015em; color: var(--p-text); }
+.md-typeset h2 { font-weight: 600; letter-spacing: -0.015em; }
+.md-typeset h3, .md-typeset h4 { font-weight: 600; }
+.md-typeset code { border-radius: var(--p-radius-xs); }
+.md-typeset pre > code { border-radius: var(--p-radius-sm); }
+.md-typeset a:hover { text-decoration: underline; }
+.md-typeset hr { border-bottom: 1px solid var(--p-border); }
+.md-typeset table:not([class]) { border: 1px solid var(--p-border); border-radius: var(--p-radius-sm); }
+.md-typeset table:not([class]) th { background-color: var(--p-surface-2); font-weight: 600; }
+
+/* ---- Buttons (the .md-button hero CTAs on the landing page) --------------- */
+.md-typeset .md-button {
+  border: 1px solid var(--p-border);
+  background: var(--p-surface-2);
+  color: var(--p-text);
+  border-radius: var(--p-radius-md);
+  font-weight: 600;
+  padding: 0.6em 1.1em;
+  transition: background var(--p-dur-fast) var(--p-ease);
+}
+.md-typeset .md-button:hover, .md-typeset .md-button:focus { background: var(--p-surface-3); color: var(--p-text); border-color: var(--p-border); }
+.md-typeset .md-button--primary { background: var(--p-accent); border-color: transparent; color: var(--p-on-accent); }
+.md-typeset .md-button--primary:hover, .md-typeset .md-button--primary:focus { background: var(--p-accent-strong); color: var(--p-on-accent); }
+
+/* ---- Cards (grid cards on the landing page) ------------------------------ */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  background: var(--p-surface);
+  box-shadow: var(--p-shadow-1);
+  transition: border-color var(--p-dur-fast) var(--p-ease);
+}
+.md-typeset .grid.cards > ul > li:hover { border-color: var(--p-border-strong); box-shadow: var(--p-shadow-1); }
+.md-typeset .grid.cards > ul > li > hr { border-color: var(--p-border); }
+
+/* ---- Admonitions → the callout family ------------------------------------ */
+/* Left rule + tinted title, on --p-surface. Material's coloured title bars are
+   replaced so the hues stay reserved for particle state:
+   note → slate · info/abstract/tip/example → accent · success → green ·
+   warning/question → amber · danger/failure/bug → red. */
+.md-typeset .admonition, .md-typeset details {
+  border-width: 0 0 0 3px;
+  border-radius: 0 var(--p-radius-sm) var(--p-radius-sm) 0;
+  box-shadow: none;
+  background: var(--p-surface);
+  font-size: 0.72rem;
+}
+.md-typeset .admonition-title, .md-typeset summary {
+  background: var(--p-surface-2) !important;
+  font-weight: 600;
+}
+.md-typeset .admonition-title::before, .md-typeset summary::before { background-color: currentColor !important; }
+.md-typeset :is(.admonition, details) { border-color: var(--p-slate); }
+.md-typeset :is(.admonition, details) > :is(.admonition-title, summary) { color: var(--p-text-muted); }
+.md-typeset :is(.admonition, details):is(.info, .abstract, .tip, .example, .todo, .hint, .important) { border-color: var(--p-accent); }
+.md-typeset :is(.admonition, details):is(.info, .abstract, .tip, .example, .todo, .hint, .important) > :is(.admonition-title, summary) { color: var(--p-accent); }
+.md-typeset :is(.admonition, details):is(.success, .check, .done) { border-color: var(--p-green); }
+.md-typeset :is(.admonition, details):is(.success, .check, .done) > :is(.admonition-title, summary) { color: var(--p-green); }
+.md-typeset :is(.admonition, details):is(.warning, .caution, .attention, .question, .help, .faq) { border-color: var(--p-amber); }
+.md-typeset :is(.admonition, details):is(.warning, .caution, .attention, .question, .help, .faq) > :is(.admonition-title, summary) { color: var(--p-amber); }
+.md-typeset :is(.admonition, details):is(.danger, .error, .failure, .fail, .missing, .bug) { border-color: var(--p-red); }
+.md-typeset :is(.admonition, details):is(.danger, .error, .failure, .fail, .missing, .bug) > :is(.admonition-title, summary) { color: var(--p-red); }
+
+/* ---- Navigation / TOC ---------------------------------------------------- */
+.md-nav__link--active, .md-nav__item .md-nav__link--active { color: var(--p-accent); font-weight: 600; }
+.md-nav__title { color: var(--p-text); font-weight: 600; }
+.md-nav__item--section > .md-nav__link { color: var(--p-text-muted); }
+.md-sidebar__scrollwrap { scrollbar-color: var(--p-border-strong) transparent; }
+.md-nav--primary .md-nav__title { background: transparent; box-shadow: none; }
+
+/* ---- Footer -------------------------------------------------------------- */
+.md-footer { border-top: 1px solid var(--p-border); }
+.md-footer-meta { background: var(--p-surface-2); }
+.md-footer__inner { padding: 1rem 0.2rem; }
+
+/* ---- Focus --------------------------------------------------------------- */
+.md-typeset :focus-visible, .md-header :focus-visible, .md-nav :focus-visible {
+  outline: none;
+  box-shadow: var(--p-focus-ring);
+  border-radius: var(--p-radius-xs);
+}

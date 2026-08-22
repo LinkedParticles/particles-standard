@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Particles">
+  <!--
+    The Particles mark: a Subject (the ring) with three particles in orbit —
+    one ACTIVE (green), one contested/stale (amber), one retrieval hit (blue) —
+    around the core claim (currentColor). Same geometry as the web-UI app icon
+    (clients/web-ui/public/icon.svg) minus the tile; the tile variant lives in
+    logo-tile.svg. Set `color` on the host to theme the core dot.
+  -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#6ea8fe" stroke-width="18" />
+  <circle cx="256" cy="120" r="26" fill="#6ea8fe" />
+  <circle cx="380" cy="320" r="26" fill="#7ee787" />
+  <circle cx="132" cy="320" r="26" fill="#f0883e" />
+  <circle cx="256" cy="256" r="34" fill="currentColor" />
+</svg>
