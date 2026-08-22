@@ -1,0 +1,19 @@
+/* preview chrome (not part of the design system) */
+html, body { margin: 0; }
+body { background: var(--p-page); }
+.ds-panes { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.ds-pane { padding: 24px; background: var(--p-page); color: var(--p-text); min-width: 0; }
+.ds-pane--label { font: 600 11px/1 var(--p-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--p-text-faint); margin: 0 0 16px; }
+.ds-single { padding: 24px; }
+.ds-h { font: 600 13px/1.4 var(--p-font-sans); color: var(--p-text-muted); margin: 0 0 8px; }
+.ds-sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+.ds-sw > div { border-radius: 8px; overflow: hidden; border: 1px solid var(--p-border); }
+.ds-sw > div > i { display: block; height: 44px; }
+.ds-sw > div > b { display: block; font: 600 11px/1.3 var(--p-font-mono); padding: 6px 8px 1px; color: var(--p-text); }
+.ds-sw > div > span { display: block; font: 10px/1.3 var(--p-font-mono); padding: 0 8px 6px; color: var(--p-text-faint); }
+.ds-note { font: 12px/1.5 var(--p-font-sans); color: var(--p-text-muted); margin: 12px 0 0; }
+.ds-scale { display: grid; grid-template-columns: 90px 1fr; gap: 6px 14px; align-items: baseline; }
+.ds-scale code { font: 11px/1 var(--p-font-mono); color: var(--p-text-faint); }
+.ds-index-card { border-top: 1px solid var(--p-border); }
+.ds-index-title { font: 600 15px/1.3 var(--p-font-sans); color: var(--p-text); padding: 28px 24px 4px; }
+.ds-index-sub { font: 13px/1.4 var(--p-font-sans); color: var(--p-text-muted); padding: 0 24px 4px; }

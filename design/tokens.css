@@ -1,0 +1,237 @@
+/*
+ * Particles design tokens — the single source for colour, type, space, radius,
+ * elevation and motion across the website (mkdocs), the web UI (clients/web-ui),
+ * the graph exporter and every future surface. Consumers import this file and
+ * reference the variables; nothing downstream redeclares a hex value.
+ *
+ * Theme model
+ * -----------
+ * Light is the default palette on bare :root. Dark is applied two ways —
+ * `[data-theme="dark"]` (explicit toggle wins) and `prefers-color-scheme: dark`
+ * guarded by `:not([data-theme="light"])` (system default). Every token that
+ * changes with theme is redefined in BOTH dark blocks; the semantic layer below
+ * only ever points at these primitives, so it never needs a dark override.
+ *
+ * Provenance
+ * ----------
+ * The dark neutrals + accent are the web-UI palette (clients/web-ui/public/
+ * styles.css); the light ink/muted/accent/amber are the graph exporter's
+ * (particles/exporters/graph/render.py). Status chip colours are the values
+ * both surfaces already share. This file reconciles them; it does not invent.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Primitives: neutrals ------------------------------------------ */
+  --p-page:        #f6f8fb;   /* app/page ground */
+  --p-surface:     #ffffff;   /* cards, sheets, panels */
+  --p-surface-2:   #eef2f7;   /* inputs, chips, secondary buttons, active tab */
+  --p-surface-3:   #e3e9f2;   /* hover on surface-2, bar tracks */
+  --p-border:      #d8dfe9;   /* hairlines */
+  --p-border-strong:#b9c4d4;  /* focused / emphasised borders */
+  --p-text:        #1c2733;   /* primary ink */
+  --p-text-muted:  #6b7a8c;   /* secondary / meta */
+  --p-text-faint:  #94a1b2;   /* tertiary / placeholders */
+  --p-on-accent:   #ffffff;   /* text on accent fills */
+
+  /* ---- Primitives: accent + semantic hues ---------------------------- */
+  --p-accent:        #2563eb; /* links, primary actions, retrieval hit */
+  --p-accent-strong: #1d4ed8; /* hover / pressed */
+  --p-accent-soft:   #dbe7fd; /* tinted backgrounds (info banner, hit row) */
+  --p-green:         #15803d; /* ACTIVE / success */
+  --p-green-soft:    #dcf5e4;
+  --p-amber:         #b45309; /* PROVENANCE_STALE / contested / warning */
+  --p-amber-soft:    #fdecd2;
+  --p-red:           #b91c1c; /* INCONSISTENCY / error / destructive */
+  --p-red-soft:      #fde3e3;
+  --p-slate:         #64748b; /* SUPERSEDED / neutral chip */
+  --p-slate-deep:    #475569; /* RETRACTED */
+  --p-slate-soft:    #e6ebf1;
+
+  /* ---- Elevation ------------------------------------------------------ */
+  --p-shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.10);
+  --p-shadow-2: 0 10px 30px rgba(16, 24, 40, 0.14);
+  --p-backdrop: rgba(16, 24, 40, 0.45);
+
+  /* ---- Graph canvas (kept in lockstep with graphRender.ts / render.py) - */
+  --p-graph-node-border: #48607c;
+  --p-graph-edge:        #7b8b9d;
+  --p-graph-edge-ghost:  #aab6c2;
+  --p-graph-node-hue:    214;      /* hsl(hue 45% L) — L ramps weak → strong */
+  --p-graph-node-l-weak:   88%;    /* no support: pale on light … */
+  --p-graph-node-l-strong: 48%;    /* … best-supported: dark on light */
+}
+
+/* Dark theme — system default when no explicit choice is stamped */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --p-page:        #0b1020;
+    --p-surface:     #141b2e;
+    --p-surface-2:   #1b2540;
+    --p-surface-3:   #243052;
+    --p-border:      #2a3552;
+    --p-border-strong:#3b4a70;
+    --p-text:        #e6edf3;
+    --p-text-muted:  #9aa4b8;
+    --p-text-faint:  #6d7890;
+    --p-on-accent:   #07101f;
+
+    --p-accent:        #6ea8fe;
+    --p-accent-strong: #8dbbff;
+    --p-accent-soft:   rgba(110, 168, 254, 0.14);
+    --p-green:         #7ee787;
+    --p-green-soft:    rgba(126, 231, 135, 0.14);
+    --p-amber:         #f0883e;
+    --p-amber-soft:    rgba(240, 136, 62, 0.14);
+    --p-red:           #ff7b72;
+    --p-red-soft:      rgba(255, 123, 114, 0.14);
+    --p-slate:         #64748b;
+    --p-slate-deep:    #475569;
+    --p-slate-soft:    rgba(100, 116, 139, 0.22);
+
+    --p-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --p-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --p-backdrop: rgba(0, 0, 0, 0.6);
+
+    --p-graph-node-border: #6f86a0;
+    --p-graph-edge:        #8fa1b5;
+    --p-graph-edge-ghost:  #5b6b7d;
+    --p-graph-node-l-weak:   22%;   /* dark theme: the ramp inverts — */
+    --p-graph-node-l-strong: 62%;   /* best-supported is the light end */
+  }
+}
+
+/* Dark theme — explicit toggle wins in both directions */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --p-page:        #0b1020;
+  --p-surface:     #141b2e;
+  --p-surface-2:   #1b2540;
+  --p-surface-3:   #243052;
+  --p-border:      #2a3552;
+  --p-border-strong:#3b4a70;
+  --p-text:        #e6edf3;
+  --p-text-muted:  #9aa4b8;
+  --p-text-faint:  #6d7890;
+  --p-on-accent:   #07101f;
+
+  --p-accent:        #6ea8fe;
+  --p-accent-strong: #8dbbff;
+  --p-accent-soft:   rgba(110, 168, 254, 0.14);
+  --p-green:         #7ee787;
+  --p-green-soft:    rgba(126, 231, 135, 0.14);
+  --p-amber:         #f0883e;
+  --p-amber-soft:    rgba(240, 136, 62, 0.14);
+  --p-red:           #ff7b72;
+  --p-red-soft:      rgba(255, 123, 114, 0.14);
+  --p-slate:         #64748b;
+  --p-slate-deep:    #475569;
+  --p-slate-soft:    rgba(100, 116, 139, 0.22);
+
+  --p-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --p-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --p-backdrop: rgba(0, 0, 0, 0.6);
+
+  --p-graph-node-border: #6f86a0;
+  --p-graph-edge:        #8fa1b5;
+  --p-graph-edge-ghost:  #5b6b7d;
+  --p-graph-node-l-weak:   22%;
+  --p-graph-node-l-strong: 62%;
+}
+
+/* ---- Semantic layer (theme-independent; points at primitives) ----------
+ * Also declared on the `.p-theme-light` / `.p-theme-dark` scopes that
+ * design/build.py derives from the primitive blocks above, so a scoped pane
+ * (side-by-side previews, an embedded widget) re-resolves var(--p-green) etc.
+ * against its own primitives rather than inheriting :root's resolved value. */
+:root, .p-theme-light, .p-theme-dark {
+  /* Particle status — the five values of particles/core/status.py */
+  --p-status-active:           var(--p-green);
+  --p-status-superseded:       var(--p-slate);
+  --p-status-retracted:        var(--p-slate-deep);
+  --p-status-provenance-stale: var(--p-amber);
+  --p-status-inconsistency:    var(--p-red);
+  /* Read-time badges (not statuses) */
+  --p-badge-contested:         var(--p-amber);
+  --p-badge-hit:               var(--p-accent);
+  /* Lint severity */
+  --p-sev-error:   var(--p-red);
+  --p-sev-warning: var(--p-amber);
+  --p-sev-info:    var(--p-accent);
+  /* Confidence bar */
+  --p-conf-track: var(--p-surface-3);
+  --p-conf-fill:  var(--p-accent);
+  /* Chip foreground on solid status fills is always white */
+  --p-on-status: #ffffff;
+
+  /* ---- Typography ------------------------------------------------------ */
+  --p-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                 Roboto, Helvetica, Arial, sans-serif;
+  --p-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular,
+                 Menlo, Consolas, monospace;
+  --p-font-display: var(--p-font-sans);   /* marketing headlines; swap here */
+  --p-text-xs:   0.75rem;   /* 12 — chips, kv meta */
+  --p-text-sm:   0.8125rem; /* 13 — hints, refs, legend */
+  --p-text-base: 0.9375rem; /* 15 — UI body */
+  --p-text-md:   1rem;      /* 16 — prose body */
+  --p-text-lg:   1.125rem;  /* 18 — card titles */
+  --p-text-xl:   1.25rem;   /* 20 — section h2 in-app */
+  --p-text-2xl:  1.5rem;    /* 24 — page h1 in-app */
+  --p-text-3xl:  1.875rem;  /* 30 — docs h1 */
+  --p-text-4xl:  2.375rem;  /* 38 — marketing h1 (mobile) */
+  --p-text-5xl:  3rem;      /* 48 — marketing h1 (desktop) */
+  --p-leading-tight:  1.2;
+  --p-leading-snug:   1.35;
+  --p-leading-normal: 1.5;
+  --p-leading-prose:  1.65;
+  --p-tracking-tight: -0.015em;
+  --p-tracking-wide:  0.02em;
+  --p-weight-regular: 400;
+  --p-weight-medium:  500;
+  --p-weight-semibold:600;
+  --p-weight-bold:    700;
+
+  /* ---- Space (4px base) ---------------------------------------------- */
+  --p-space-1: 4px;
+  --p-space-2: 8px;
+  --p-space-3: 12px;
+  --p-space-4: 16px;
+  --p-space-5: 24px;
+  --p-space-6: 32px;
+  --p-space-7: 48px;
+  --p-space-8: 64px;
+  --p-space-9: 96px;
+
+  /* ---- Radius ---------------------------------------------------------- */
+  --p-radius-xs: 4px;    /* chips */
+  --p-radius-sm: 6px;    /* code, small rows */
+  --p-radius-md: 10px;   /* buttons, inputs, tabs */
+  --p-radius-lg: 16px;   /* cards, panels */
+  --p-radius-xl: 20px;   /* sheets */
+  --p-radius-pill: 999px;
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --p-col-app:   560px;  /* single-column app (queue / query) */
+  --p-col-wide:  1100px; /* graph route, marketing sections */
+  --p-col-prose: 72ch;   /* docs / whitepaper measure */
+  --p-hairline:  1px;
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --p-ease:      cubic-bezier(0.2, 0, 0, 1);
+  --p-dur-fast:  120ms;
+  --p-dur-base:  180ms;
+  --p-dur-slow:  280ms;
+
+  /* ---- Focus ----------------------------------------------------------- */
+  --p-focus-ring: 0 0 0 3px color-mix(in srgb, var(--p-accent) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --p-dur-fast: 0ms;
+    --p-dur-base: 0ms;
+    --p-dur-slow: 0ms;
+  }
+}

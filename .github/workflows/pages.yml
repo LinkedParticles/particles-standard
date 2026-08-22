@@ -1,0 +1,73 @@
+# Publish https://linkedparticles.org — the standard's front door and the host
+# that makes the published identifiers dereference.
+#
+# This repo is a per-release scrubbed export of a private development upstream
+# (see CONTRIBUTING.md). These workflows are authored in that upstream under
+# publish/overlays/ and laid into the exported tree by the release export —
+# edit them there, not on the public repo (a direct edit here is overwritten by
+# the next export).
+#
+# Supply-chain convention (matches the upstream): every `uses:` is pinned to a
+# full 40-char commit SHA, never a mutable `@vN` tag; the trailing `# vN`
+# comment is the human-readable tag that SHA resolves to. Bump a SHA only
+# deliberately.
+#
+# The build is `mkdocs build --strict`, so a broken link or an artifact whose
+# `$id` no longer matches the path it is served at fails the deploy rather than
+# publishing a site that lies about its own identifiers. The dereference
+# workflow re-checks the *served* bytes afterwards.
+#
+# One-time repository setup (owner): Settings → Pages → Source = "GitHub
+# Actions", custom domain = linkedparticles.org, "Enforce HTTPS" once the
+# certificate issues. The CNAME file ships in the build output (docs/CNAME), so
+# the domain survives every deploy.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never let two deploys race; queue instead of cancelling, so the last push to
+# land is the last one published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Install the docs toolchain
+        run: python -m pip install -r docs-requirements.txt
+      - name: Build the site (strict)
+        run: mkdocs build --strict
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    # `pages: write` + `id-token: write` are what the official deploy action
+    # needs; they are scoped to this job so the build job stays read-only.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

@@ -1,0 +1,54 @@
+# The dereference contract: every published identifier resolves, with the right
+# media type, to the exact bytes in this tree.
+#
+# This repo is a per-release scrubbed export of a private development upstream
+# (see CONTRIBUTING.md). These workflows are authored in that upstream under
+# publish/overlays/ and laid into the exported tree by the release export —
+# edit them there, not on the public repo (a direct edit here is overwritten by
+# the next export).
+#
+# Supply-chain convention (matches the upstream): every `uses:` is pinned to a
+# full 40-char commit SHA, never a mutable `@vN` tag; the trailing `# vN`
+# comment is the human-readable tag that SHA resolves to.
+#
+# Every particle this project publishes carries its schema `$id` and its JSON-LD
+# `@context` / SHACL vocabulary IRIs as absolute `https://linkedparticles.org`
+# URLs. Those identifiers are a promise: fetch one and you get the artifact. The
+# site build puts the bytes there; this job proves they arrived — after each
+# deploy, and daily thereafter, because a promise about identifiers is not kept
+# by having been true once.
+#
+# A red run here means published data references something the web no longer
+# serves. Check, in order: the Pages deploy succeeded; the custom domain and its
+# certificate are still attached; DNS still points at Pages.
+name: Dereference
+
+on:
+  # After a publish lands, not in parallel with it.
+  workflow_run:
+    workflows: [Pages]
+    types: [completed]
+  schedule:
+    # Daily, off the hour to avoid the top-of-hour scheduling crush.
+    - cron: "37 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dereference:
+    name: canonical identifiers resolve
+    runs-on: ubuntu-latest
+    # On a workflow_run trigger, only check what actually deployed. The
+    # schedule / manual triggers carry no upstream conclusion and always run.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Fetch every canonical identifier and compare against this tree
+        run: python .github/dereference_check.py

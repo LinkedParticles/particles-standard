@@ -1,0 +1,11 @@
+# Build dependencies for the linkedparticles.org site (mkdocs build --strict).
+#
+# Authored in the private development upstream under publish/overlays/ and laid
+# into this tree by the release export — edit it there, not here.
+#
+# Pinned to the versions the upstream's own lockfile resolves, so the published
+# site is built by the same toolchain that gates the docs upstream. The
+# mkdocstrings handler is deliberately absent: this site carries no generated
+# API reference (that stays with the engine repository).
+mkdocs==1.6.1
+mkdocs-material==9.7.6

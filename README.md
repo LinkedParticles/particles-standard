@@ -16,11 +16,12 @@ source of truth for the design. It is independent of any one implementation.
 
 | Path | Contents | License |
 |---|---|---|
-| `docs/spec/whitepaper.md` | The motivation and the model | CC-BY-4.0 |
-| `docs/spec/technical-specification.md` | The formal, normative definition | CC-BY-4.0 |
-| `artifacts/schemas/` | Normative JSON Schema, JSON-LD context, and trust-lens schema | Apache-2.0 |
-| `artifacts/conformance/` | The conformance profile and its ground-truth vectors | Apache-2.0 |
-| `tests/conformance/fixtures/` | Behavioral conformance fixtures | Apache-2.0 |
+| [`docs/spec/whitepaper.md`](docs/spec/whitepaper.md) | The motivation and the model | CC-BY-4.0 |
+| [`docs/spec/technical-specification.md`](docs/spec/technical-specification.md) | The formal, normative definition | CC-BY-4.0 |
+| [`docs/spec/conformance-profile.md`](docs/spec/conformance-profile.md) | What a conforming implementation must do | CC-BY-4.0 |
+| [`artifacts/schemas/`](artifacts/schemas/) | Normative JSON Schema, JSON-LD context, and trust-lens schema | Apache-2.0 |
+| [`artifacts/conformance/`](artifacts/conformance/) | The conformance profile and its ground-truth vectors | Apache-2.0 |
+| [`tests/conformance/fixtures/`](tests/conformance/fixtures/) | Behavioral conformance fixtures | Apache-2.0 |
 
 The prose is licensed CC-BY-4.0; the machine-readable artifacts and fixtures are
 Apache-2.0. See [`docs/spec/LICENSE`](docs/spec/LICENSE).

@@ -1,0 +1,112 @@
+# mkdocs configuration for the particles-standard public repository — the site
+# published at https://linkedparticles.org.
+#
+# This repo is a per-release scrubbed export of a private development upstream
+# (see CONTRIBUTING.md). This config is authored in that upstream under
+# publish/overlays/ and laid into the exported tree by the release export —
+# edit it there, not on the public repo (a direct edit here is overwritten by
+# the next export).
+#
+# It is deliberately a separate file from the upstream's own mkdocs.yml: that
+# one navigates the SDK's user / operator / plugin-author guides and the
+# development corpus, none of which is published here. This site has two faces
+# at one origin — the front door (landing + the standard's two documents) and
+# the artifact host, which serves the normative schemas byte-identical at their
+# canonical identifiers. The artifact host is the hooks' work, not a checked-in
+# directory: see hooks/copy_schema_artifacts.py.
+#
+# Build:  pip install -r docs-requirements.txt && mkdocs build --strict
+
+site_name: Particles
+site_description: A git-like ledger for what an AI system believes — an open standard for provenance-tracked, calibrated-confidence agent knowledge.
+site_url: https://linkedparticles.org
+repo_url: https://github.com/LinkedParticles/particles-standard
+repo_name: LinkedParticles/particles-standard
+
+# The site is the standard's front door. The whitepaper review driver is a
+# working document, not reader-facing: it stays in the repo and off the site.
+exclude_docs: |
+  spec/review-request-v2.2.md
+
+theme:
+  name: material
+  # Brand + palette come from the design system: hooks/copy_design_tokens.py
+  # materialises stylesheets/tokens.css and assets/favicon.svg from design/,
+  # and docs/stylesheets/particles.css maps every Material colour variable onto
+  # the --p-* tokens (hence `primary: custom` on both schemes). The header mark
+  # is a Material inline icon so its core dot takes the header ink via
+  # currentColor.
+  custom_dir: overrides
+  icon:
+    logo: particles/mark
+  favicon: assets/favicon.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+hooks:
+  - hooks/copy_design_tokens.py
+  # The artifact host: copies artifacts/schemas/** into the built site at
+  # /schemas/… byte-identical, and generates docs/vocab.md from context.jsonld
+  # so the `#`-fragment vocabulary namespace dereferences. The post-deploy
+  # dereference workflow re-checks the served bytes against this tree.
+  - hooks/copy_schema_artifacts.py
+
+# tokens.css is generated into docs/stylesheets/ by the hook; particles.css is
+# authored. Order matters: tokens first.
+extra_css:
+  - stylesheets/tokens.css
+  - stylesheets/particles.css
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - The standard:
+      - Whitepaper: spec/whitepaper.md
+      - Technical specification: spec/technical-specification.md
+      - Conformance profile: spec/conformance-profile.md
+      - Vocabulary: vocab.md
+      - Whitepaper changelog: spec/whitepaper-changelog.md
+  - Repositories:
+      - The standard (this repo): https://github.com/LinkedParticles/particles-standard
+      - Engine and surfaces: https://github.com/LinkedParticles/particles-engine-py
+      - Client library: https://github.com/LinkedParticles/particles-core-py
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - sane_lists
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
