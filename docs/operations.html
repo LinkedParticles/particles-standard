@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Particles — the operations</title>
+<!--
+  A self-contained interactive map of the operations, embedded on the
+  walkthrough page. Public variant: steps are described in user language and
+  entry points are CLI verbs. Honours ?theme=dark|light from the embedding
+  page (falling back to prefers-color-scheme), so it can follow the site's
+  palette toggle.
+-->
+<style>
+:root{
+  --color-text-primary:#1a1a18; --color-text-secondary:#5f5e5a; --color-text-tertiary:#8a897f; --color-text-info:#0c447c;
+  --color-background-primary:#ffffff; --color-background-secondary:#f4f3ee; --color-page:#faf9f5;
+  --color-border-tertiary:rgba(0,0,0,.12); --color-border-secondary:rgba(0,0,0,.22); --color-border-info:#85b7eb;
+  --border-radius-md:8px; --border-radius-lg:12px;
+  --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --color-text-primary:#ececea; --color-text-secondary:#b4b2a9; --color-text-tertiary:#888780; --color-text-info:#85b7eb;
+  --color-background-primary:#26241f; --color-background-secondary:#2f2c27; --color-page:#1c1a17;
+  --color-border-tertiary:rgba(255,255,255,.14); --color-border-secondary:rgba(255,255,255,.24); --color-border-info:#185fa5;
+}}
+:root[data-theme="dark"]{
+  --color-text-primary:#ececea; --color-text-secondary:#b4b2a9; --color-text-tertiary:#888780; --color-text-info:#85b7eb;
+  --color-background-primary:#26241f; --color-background-secondary:#2f2c27; --color-page:#1c1a17;
+  --color-border-tertiary:rgba(255,255,255,.14); --color-border-secondary:rgba(255,255,255,.24); --color-border-info:#185fa5;
+}
+body{background:var(--color-page);color:var(--color-text-primary);font-family:var(--font-sans);margin:0;padding:18px 16px 28px;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto}
+.grp{margin-bottom:14px}
+.gl{font-size:12px;color:var(--color-text-tertiary);margin:0 0 8px}
+.oprow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.op{font-family:inherit;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 13px;cursor:pointer}
+.op:hover{border-color:var(--color-text-tertiary)}
+.op.sel{border:2px solid #378add;font-weight:500;padding:7px 12px}
+.op .n{color:var(--color-text-tertiary);margin-right:6px}
+.arr{color:var(--color-text-tertiary);font-size:14px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-top:6px}
+.chead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:4px}
+.cname{font-size:18px;font-weight:500}
+.centry{font-family:var(--font-mono);font-size:12px;color:var(--color-text-tertiary)}
+.cpurpose{font-size:14px;color:var(--color-text-secondary);margin:0 0 16px}
+.steps{list-style:none;margin:0 0 18px;padding:0}
+.steps li{position:relative;padding:0 0 13px 30px;margin-left:11px;border-left:1.5px solid var(--color-border-tertiary);font-size:13px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:2px}
+.steps .num{position:absolute;left:-11.5px;top:-3px;width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary)}
+.sect{font-size:12px;color:var(--color-text-tertiary);margin:0 0 7px}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;padding:3px 9px;border-radius:999px;border:none}
+.k-ok{background:#e1f5ee;color:#085041}
+.k-warn{background:#faeeda;color:#633806}
+.k-info{background:#e6f1fb;color:#0c447c}
+.k-mute{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="grp"><p class="gl">The core loop — get knowledge in, then ask</p><div class="oprow" id="row-core"></div></div>
+<div class="grp"><p class="gl">Maintenance — act on the store between extractions</p><div class="oprow" id="row-maint"></div></div>
+<div class="card" id="detail"></div>
+</div>
+<script>
+(function(){
+  // Same theme contract as the graph export: ?theme=dark|light|auto at load,
+  // a {type:"particles-graph-theme", theme:…} postMessage afterwards — the
+  // embedding site's javascripts/graph-theme.js speaks both.
+  function applyTheme(t){
+    if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
+    else if(t==='auto')document.documentElement.removeAttribute('data-theme');
+  }
+  applyTheme(new URLSearchParams(location.search).get('theme'));
+  window.addEventListener('message',function(ev){
+    var d=ev.data;
+    if(d&&d.type==='particles-graph-theme')applyTheme(d.theme);
+  });
+  var OPS={
+    deposit:{name:'Deposit',entry:'particles deposit',purpose:'Write a source into the append-only corpus, fingerprinted so every claim can point back to the exact bytes it came from.',
+      steps:['Check the URL is safe to fetch','Route to a domain importer, or fall back to a plain fetch','Fingerprint the content (SHA-256) — identical bytes are deduplicated','Store the raw bytes, content-addressed','Record the corpus entry and a snapshot, pending extraction','Follow the page’s primary links one hop'],
+      out:[['snapshot: pending extraction','info'],['unchanged re-fetch: recorded, not duplicated','info'],['entry: new or a new snapshot of a known source','mute']]},
+    extract:{name:'Extract',entry:'particles extract',purpose:'Turn a snapshot into claims: LLM extraction, subject resolution, and reconciliation against what the store already believes.',
+      steps:['Pick the extractor registered for the source type','An LLM reads the source in chunks and drafts candidate claims','Resolve each claim’s subjects: the local subject store first, then Wikidata','Compare each candidate with existing beliefs about the same subjects','Corroborating claims merge; corrections supersede; disagreements become conflict records','Write the particles, each linked to its source snapshot'],
+      out:[['new claim → active','ok'],['disagreement → conflict record, kept for review','warn'],['corrected claim → superseded, retired with a pointer to its successor','mute']]},
+    query:{name:'Query',entry:'particles query',purpose:'Semantic search over active beliefs → ranked evidence and an answer that cites it.',
+      steps:['Embed the question','Load active beliefs (optionally as of a past date, or filtered by subject)','Rank by similarity to the question','Compose each claim’s effective confidence: stored value × source trust × recency','Note coverage gaps — what the store doesn’t know','Write the answer from the ranked evidence, claim by claim'],
+      out:[['ranked, cited evidence','info'],['coverage gaps, stated','info'],['contested claims, flagged','warn'],['store: untouched — read-only','mute']]},
+    lint:{name:'Lint',entry:'particles lint',purpose:'Audit the store: contradictions, staleness, broken source links, decayed confidence.',
+      steps:['Structural checks: stale sources, retraction knock-on effects, missing links','Coverage checks: claims with no subject, subjects with no claims','Quality checks: compound claims that should be split, weak subject matches','Semantic checks (optional, LLM): contradictions the structure can’t see','With --fix: apply the safe status transitions automatically'],
+      out:[['findings, each mapped to a fix','info'],['stale claim → flagged or retired','mute'],['contradiction → review queue','warn']]},
+    review:{name:'Review',entry:'particles review',purpose:'Rule on a recorded conflict — and turn the ruling into reusable trust policy.',
+      steps:['Read the conflict: claim A, claim B, and their sources','Prefer one side → the other is demoted, and the ruling is recorded','Or rule both valid — genuine variation, not error','The ruling becomes a source-trust statement that re-ranks every future answer','An audit record preserves who ruled, and why'],
+      out:[['conflict → resolved','ok'],['a reusable source-trust statement','info'],['audit trail','mute']]},
+    reindex:{name:'Reindex',entry:'particles reindex',purpose:'Re-extract sources after an extractor improves — superseding old claims, never dropping them.',
+      steps:['Choose the scope: failed snapshots, an outdated extractor version, or explicit sources','Re-run extraction against the stored raw bytes','Claims that survive carry forward; the rest are superseded — never deleted'],
+      out:[['old claims → superseded','mute'],['carried-forward claims stay active','ok'],['new claims → active','ok']]},
+    curation:{name:'Curation',entry:'particles curation',purpose:'One ranked to-do queue, composed from everything the other maintenance passes found.',
+      steps:['Run the lint checks, read-only','Add open conflicts, likely duplicates, and cited-but-undeposited sources','Rank by leverage: severity, age, how often the claim is used','Present a finite queue with one-gesture actions: affirm, retract, trust, merge, snooze'],
+      out:[['a ranked editing queue','info'],['gestures: affirm · retract · trust · merge · snooze','info']]}
+  };
+  var core=[['deposit',1],['extract',2],['query',3]],maint=['lint','review','reindex','curation'];
+  var rowCore=document.getElementById('row-core'),rowMaint=document.getElementById('row-maint'),detail=document.getElementById('detail');
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  core.forEach(function(c,i){var b=document.createElement('button');b.className='op';b.dataset.op=c[0];b.innerHTML='<span class="n">'+c[1]+'</span>'+OPS[c[0]].name;rowCore.appendChild(b);if(i<core.length-1){var a=document.createElement('span');a.className='arr';a.textContent='→';rowCore.appendChild(a);}});
+  maint.forEach(function(k){var b=document.createElement('button');b.className='op';b.dataset.op=k;b.textContent=OPS[k].name;rowMaint.appendChild(b);});
+  function render(k){var o=OPS[k];
+    document.querySelectorAll('.op').forEach(function(x){x.classList.toggle('sel',x.dataset.op===k);});
+    var steps=o.steps.map(function(s,i){return '<li><span class="num">'+(i+1)+'</span>'+esc(s)+'</li>';}).join('');
+    var oc=o.out.map(function(p){return '<span class="chip k-'+p[1]+'">'+esc(p[0])+'</span>';}).join('');
+    detail.innerHTML='<div class="chead"><span class="cname">'+o.name+'</span><span class="centry">'+esc(o.entry)+'</span></div>'+
+      '<p class="cpurpose">'+esc(o.purpose)+'</p>'+
+      '<p class="sect">What happens</p><ul class="steps">'+steps+'</ul>'+
+      '<p class="sect">What comes out</p><div class="badges">'+oc+'</div>';}
+  document.querySelectorAll('.op').forEach(function(b){b.addEventListener('click',function(){render(b.dataset.op);});});
+  render('deposit');
+})();
+</script>
+</body>
+</html>
