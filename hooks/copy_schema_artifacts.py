@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """mkdocs build hook — the artifact host: serve the normative artifacts at their
 canonical paths, and render the vocabulary as a human page.
 

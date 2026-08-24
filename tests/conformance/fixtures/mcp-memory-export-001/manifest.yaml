@@ -1,0 +1,42 @@
+# Conformance fixture for the reference memory-server migration extractor
+#.
+#
+# Source: synthesised, not fetched. The entity names are the reference server's
+# own README example (`John_Smith` → `works_at` → `Anthropic`), reproduced with
+# attribution (the convention set);
+# `@modelcontextprotocol/server-memory` is MIT licensed.
+fixture_id: mcp-memory-export-001
+source_type: MCP_MEMORY_EXPORT
+expected_acceptors:
+  - mcp-memory-extractor
+notes: |
+  Four particles are emitted — three observations and one relation — from a
+  six-line export. This is the first fixture whose particles are **second-hand
+  by construction**: every one carries `calibration_source: IMPORTED` and the
+  flat `migration.import_confidence` floor rather than any number a model or
+  the source store produced.
+
+  Branch coverage: a multi-observation entity (two particles from one line,
+  distinguished only by their `provenance.location` ordinal); a second entity
+  with its own `entityType` → `subject_class`; an observation-less entity,
+  which produces **no** particle and is reported as a quality note instead
+  (the known fidelity gap); a relation, which is the only
+  two-subject particle here and carries its triple losslessly in reserved tags
+  because `particle_subjects` has no ordering column; a
+  non-JSON line and an unknown record type, both skipped with a numbered note
+  rather than aborting the migration or vanishing silently.
+
+  Three fields exist on these particles that no other fixture populates, and
+  they are the attribution rule made observable:
+  `provenance.location` cites the record's line inside the deposited blob;
+  `contributors` carries the `importer` role naming who ran the migration; and
+  `tags` carries both the import marker and the store vocabulary, so
+  a migrated record reads back through `particles memory serve` as the same
+  record the façade would have written.
+
+  Note the deliberate `uncertainty_nature` uniformity: every particle is
+  EPISTEMIC, for the same reason as `rdf-graph-001` — a translator reports what
+  a source states, and the residual uncertainty is about the world. The diversity rule will flag this extractor, and as there, that is
+  correct behaviour to observe rather than a defect to paper over. The same
+  goes for confidence uniformity, which is not a calibration failure but the
+  §5 decision: one number, one meaning.

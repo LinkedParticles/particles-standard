@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Assert every canonical identifier this project publishes actually resolves.
 
 Pure stdlib, no build step. Every particle serialized by a conforming

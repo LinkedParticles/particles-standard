@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Render the Particles design-system preview cards.
 
 Reads ``tokens.css`` + ``components.css`` and each fragment in ``cards/``, and

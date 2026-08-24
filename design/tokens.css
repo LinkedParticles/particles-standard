@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: 2026 The Particles authors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
  * Particles design tokens — the single source for colour, type, space, radius,
  * elevation and motion across the website (mkdocs), the web UI (clients/web-ui),
  * the graph exporter and every future surface. Consumers import this file and

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Enforce the Developer Certificate of Origin (DCO) sign-off on PR commits.
 
 This is a small, self-contained checker vendored into each public repository's

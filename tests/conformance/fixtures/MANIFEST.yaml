@@ -47,6 +47,9 @@ fixtures:
   - id: rdf-graph-001
     source_type: RDF_GRAPH
     expected_acceptors: [rdf-extractor]
+  - id: mcp-memory-export-001
+    source_type: MCP_MEMORY_EXPORT
+    expected_acceptors: [mcp-memory-extractor]
   - id: wikidata-entity-001
     source_type: WIKIDATA_API
     expected_acceptors: [wikidata-extractor]

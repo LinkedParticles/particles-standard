@@ -1,0 +1,155 @@
+# REUSE licensing annotations for files that do not carry an SPDX header
+#.
+#
+# The licensing metadata is split in two, and the split is forced rather than
+# chosen. Authored source that carries a comment idiom holds its own SPDX
+# header, so the file states its license wherever it travels. Everything
+# else is annotated here:
+#
+#   * The normative artifacts under `artifacts/` are served byte-identical at
+#     the permanent `$id` / `@context` / vocabulary IRIs every published
+#     particle carries, and a daily check asserts that byte-match. They are
+#     annotated, never modified — and JSON has no comment syntax in any case.
+#     A `.license` sidecar is not used either: the site build copies
+#     `artifacts/schemas/**` wholesale, so a sidecar would be served as a new
+#     unreferenced file under a published prefix.
+#   * Markdown with YAML frontmatter cannot take a leading comment without
+#     breaking the frontmatter parse.
+#   * Generated files would otherwise need their generators taught to emit a
+#     header — `docs/cli-reference.md`, `artifacts/openapi.json`,
+#     `docs/ADR/README.md`, `docs/vocab.md`, and the whole committed web-UI
+#     bundle under `clients/web-ui/dist/`.
+#   * `design/logo-mark.svg` is byte-compared against its tracked copy in
+#     `overrides/.icons/particles/mark.svg` by a docs-build hook, so a header
+#     in one and not the other would fail the build.
+#   * Binary and empty files cannot hold one at all.
+#
+# There is deliberately NO catch-all `path = "**"` annotation. A catch-all
+# would cover every file including the ones that are supposed to carry a
+# header, which would make `reuse lint` incapable of reporting a source file
+# that lost or never had one — the exact regression the gate exists to catch.
+# Every pattern below therefore names a file class that is annotation-only by
+# design. When a new file type arrives, decide which half it belongs to; do
+# not widen a pattern to silence the linter.
+#
+# Patterns are listed in both bare and `**/`-prefixed form because the two
+# match different depths.
+#
+# Every annotation below sets `precedence = "override"`. These classes are
+# defined as the ones that do NOT self-declare licensing, so tag-shaped text
+# inside them is *content*, not metadata: prose that documents the header
+# convention, a guide that shows an example, a fixture that contains one.
+# Without the override, `reuse` reads such a line as the file's own licence —
+# and a documentation page explaining the rule breaks the gate enforcing it.
+# The override changes nothing for the files that carry real headers: no
+# pattern here matches them.
+
+version = 1
+SPDX-PackageName = "Particles"
+SPDX-PackageSupplier = "The Particles authors"
+SPDX-PackageDownloadLocation = "https://linkedparticles.org"
+
+# --------------------------------------------------------------------------- #
+# Prose, data, generated output, and binaries — Apache-2.0, like the code they
+# describe. `docs/spec/**` is re-annotated CC-BY-4.0 below.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = [
+    "*.md", "**/*.md",
+    "*.json", "**/*.json",
+    "*.jsonl", "**/*.jsonl",
+    "*.jsonld", "**/*.jsonld",
+    "*.ttl", "**/*.ttl",
+    "*.bin", "**/*.bin",
+    "*.html", "**/*.html",
+    "*.svg", "**/*.svg",
+    "*.txt", "**/*.txt",
+    "*.csv", "**/*.csv",
+    "*.docx", "**/*.docx",
+    "*.toml", "**/*.toml",
+    "*.ini", "**/*.ini",
+    "*.lock", "**/*.lock",
+    "*.tpl", "**/*.tpl",
+    "*.sample", "**/*.sample",
+    "*.webmanifest", "**/*.webmanifest",
+    "*.typed", "**/*.typed",
+    "*.gitkeep", "**/*.gitkeep",
+    "*.gitignore", "**/*.gitignore",
+    "*.dockerignore", "**/*.dockerignore",
+    "LICENSE", "**/LICENSE",
+    "NOTICE", "**/NOTICE",
+    "deploy/Dockerfile",
+    "**/docs/CNAME",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The Particles authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# --------------------------------------------------------------------------- #
+# Fixtures and ground-truth data. YAML that is *configuration* carries its own
+# header; YAML that is *data* is annotated here, on the same reasoning that
+# keeps the artifact tree unmodified.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = [
+    "artifacts/**",
+    "tests/**/*.yaml",
+    "tests/**/*.yml",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The Particles authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# --------------------------------------------------------------------------- #
+# The non-Python clients. `clients/web-ui/dist/` is a committed build output
+# whose byte-identity to a rebuild of `src/` + `public/` is a stated property
+# of that tree, so a header in a build *input* is a change to a build product
+# that no gate here can re-verify. The whole subtree is annotated instead —
+# a coherent boundary, since `clients/` already sits outside this package's
+# type-check, lint, and import-boundary scope.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = "clients/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The Particles authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# --------------------------------------------------------------------------- #
+# The standard's prose is CC-BY-4.0, not Apache-2.0 — the split grant made at
+# activation and stated in `NOTICE`. This annotation comes after the
+# blanket `*.md` entry above and takes precedence over it.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = "docs/spec/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The Particles authors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# --------------------------------------------------------------------------- #
+# Vendored third party. Cytoscape.js ships twice — once for the graph
+# exporter's self-contained HTML artifact, once inside the web-UI bundle —
+# with its upstream license text beside each copy. This is the only
+# third-party code in any published tree, and the single most concrete reason
+# the licensing half is worth doing: without it, an MIT library sits under a
+# repository-wide Apache grant it is not actually under.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = [
+    "**/cytoscape.min.js",
+    "**/LICENSE.cytoscape.txt",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2016-2026 The Cytoscape Consortium"
+SPDX-License-Identifier = "MIT"
+
+# --------------------------------------------------------------------------- #
+# The Developer Certificate of Origin, shipped verbatim as the sole inbound
+# instrument. It is a license document in its own right, under its
+# own verbatim-copying terms, and has no SPDX identifier — hence the
+# `LicenseRef-`.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = "DCO"
+precedence = "override"
+SPDX-FileCopyrightText = "2004, 2006 The Linux Foundation and its contributors"
+SPDX-License-Identifier = "LicenseRef-DCO"

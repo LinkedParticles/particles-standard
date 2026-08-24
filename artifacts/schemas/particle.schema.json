@@ -282,7 +282,7 @@
         },
         "calibration_source": {
           "type": "string",
-          "enum": ["EXTRACTOR_DIRECT", "AGENT_ASSERTED", "CALIBRATED_BENCHMARK", "HUMAN_REVIEW", "DERIVED"]
+          "enum": ["EXTRACTOR_DIRECT", "AGENT_ASSERTED", "CALIBRATED_BENCHMARK", "HUMAN_REVIEW", "DERIVED", "IMPORTED"]
         },
         "calibration_method": {
           "type": ["string", "null"],
