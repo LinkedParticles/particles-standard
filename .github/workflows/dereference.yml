@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # The dereference contract: every published identifier resolves, with the right
 # media type, to the exact bytes in this tree.
 #

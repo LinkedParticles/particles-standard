@@ -61,6 +61,14 @@ By contributing you agree your contribution is licensed under the same terms as
 the file you change: the prose under `docs/spec/` is CC-BY-4.0; the
 machine-readable artifacts and fixtures are Apache-2.0.
 
+That split is machine-readable rather than something you have to take on
+trust. This repository is [REUSE](https://reuse.software/)-compliant: the
+per-file terms are declared in `REUSE.toml`, the texts they name ship in
+`LICENSES/`, and `reuse lint` on a checkout confirms every file is covered.
+The normative artifacts are annotated rather than modified — they are served
+byte-identical at the permanent identifier IRIs, so nothing may be inserted
+into them.
+
 ## Normative substance lands in the artifacts
 
 The prose *describes*; the machine-readable artifacts *define*. A contribution

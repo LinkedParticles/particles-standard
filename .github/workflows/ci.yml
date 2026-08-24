@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # CI for the particles-standard public repository.
 #
 # This repo is a per-release scrubbed export of a private development upstream
@@ -45,3 +49,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Docs + artifact smoke check
         run: python .github/docs_check.py
+
+  reuse:
+    name: REUSE licensing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.11"
+          enable-cache: false
+
+      # Whole-tree, not per-file: compliance is a property of the tree — a
+      # header only resolves against `LICENSES/`, and a licence text nothing
+      # is under is itself a failure. Needs no project install, so it runs in
+      # seconds on a bare checkout.
+      - name: reuse lint
+        run: uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint

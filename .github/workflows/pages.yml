@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Publish https://linkedparticles.org — the standard's front door and the host
 # that makes the published identifiers dereference.
 #

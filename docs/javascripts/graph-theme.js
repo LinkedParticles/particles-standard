@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 The Particles authors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /* Hand the embedded demo pages this site's palette.
  *
  * The demos (the graph export under docs/demo/, the operations explorer) are

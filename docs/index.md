@@ -66,6 +66,37 @@ second brain for a person.
 No other memory system we know of ships all four —
 [see how it compares](why.md#how-it-compares).
 
+## Take your agent's memory out of its hands
+
+A coding agent remembers by appending lines to a file it writes itself.
+Nothing there records where a line came from, whether it is still true, or
+that two lines disagree — and the agent decides what is worth keeping.
+
+One command points that memory at a Particles store instead:
+
+```bash
+particles init claude-code
+```
+
+Remembering stops being the agent's job. Each session *ends* by **harvesting**
+what happened into the corpus, so nothing depends on the agent choosing to
+save it. Each session *starts* with the store's current view pushed into the
+context window — ranked by effective confidence, contradictions flagged
+rather than hidden. And on first run it audits the memory you already have:
+
+```text
+Audited 23 memory files → 212 beliefs about 58 subjects.
+
+  4 potential contradictions        (2 cross-file, 2 contested at extract time)
+  11 likely-duplicate belief pairs  (unjudged similarity candidates; --judge to verify)
+  7 probably-stale facts            (5 aged past their source's decay horizon, 2 expired)
+
+  Also: 3 cited sources never captured · 6 beliefs have no resolvable subject
+```
+
+Those are questions a text file cannot answer about itself.
+[Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)
+
 ## Watch a belief get replaced
 
 In 2006 the IAU demoted Pluto. Below is a real Particles store that learned

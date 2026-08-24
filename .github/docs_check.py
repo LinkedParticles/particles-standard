@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Lightweight docs + artifact check for the particles-standard repository.
 
 Pure stdlib, no build step — the standard repo ships spec prose plus the

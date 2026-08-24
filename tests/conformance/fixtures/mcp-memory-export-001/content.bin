@@ -1,0 +1,6 @@
+{"type":"entity","name":"John_Smith","entityType":"person","observations":["Speaks fluent Spanish","Graduated in 2019"]}
+{"type":"entity","name":"Anthropic","entityType":"organization","observations":["Builds Claude"]}
+{"type":"entity","name":"Ghost_Node","entityType":"person","observations":[]}
+{"type":"relation","from":"John_Smith","to":"Anthropic","relationType":"works_at"}
+this line is not json
+{"type":"reminder","note":"an unknown record type"}

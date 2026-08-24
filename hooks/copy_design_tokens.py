@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """mkdocs build hook — bring the design system into the docs tree.
 
 The docs site is skinned by the repo-wide design tokens (``design/tokens.css``,
