@@ -14,6 +14,13 @@ so the site build — not a hand-copied directory — is what puts the bytes the
   (gitignored, like ``stylesheets/tokens.css``), so the ``#``-fragment
   vocabulary namespace resolves to a themed, searchable page carrying a real
   anchor per term.
+* ``on_pre_build`` also writes one page per **own-origin sub-namespace** the
+  context declares (``extraction:``, ``social:``, ``hn:``, … at
+  ``https://linkedparticles.org/vocab/<name>#``) into ``docs/vocab/<name>.md``
+  (also gitignored). Published particles carry these IRIs, so each one must
+  dereference just like the core vocabulary namespace; the pages are what serve
+  them. External vocabularies the context maps onto (nomisma, schema.org,
+  wikidata, …) dereference at their own hosts and are not our obligation.
 * ``on_post_build`` copies ``artifacts/schemas/**`` into the built site under
   ``/schemas/…`` and asserts the copy is byte-identical.
 
@@ -55,6 +62,10 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 _ARTIFACTS = _REPO_ROOT / "artifacts" / "schemas"
 _DOCS = _REPO_ROOT / "docs"
 _VOCAB_PAGE = _DOCS / "vocab.md"
+# Own-origin sub-namespace pages are generated under here (one .md per
+# ``…/vocab/<name>#`` prefix). The directory is generated wholesale each build,
+# so it holds nothing but generated files and can be rebuilt from scratch.
+_VOCAB_SUBNS_DIR = _DOCS / "vocab"
 
 # The site path the artifacts are served under — the ``/schemas/…`` segment of
 # every canonical ``$id``. Asserted against the artifacts rather than
@@ -274,6 +285,61 @@ def check_schema_ids() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Own-origin sub-namespaces (derived from the context, never configured)
+# --------------------------------------------------------------------------- #
+@dataclass
+class Subnamespace:
+    """One own-origin vocabulary sub-namespace declared by the context.
+
+    ``prefix`` / ``iri`` are the context declaration
+    (``"extraction": "https://linkedparticles.org/vocab/extraction#"``);
+    ``serve_path`` is the site path the ``#``-fragment IRIs dereference to
+    (``/vocab/extraction``); ``doc_relpath`` is the ``docs/``-relative Markdown
+    file that produces it (``vocab/extraction.md``).
+    """
+
+    prefix: str
+    iri: str
+    serve_path: str
+    doc_relpath: str
+
+
+def _terms_for_prefix(vocab: Vocabulary, prefix: str) -> list[Term]:
+    """Every parsed term whose CURIE prefix is *prefix*, name-sorted."""
+    out: list[Term] = []
+    for group in (vocab.classes, vocab.properties, vocab.individuals, vocab.external):
+        out.extend(t for t in group if t.prefix == prefix)
+    return sorted(out, key=lambda t: t.local)
+
+
+def subnamespaces(vocab: Vocabulary, origin: str) -> list[Subnamespace]:
+    """The context's own-origin vocabulary sub-namespaces, in prefix order.
+
+    A prefix under ``{origin}/vocab/`` (``…/vocab/extraction#``) names a term
+    space this project is responsible for serving — published particles carry
+    those IRIs, so each must dereference. The primary namespace
+    (``…/vocab#`` → the ``/vocab`` page) and every external vocabulary
+    (nomisma, schema.org, wikidata, …) are excluded: the first is the vocab
+    page's job, the rest resolve at their own hosts.
+    """
+    prefix_root = f"{origin}/vocab/"
+    out: list[Subnamespace] = []
+    for prefix, iri in sorted(vocab.prefixes.items()):
+        if not iri.startswith(prefix_root):
+            continue
+        serve_path = urlsplit(iri).path.rstrip("/")  # /vocab/extraction (drop the fragment's #)
+        out.append(
+            Subnamespace(
+                prefix=prefix,
+                iri=iri,
+                serve_path=serve_path,
+                doc_relpath=f"{serve_path.lstrip('/')}.md",
+            )
+        )
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Rendering
 # --------------------------------------------------------------------------- #
 def _anchor(local: str) -> str:
@@ -383,14 +449,23 @@ def render_vocab_page(vocab: Vocabulary, origin: str) -> str:
     lines += [
         "## Related namespaces",
         "",
-        "Prefixes the context declares. The Particles ones are extension-scoped:",
-        "they namespace the domain-specific fields an extractor may attach, and",
-        "carry no terms in the core context.",
+        "Prefixes the context declares. The Particles ones under `…/vocab/` are",
+        "extension-scoped: they namespace the domain-specific fields an extractor",
+        "may attach, carry no terms in the core context, and each dereferences to",
+        "its own page (linked below). Every other prefix maps onto an established",
+        "external vocabulary that resolves at its own host.",
         "",
     ]
+    subns_page = {sub.prefix: sub.doc_relpath for sub in subnamespaces(vocab, origin)}
     lines += _table(
         ("Prefix", "Namespace IRI"),
-        [(f"`{p}`", f"`{iri}`") for p, iri in sorted(vocab.prefixes.items())],
+        [
+            (
+                f"[`{p}`]({subns_page[p]})" if p in subns_page else f"`{p}`",
+                f"`{iri}`",
+            )
+            for p, iri in sorted(vocab.prefixes.items())
+        ],
     )
     lines += [
         "## Machine-readable artifacts",
@@ -405,15 +480,82 @@ def render_vocab_page(vocab: Vocabulary, origin: str) -> str:
     return "\n".join(lines)
 
 
+def render_subnamespace_page(sub: Subnamespace, terms: list[Term]) -> str:
+    """The Markdown source of one ``/vocab/<name>`` extension-namespace page.
+
+    Its whole job is to make the IRIs this namespace's published data already
+    carries dereference. Where the context enumerates terms in the namespace
+    they render with a ``#`` anchor each (as on the core vocabulary page);
+    where it does not — the usual case today, since these fields are minted
+    per-particle by the extractor rather than declared in the core context —
+    the page still resolves and says so.
+    """
+    lines = [
+        _BANNER,
+        "",
+        f"# The `{sub.prefix}` extension vocabulary",
+        "",
+        f"Namespace IRI: `{sub.iri}`",
+        "",
+        "This is an **extension vocabulary** — a domain-specific namespace whose",
+        "terms are minted and emitted by the extractor that produces this kind of",
+        "particle, not declared by the core Particles schema. A serialized particle",
+        f"names a term here as `{sub.prefix}:<term>`, which expands to",
+        f"`{sub.iri}<term>` and dereferences to this page.",
+        "",
+        "The core vocabulary — the provenance, confidence, and lifecycle terms every",
+        "particle carries — lives on the [Particles vocabulary](../vocab.md) page.",
+        "This page exists so the identifiers this namespace's data already carries",
+        "resolve to a real target.",
+        "",
+        "## Terms",
+        "",
+    ]
+    if terms:
+        lines += [
+            "Each row is one term in this namespace and the JSON key (or keys) bound",
+            "to it.",
+            "",
+        ]
+        lines += _table(
+            ("Term", "JSON key", "IRI"),
+            [(_anchor(t.local), _keys(t), f"`{t.iri}`") for t in terms],
+        )
+    else:
+        lines += [
+            "The core context declares no terms in this namespace yet: its fields are",
+            "attached per-particle by the extractor that emits them, not enumerated",
+            "in the shared schema. As the standard gives these fields normative",
+            "definitions they will be listed here, each with a `#`-fragment anchor.",
+            "",
+        ]
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- #
 # mkdocs hooks
 # --------------------------------------------------------------------------- #
 def on_pre_build(config: Any, **_kwargs: object) -> None:
-    """Generate ``docs/vocab.md`` and check the artifacts' published identifiers."""
+    """Generate the vocabulary pages and check the artifacts' published identifiers."""
     check_schema_ids()
     vocab = parse_vocabulary(_load_context())
+    origin = canonical_origin()
+
     _VOCAB_PAGE.parent.mkdir(parents=True, exist_ok=True)
-    _VOCAB_PAGE.write_text(render_vocab_page(vocab, canonical_origin()), encoding="utf-8")
+    _VOCAB_PAGE.write_text(render_vocab_page(vocab, origin), encoding="utf-8")
+
+    # One page per own-origin sub-namespace, served at the exact path its IRIs
+    # dereference to. Regenerated wholesale each build: the directory holds only
+    # generated files, so a prefix removed from the context leaves no stale page.
+    if _VOCAB_SUBNS_DIR.exists():
+        shutil.rmtree(_VOCAB_SUBNS_DIR)
+    for sub in subnamespaces(vocab, origin):
+        page = _VOCAB_SUBNS_DIR / Path(sub.doc_relpath).relative_to("vocab")
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text(
+            render_subnamespace_page(sub, _terms_for_prefix(vocab, sub.prefix)),
+            encoding="utf-8",
+        )
 
 
 def on_post_build(config: Any, **_kwargs: object) -> None:

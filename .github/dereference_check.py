@@ -12,11 +12,17 @@ implementation carries absolute identifiers — each schema's ``$id``, the JSON-
 ``https://linkedparticles.org``. Those strings are permanent: they are baked into
 published data and cannot be swapped out later. So the site that serves them has
 one obligation, and this script is the check on it. For every artifact in this
-tree, and for the vocabulary page:
+tree, for the vocabulary page, and for every own-origin vocabulary namespace the
+context declares (the core ``…/vocab`` page plus each ``…/vocab/<name>``
+extension namespace):
 
   1. the identifier resolves with HTTP 200;
   2. the media type is the one a consumer parses by;
   3. the served bytes are **identical** to the bytes in this tree.
+
+External vocabularies the context maps onto (nomisma, schema.org, wikidata, …)
+resolve at their own hosts and are deliberately out of scope — this check is the
+promise about *our* identifiers, not theirs.
 
 (3) is the one that matters most and is the easiest to lose: a build step that
 "helpfully" reformats JSON, or a host that rewrites a document, breaks hash
@@ -49,6 +55,7 @@ from urllib.parse import urlsplit
 ARTIFACT_DIR = Path("artifacts/schemas")
 SERVE_PREFIX = "schemas"
 ORIGIN_ANCHOR = "particle.schema.json"
+CONTEXT_ARTIFACT = "context.jsonld"
 
 # The human vocabulary page: the `#`-fragment namespace every `particles:` term
 # expands into. Fetched as a page, and checked for a term anchor — a 200 that
@@ -149,6 +156,57 @@ def check_vocab(base: str) -> list[str]:
     return errors
 
 
+def declared_prefixes(root: Path) -> dict[str, str]:
+    """The namespace-prefix declarations in the canonical JSON-LD context.
+
+    A prefix declaration is a string value that is an absolute IRI ending in
+    ``#`` or ``/`` (``"extraction": "https://…/vocab/extraction#"``) — the same
+    structural test the site build uses to render them.
+    """
+    src = root / ARTIFACT_DIR / CONTEXT_ARTIFACT
+    ctx = json.loads(src.read_text(encoding="utf-8")).get("@context", {})
+    return {
+        key: value
+        for key, value in ctx.items()
+        if not key.startswith("@")
+        and isinstance(value, str)
+        and "://" in value
+        and value.endswith(("#", "/"))
+    }
+
+
+def check_namespaces(root: Path, base: str) -> list[str]:
+    """Every own-origin ``…/vocab/<name>`` namespace IRI must dereference.
+
+    These are the extension vocabularies published particles carry
+    (``extraction:``, ``social:``, ``hn:``, …). The core ``…/vocab`` namespace
+    is checked by :func:`check_vocab` (it additionally verifies term anchors);
+    external vocabularies resolve at their own hosts and are out of scope.
+
+    Own-origin is decided against the *canonical* origin the context declares
+    (not against *base*), so a ``--base-url`` staging or fork run still exercises
+    the same namespaces — only the host fetched from changes.
+    """
+    errors: list[str] = []
+    prefix_root = f"{base_url_from_artifacts(root)}/{VOCAB_PATH}/"
+    for prefix, iri in sorted(declared_prefixes(root).items()):
+        if not iri.startswith(prefix_root):
+            continue
+        url = f"{base}{urlsplit(iri).path.rstrip('/')}"
+        status, media, body = fetch(url)
+        if status != 200:
+            errors.append(
+                f"{url}: HTTP {status or 'unreachable'} (expected 200) — the "
+                f"`{prefix}:` namespace IRI does not dereference"
+            )
+            continue
+        if not media.startswith("text/html"):
+            errors.append(f"{url}: media type {media!r}, expected text/html")
+        else:
+            print(f"  ok  {url}  [{media}]  {len(body)} bytes  (`{prefix}:` namespace)")
+    return errors
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
@@ -161,7 +219,7 @@ def main() -> int:
     base = (args.base_url or base_url_from_artifacts(root)).rstrip("/")
     print(f"dereference check: {base}")
 
-    errors = check_artifacts(root, base) + check_vocab(base)
+    errors = check_artifacts(root, base) + check_vocab(base) + check_namespaces(root, base)
     if errors:
         print("\ndereference check: FAIL", file=sys.stderr)
         for e in errors:

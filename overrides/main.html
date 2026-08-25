@@ -1,0 +1,45 @@
+<!--
+  Shared Material override for every site built from this repository (the
+  monorepo docs, linkedparticles.org, docs.linkedparticles.org — all three
+  configs set `custom_dir` to this directory).
+
+  Adds the social/share metadata Material doesn't emit on its own: Open Graph
+  and Twitter cards, taking the page's own front-matter title/description when
+  present and the site config's otherwise. The share image is opt-in per site
+  via `extra.social_image` (an absolute URL), so a config without one degrades
+  to a summary card rather than a broken image.
+-->
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {%- set og_title = config.site_name -%}
+  {%- if page and page.meta and page.meta.title -%}
+    {%- set og_title = page.meta.title -%}
+  {%- elif page and page.title and not page.is_homepage -%}
+    {%- set og_title = page.title ~ " – " ~ config.site_name -%}
+  {%- endif -%}
+  {%- set og_description = config.site_description -%}
+  {%- if page and page.meta and page.meta.description -%}
+    {%- set og_description = page.meta.description -%}
+  {%- endif -%}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ og_title }}">
+  {% if og_description %}<meta property="og:description" content="{{ og_description }}">{% endif %}
+  {% if page and page.canonical_url %}<meta property="og:url" content="{{ page.canonical_url }}">{% endif %}
+  {% if config.extra.social_image %}
+  <meta property="og:image" content="{{ config.extra.social_image }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ config.extra.social_image }}">
+  {% else %}
+  <meta name="twitter:card" content="summary">
+  {% endif %}
+  <meta name="twitter:title" content="{{ og_title }}">
+  {% if og_description %}<meta name="twitter:description" content="{{ og_description }}">{% endif %}
+  {% if config.extra.favicon_ico %}
+  <link rel="icon" href="{{ config.extra.favicon_ico | url }}" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{ config.extra.apple_touch_icon | url }}">
+  {% endif %}
+{% endblock %}

@@ -1,3 +1,7 @@
+---
+title: A git-like ledger for what an AI system believes
+description: Particles keeps AI memory as sourced, dated, confidence-scored claims — nothing overwritten, trust applied at read time, disagreements kept visible.
+---
 <!--
   The landing page of https://linkedparticles.org — the standard's front door.
   See CONTRIBUTING.md for how changes to this page reach the repository.
@@ -21,9 +25,9 @@ and when, is always there. Trust, doubt, and staleness are applied when you
 beliefs doesn't have to be an AI: the same store works as a sourced, dated
 second brain for a person.
 
-[Why Particles?](why.md){ .md-button .md-button--primary }
+[Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button .md-button--primary }
 [See it work](walkthrough.md){ .md-button }
-[Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button }
+[Why Particles?](why.md){ .md-button }
 
 ## What makes it different
 
@@ -63,8 +67,9 @@ second brain for a person.
 
 </div>
 
-No other memory system we know of ships all four —
-[see how it compares](why.md#how-it-compares).
+In our August 2026 survey of the leading memory systems — Zep/Graphiti,
+mem0, Letta, Supermemory, Hindsight — none documented all four.
+[See the comparison](why.md#how-it-compares).
 
 ## Take your agent's memory out of its hands
 
@@ -94,7 +99,9 @@ Audited 23 memory files → 212 beliefs about 58 subjects.
   Also: 3 cited sources never captured · 6 beliefs have no resolvable subject
 ```
 
-Those are questions a text file cannot answer about itself.
+Those are questions a text file cannot answer about itself. And when your
+agent gets something wrong, you can see exactly why — which claim, from which
+source, superseded by what — and fix it at the source.
 [Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)
 
 ## Watch a belief get replaced
@@ -103,7 +110,9 @@ In 2006 the IAU demoted Pluto. Below is a real Particles store that learned
 *"Pluto is the ninth planet"* in 1996 and the reclassification in 2006. Both
 claims are still there: the old one keeps its source, its confidence, and its
 dates, and gains a pointer to what replaced it — so the store can answer with
-what it believes now, or with what it believed in 2000.
+what it believes now, or with what it believed in 2000. (That lens is about
+the store's own history — what it believed, and when that changed. Pluto
+didn't change in 2006; the belief about it did.)
 
 <figure markdown="span">
   <iframe src="demo/pluto-belief-history.html" data-themed
@@ -122,14 +131,35 @@ what it believes now, or with what it believed in 2000.
 The full loop — getting sources in, extracting claims, querying with evidence,
 and time-traveling with `--as-of` — is on [See it work](walkthrough.md).
 
+## Ask, and see the evidence
+
+Here is the bundled web UI answering a question against that same Pluto store.
+The answer is built only from stored claims — and every claim behind it is
+listed with its stored confidence, the effective confidence it was ranked with
+at read time, its dates, and whether it revises an earlier belief. At the end,
+the same answer opens as a graph of the knowledge it consulted.
+
+<figure markdown="span">
+  <video src="assets/query-demo.mp4" autoplay loop muted playsinline
+         title="The Particles web UI answering a question, with each cited belief's stored and effective confidence"
+         style="width: 100%; max-width: 44rem; border: 1px solid var(--p-border); border-radius: var(--p-radius-lg); background: #f4f6fb;"></video>
+  <figcaption>
+    Asking <em>"Is Pluto still a planet?"</em> in the web UI that ships with
+    the engine. The top-cited belief is the 2006 reclassification — marked
+    <em>revises an earlier belief</em>, because the 1996 claim it replaced is
+    still in the store.
+  </figcaption>
+</figure>
+
 ## Measured, not just argued
 
-On LongMemEval, a long-term conversational-memory benchmark, an answering
-model given ten retrieved particles (~2,000 characters) scores **92% of what
-the same model scores when handed the entire conversation history** — from
-under 2% of the tokens — and at that same context budget it answers **1.9×**
-as many questions correctly as LLM-written session notes and **2.5×** as many
-as retrieval over the raw transcript.
+On a stratified 150-question run of LongMemEval, a long-term
+conversational-memory benchmark, an answering model given ten retrieved
+particles — a ~2,000-character read budget — answers **73.3%** of questions
+correctly, against **79.3%** for the same model handed the *entire*
+conversation history: 92% of the ceiling from under 2% of the tokens. At that
+same budget it answers **1.9×** as many questions correctly as LLM-written
+session notes and **2.5×** as many as retrieval over the raw transcript.
 [The numbers, and their caveats →](why.md#measured-not-just-argued)
 
 ## Where to go next
@@ -140,8 +170,8 @@ as retrieval over the raw transcript.
 
     ---
 
-    Install the SDK and run the deposit → extract → query loop against your
-    own sources in a few minutes.
+    `pip install linkedparticles`, then run the deposit → extract → query
+    loop against your own sources.
 
     [Getting started →](https://docs.linkedparticles.org/user-guide/getting-started/)
 
@@ -154,77 +184,13 @@ as retrieval over the raw transcript.
 
     [Why Particles? →](why.md)
 
--   **Read the standard**
+-   **Read the specification**
 
     ---
 
     The whitepaper, the technical specification, the conformance profile, and
     the machine-readable schemas — independent of any one implementation.
 
-    [The standard →](spec/whitepaper.md)
+    [The specification →](specification.md)
 
 </div>
-
-## The standard
-
-- [Whitepaper](spec/whitepaper.md) — the motivation and the design argument
-- [Technical specification](spec/technical-specification.md) — the formal
-  schema, the operations, and the conformance contract
-- [Conformance profile](spec/conformance-profile.md) — what a conforming
-  implementation must do
-- [Vocabulary](vocab.md) — every term, at the identifier it resolves to
-
-The machine-readable artifacts are served at the identifiers published data
-carries, byte-identical to the copies in the repository:
-
-- [`/schemas/particle.schema.json`](https://linkedparticles.org/schemas/particle.schema.json)
-- [`/schemas/context.jsonld`](https://linkedparticles.org/schemas/context.jsonld)
-- [`/schemas/trust_lens.schema.json`](https://linkedparticles.org/schemas/trust_lens.schema.json)
-- [`/schemas/interchange.schema.json`](https://linkedparticles.org/schemas/interchange.schema.json)
-- the five SHACL shapes under
-  [`/schemas/shacl/`](https://linkedparticles.org/schemas/shacl/ParticleShape.ttl)
-
-## The three repositories
-
-<div class="grid cards" markdown>
-
--   **The standard**
-
-    ---
-
-    The whitepaper, the technical specification, the normative schema and
-    SHACL artifacts, and the conformance fixtures — independent of any one
-    implementation. This site is built from it.
-
-    [particles-standard →](https://github.com/LinkedParticles/particles-standard)
-
--   **The engine**
-
-    ---
-
-    The reference implementation's state-holding half: corpus, extraction
-    pipeline, belief store, the query/lint/review operations, and the API,
-    CLI, MCP and web surfaces.
-
-    [particles-engine-py →](https://github.com/LinkedParticles/particles-engine-py)
-
--   **The client library**
-
-    ---
-
-    The store-free half: schema models with their confidence invariants,
-    candidate extraction, conformance validation, and the interchange codec.
-    Depend on this to produce or validate particles.
-
-    [particles-core-py →](https://github.com/LinkedParticles/particles-core-py)
-
-</div>
-
-## Reference
-
-- [SDK documentation](https://docs.linkedparticles.org/) — user, operator, and
-  plugin-author guides, the CLI reference, and the HTTP API contract
-- [Security and trust](https://github.com/LinkedParticles/particles-engine-py/blob/main/SECURITY.md)
-  — the reporting policy and the disclosed caveats
-- [Contributing](https://github.com/LinkedParticles/particles-standard/blob/main/CONTRIBUTING.md)
-  — how changes to the standard are proposed and land

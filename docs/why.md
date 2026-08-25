@@ -24,29 +24,35 @@ built out of exactly those things.
 
 ## Two ways to build a knowledge system
 
-For decades, machine knowledge has been attempted in two ways, and each gives
-up on half of the problem.
+At the extremes, machine knowledge has been built in two ways, and each
+gives up on half of the problem.
 
 - **Formalize everything.** Projects like Cyc — a forty-year effort to
-  hand-write common sense as formal logic — and the semantic web bet that
-  machines could reason over knowledge once every fact was encoded by hand.
-  The reasoning worked; the economics didn't. They stalled on the cost of
-  formalizing the world one rule at a time.
+  hand-write common sense as formal logic — and the hand-built ontologies of
+  the early semantic web bet that machines could reason over knowledge once
+  every fact was encoded by hand. The reasoning worked; the economics didn't:
+  they stalled on the cost of formalizing the world one rule at a time.
 - **Formalize nothing.** Most of today's AI systems do the opposite: store
   raw text, cut it into chunks, and retrieve whatever looks similar to the
   question (the technique behind "retrieval-augmented generation"). Fast to
   build — but a chunk of text has no notion of a claim, a source's
-  trustworthiness, or a belief that was later corrected. The system doesn't
-  *know* anything; it just finds text near the question.
+  trustworthiness, or a belief that was later corrected.
 
-Particles takes the path between them. An LLM does the formalizing — it
+Plenty of systems live between the extremes — knowledge graphs, entity
+extraction, temporal databases. What none of them keep is the *epistemic
+record*: which claim, from which source, believed how strongly, corrected by
+what. Particles is built around exactly that record. An LLM does the
+structuring — it
 extracts each claim as a plain sentence, bundled with confidence, provenance,
 and canonical **subjects** into a **particle**: the smallest self-contained
-unit of knowledge, its uncertainty grounded in the
-[PSUM](https://www.omg.org/spec/PSUM/) standard. Truth is scoped, not
+unit of knowledge, its uncertainty expressed in the terms of
+[PSUM](https://www.omg.org/spec/PSUM/), the OMG's standard for representing
+uncertainty. Truth is scoped, not
 absolute; contested claims stay visible under an auditable trust policy. A
 system's knowledge becomes something you can query, audit, and revise one
-belief at a time.
+belief at a time. Extraction runs on whichever LLM you configure — hosted or
+local; adding a provider is configuration, not code — and the store itself is
+a local database that never leaves your machine unless you export it.
 
 ## Not only for AI
 
@@ -74,9 +80,17 @@ trust applied at read time under a policy you can change, and contradictions
 kept as first-class records for a human to rule on. Where a conflict is
 handled at all in these systems, it is resolved silently by the model —
 "the graph updated itself" — with no record that the disagreement existed and
-no way for your judgment of the sources to accumulate. And none of them is an
-open standard: there is no schema or interchange format independent of the
-vendor's own implementation.
+no way for your judgment of the sources to accumulate. And none of them
+publishes an implementation-independent specification: there is no schema or
+interchange format that outlives the vendor's own code. (For database people:
+the storage discipline underneath is bitemporal — append-only assertions with
+as-of reads, in the Datomic/XTDB lineage. The epistemic layer on top is the
+new part.)
+
+Compiled August 2026 from each product's public documentation and
+repositories. **✗ means "not documented in the product's public materials at
+that date" — never a verified absence**; ◐ is a partial mechanism; – means we
+could not determine it either way.
 
 | | Particles | Zep / Graphiti | mem0 | Letta | Supermemory | Hindsight |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -88,13 +102,10 @@ vendor's own implementation.
 | Trust applied at read time, policy changeable | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | Contradictions surfaced for human review | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | Source-trust policy built from your rulings | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Open standard with an interchange format | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Open, implementation-independent spec + interchange format | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | Self-hostable, open source | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ |
 
-Compiled 2026-08 from each product's public documentation and repositories.
-**✗ means "not documented in the product's public materials at that date," not
-a verified absence**; ◐ is a partial mechanism; – means we could not determine
-it either way. Corrections are welcome —
+Corrections are welcome —
 [open an issue](https://github.com/LinkedParticles/particles-standard/issues).
 Notes: Graphiti is Apache-2.0 and self-hostable; Zep's hosted product builds
 on it. mem0's write path accumulates memories rather than overwriting them,
@@ -104,8 +115,7 @@ score per opinion; Particles separates the stored value from read-time trust.
 
 ## Measured, not just argued
 
-Architecture is an argument; benchmarks are evidence. Particles publishes its
-results on **LongMemEval** (Wu et al., ICLR 2025), a benchmark of 500
+Particles publishes its results on **LongMemEval** (Wu et al., ICLR 2025), a benchmark of 500
 questions asked against months of chat history — run against the pipeline the
 SDK actually ships, under default configuration, with the baseline that must
 not be buried published beside it.
@@ -139,7 +149,7 @@ our number beside theirs. Every comparison above holds the dataset, the
 judge, the answering model, and the budget fixed, and changes only the
 memory.
 
-## The honest tradeoff
+## The tradeoff
 
 Choosing LLM extraction over hand-formalization has real costs, and they are
 part of the design, not fine print.
@@ -161,6 +171,6 @@ source disagreement into a ruling; and rulings compound into a reusable
 source-trust policy — so the judgment you invest doesn't evaporate into a
 one-off edit, it becomes policy that re-ranks every future answer. That
 accumulation of *your* judgment over the machine's knowledge is the thing a
-pile of text chunks cannot do at any price.
+pile of text chunks cannot do.
 
 Ready to see the loop run? [See it work →](walkthrough.md)
