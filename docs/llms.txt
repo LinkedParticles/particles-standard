@@ -1,0 +1,46 @@
+# Particles
+
+> An open specification and reference implementation for AI-system memory as
+> an append-only ledger of claims: each belief is one sourced, dated,
+> confidence-scored claim ("particle"); corrections supersede rather than
+> overwrite; trust, doubt, and staleness are applied at query time under a
+> changeable policy; contradictions are kept as first-class records.
+
+The specification is implementation-independent; the reference
+implementation is `pip install linkedparticles` (Python 3.11+, CLI + HTTP
+API + MCP server).
+
+## Docs
+
+- [Why Particles](https://linkedparticles.org/why/): the argument, the
+  comparison with other memory systems, benchmark results and caveats
+- [Walkthrough](https://linkedparticles.org/walkthrough/): the
+  deposit → extract → query loop with real output, and as-of time travel
+- [Whitepaper](https://linkedparticles.org/spec/whitepaper/): motivation and
+  design
+- [Technical specification](https://linkedparticles.org/spec/technical-specification/):
+  the formal schema, operations, and conformance contract
+- [Conformance profile](https://linkedparticles.org/spec/conformance-profile/):
+  what a conforming implementation must do
+- [Vocabulary](https://linkedparticles.org/vocab/): every term at the
+  identifier it resolves to
+- [SDK documentation](https://docs.linkedparticles.org/): user, operator, and
+  plugin-author guides, CLI reference, HTTP API
+
+## Machine-readable artifacts
+
+- [JSON Schema](https://linkedparticles.org/schemas/particle.schema.json)
+- [JSON-LD context](https://linkedparticles.org/schemas/context.jsonld)
+- [Interchange schema](https://linkedparticles.org/schemas/interchange.schema.json)
+- [Trust-lens schema](https://linkedparticles.org/schemas/trust_lens.schema.json)
+- [SHACL shapes](https://linkedparticles.org/schemas/shacl/ParticleShape.ttl):
+  also SubjectShape, ProvenanceChainShape, CorpusSnapshotShape,
+  TrustStatementShape at the same path
+
+## Code
+
+- [Engine](https://github.com/LinkedParticles/particles-engine-py): reference
+  implementation (PyPI: `linkedparticles`)
+- [Client library](https://github.com/LinkedParticles/particles-core-py):
+  store-free schema + extraction (PyPI: `linkedparticles-core`)
+- [Specification repo](https://github.com/LinkedParticles/particles-standard)

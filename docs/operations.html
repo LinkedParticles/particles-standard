@@ -11,24 +11,41 @@
   page (falling back to prefers-color-scheme), so it can follow the site's
   palette toggle.
 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap">
 <style>
 :root{
-  --color-text-primary:#1a1a18; --color-text-secondary:#5f5e5a; --color-text-tertiary:#8a897f; --color-text-info:#0c447c;
-  --color-background-primary:#ffffff; --color-background-secondary:#f4f3ee; --color-page:#faf9f5;
-  --color-border-tertiary:rgba(0,0,0,.12); --color-border-secondary:rgba(0,0,0,.22); --color-border-info:#85b7eb;
+  /* The site's design tokens (design/tokens.css), inlined so the page stays
+     self-contained — keep in step with the site palette. */
+  --color-text-primary:#1c2733; --color-text-secondary:#6b7a8c; --color-text-tertiary:#94a1b2; --color-text-info:#1d4ed8;
+  --color-background-primary:#ffffff; --color-background-secondary:#eef2f7; --color-page:#f6f8fb;
+  --color-border-tertiary:#d8dfe9; --color-border-secondary:#b9c4d4; --color-border-info:#a8c3f5;
+  --color-accent:#2563eb;
+  --chip-ok-bg:#dcf5e4; --chip-ok-fg:#15803d;
+  --chip-warn-bg:#fdecd2; --chip-warn-fg:#b45309;
+  --chip-info-bg:#dbe7fd; --chip-info-fg:#1d4ed8;
   --border-radius-md:8px; --border-radius-lg:12px;
-  --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --font-sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --color-text-primary:#ececea; --color-text-secondary:#b4b2a9; --color-text-tertiary:#888780; --color-text-info:#85b7eb;
-  --color-background-primary:#26241f; --color-background-secondary:#2f2c27; --color-page:#1c1a17;
-  --color-border-tertiary:rgba(255,255,255,.14); --color-border-secondary:rgba(255,255,255,.24); --color-border-info:#185fa5;
+  --color-text-primary:#e6edf3; --color-text-secondary:#9aa4b8; --color-text-tertiary:#6d7890; --color-text-info:#8dbbff;
+  --color-background-primary:#141b2e; --color-background-secondary:#1b2540; --color-page:#0b1020;
+  --color-border-tertiary:#2a3552; --color-border-secondary:#3b4a70; --color-border-info:#4c669e;
+  --color-accent:#6ea8fe;
+  --chip-ok-bg:rgba(126,231,135,.14); --chip-ok-fg:#7ee787;
+  --chip-warn-bg:rgba(240,136,62,.14); --chip-warn-fg:#f0883e;
+  --chip-info-bg:rgba(110,168,254,.14); --chip-info-fg:#8dbbff;
 }}
 :root[data-theme="dark"]{
-  --color-text-primary:#ececea; --color-text-secondary:#b4b2a9; --color-text-tertiary:#888780; --color-text-info:#85b7eb;
-  --color-background-primary:#26241f; --color-background-secondary:#2f2c27; --color-page:#1c1a17;
-  --color-border-tertiary:rgba(255,255,255,.14); --color-border-secondary:rgba(255,255,255,.24); --color-border-info:#185fa5;
+  --color-text-primary:#e6edf3; --color-text-secondary:#9aa4b8; --color-text-tertiary:#6d7890; --color-text-info:#8dbbff;
+  --color-background-primary:#141b2e; --color-background-secondary:#1b2540; --color-page:#0b1020;
+  --color-border-tertiary:#2a3552; --color-border-secondary:#3b4a70; --color-border-info:#4c669e;
+  --color-accent:#6ea8fe;
+  --chip-ok-bg:rgba(126,231,135,.14); --chip-ok-fg:#7ee787;
+  --chip-warn-bg:rgba(240,136,62,.14); --chip-warn-fg:#f0883e;
+  --chip-info-bg:rgba(110,168,254,.14); --chip-info-fg:#8dbbff;
 }
 body{background:var(--color-page);color:var(--color-text-primary);font-family:var(--font-sans);margin:0;padding:18px 16px 28px;line-height:1.6}
 .wrap{max-width:760px;margin:0 auto}
@@ -37,7 +54,7 @@ body{background:var(--color-page);color:var(--color-text-primary);font-family:va
 .oprow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .op{font-family:inherit;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 13px;cursor:pointer}
 .op:hover{border-color:var(--color-text-tertiary)}
-.op.sel{border:2px solid #378add;font-weight:500;padding:7px 12px}
+.op.sel{border:2px solid var(--color-accent);font-weight:500;padding:7px 12px}
 .op .n{color:var(--color-text-tertiary);margin-right:6px}
 .arr{color:var(--color-text-tertiary);font-size:14px}
 .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-top:6px}
@@ -52,9 +69,9 @@ body{background:var(--color-page);color:var(--color-text-primary);font-family:va
 .sect{font-size:12px;color:var(--color-text-tertiary);margin:0 0 7px}
 .badges{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:11px;padding:3px 9px;border-radius:999px;border:none}
-.k-ok{background:#e1f5ee;color:#085041}
-.k-warn{background:#faeeda;color:#633806}
-.k-info{background:#e6f1fb;color:#0c447c}
+.k-ok{background:var(--chip-ok-bg);color:var(--chip-ok-fg)}
+.k-warn{background:var(--chip-warn-bg);color:var(--chip-warn-fg)}
+.k-info{background:var(--chip-info-bg);color:var(--chip-info-fg)}
 .k-mute{background:var(--color-background-secondary);color:var(--color-text-secondary)}
 </style>
 </head>

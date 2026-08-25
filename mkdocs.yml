@@ -22,7 +22,7 @@
 # Build:  pip install -r docs-requirements.txt && mkdocs build --strict
 
 site_name: Particles
-site_description: A git-like ledger for what an AI system believes — an open standard for provenance-tracked, calibrated-confidence agent knowledge.
+site_description: A git-like ledger for what an AI system believes — an open specification for provenance-tracked, calibrated-confidence agent knowledge.
 site_url: https://linkedparticles.org
 repo_url: https://github.com/LinkedParticles/particles-standard
 repo_name: LinkedParticles/particles-standard
@@ -91,6 +91,19 @@ extra_css:
 extra_javascript:
   - javascripts/graph-theme.js
 
+copyright: >-
+  © 2026 the LinkedParticles authors ·
+  specification draft v2.2 (CC-BY) ·
+  <a href="https://pypi.org/project/linkedparticles/">reference implementation on PyPI</a> (Apache-2.0) ·
+  <a href="https://github.com/LinkedParticles/particles-engine-py/blob/main/SECURITY.md">security</a>
+
+# Share/social metadata rendered by overrides/main.html; the PNG fallback
+# icons sit beside the hook-materialised favicon.svg.
+extra:
+  social_image: https://linkedparticles.org/assets/social-card.png
+  favicon_ico: assets/favicon.ico
+  apple_touch_icon: assets/apple-touch-icon.png
+
 plugins:
   - search
 
@@ -98,8 +111,10 @@ nav:
   - Home: index.md
   - Why Particles: why.md
   - See it work: walkthrough.md
-  - SDK docs: https://docs.linkedparticles.org/
-  - The standard:
+  - Get started: https://docs.linkedparticles.org/user-guide/getting-started/
+  - Docs: https://docs.linkedparticles.org/
+  - The specification:
+      - Overview: specification.md
       - Whitepaper: spec/whitepaper.md
       - Technical specification: spec/technical-specification.md
       - Conformance profile: spec/conformance-profile.md
