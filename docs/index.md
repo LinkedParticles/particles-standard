@@ -85,9 +85,11 @@ particles init claude-code
 
 Remembering stops being the agent's job. Each session *ends* by **harvesting**
 what happened into the corpus, so nothing depends on the agent choosing to
-save it. Each session *starts* with the store's current view pushed into the
-context window — ranked by effective confidence, contradictions flagged
-rather than hidden. And on first run it audits the memory you already have:
+save it. Each session *starts* with a small ranked digest — the store's top
+standing beliefs, a few thousand tokens at most, never the whole store —
+pushed into the context window, contradictions flagged rather than hidden;
+everything else stays out of the prompt, retrievable on demand. And on first
+run it audits the memory you already have:
 
 ```text
 Audited 23 memory files → 212 beliefs about 58 subjects.
