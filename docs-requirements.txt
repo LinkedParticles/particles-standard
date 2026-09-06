@@ -8,4 +8,4 @@
 # mkdocstrings handler is deliberately absent: this site carries no generated
 # API reference (that stays with the engine repository).
 mkdocs==1.6.1
-mkdocs-material==9.7.6
+mkdocs-material==9.7.7

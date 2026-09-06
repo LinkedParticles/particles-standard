@@ -1,5 +1,5 @@
 ---
-title: A git-like ledger for what an AI system believes
+title: Version control for what your AI knows
 description: Particles keeps AI memory as sourced, dated, confidence-scored claims — nothing overwritten, trust applied at read time, disagreements kept visible.
 ---
 <!--
@@ -12,18 +12,23 @@ description: Particles keeps AI memory as sourced, dated, confidence-scored clai
   lives on why.md, the demos on walkthrough.md. Keep it that way: new detail
   goes on those pages, not here.
 -->
-# Particles
+<div class="p-hero" markdown>
 
-**A git-like ledger for what an AI system believes.**
+# Version control for what your AI knows
 
-Every piece of knowledge is one claim: sourced, dated, and confidence-scored.
-As in a git history, nothing is overwritten: a correction *supersedes* the old
-claim, a withdrawal *retracts* it, and a disagreement is recorded as a
-disagreement — never quietly resolved. The full history of what was believed,
-and when, is always there. Trust, doubt, and staleness are applied when you
-*read*, never written into the stored claim. And the thing reading and writing
-beliefs doesn't have to be an AI: the same store works as a sourced, dated
-second brain for a person.
+A git-like ledger for what an AI system believes: every piece of knowledge is
+one claim — sourced, dated, confidence-scored — and nothing is ever
+overwritten.
+{ .p-hero-sub }
+
+</div>
+
+A correction *supersedes* the old claim, a withdrawal *retracts* it, and a
+disagreement is recorded as a disagreement — never quietly resolved. The full
+history of what was believed, and when, is always there. Trust, doubt, and
+staleness are applied when you *read*, never written into the stored claim.
+And the thing reading and writing beliefs doesn't have to be an AI: the same
+store works as a sourced, dated second brain for a person.
 
 [Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button .md-button--primary }
 [See it work](walkthrough.md){ .md-button }
