@@ -8,6 +8,11 @@
   present and the site config's otherwise. The share image is opt-in per site
   via `extra.social_image` (an absolute URL), so a config without one degrades
   to a summary card rather than a broken image.
+
+  Also carries the web-analytics tag, opt-in per site the same way via
+  `extra.goatcounter_code`. Material has no native GoatCounter provider (its
+  `extra.analytics.provider` knows only Google Analytics and Plausible), so the
+  one script tag is emitted here rather than configured there.
 -->
 {% extends "base.html" %}
 
@@ -41,5 +46,57 @@
   {% if config.extra.favicon_ico %}
   <link rel="icon" href="{{ config.extra.favicon_ico | url }}" sizes="32x32">
   <link rel="apple-touch-icon" href="{{ config.extra.apple_touch_icon | url }}">
+  {% endif %}
+  {#
+    Web analytics — GoatCounter. Cookieless, sets no identifiers, and honours
+    Do Not Track, so it needs no consent banner (which is why it was chosen
+    over Plausible and Google Analytics for a project whose pitch is privacy).
+
+    Opt-in per site via `extra.goatcounter_code`, exactly like `social_image`
+    above: the code is the subdomain — the `MYCODE` of
+    `https://MYCODE.goatcounter.com` — and it is configured in that site's own
+    `mkdocs.yml`, which is the single place it appears. Never hardcode a code
+    here: the monorepo's own `mkdocs.yml` uses this same template and
+    deliberately sets no key (that build is local/CI only and is never served
+    publicly), so a config without the key must emit no script at all.
+
+    Both published sites name the one `linkedparticles` GoatCounter site,
+    which accepts both hostnames, so the two report into one dashboard. That
+    is deliberate and settled: the front door's landing page and the docs
+    site's guides are one funnel, and reading a funnel across two dashboards
+    means reconciling two sets of numbers by hand.
+
+    One dashboard is only legible because the recorded PATH carries the
+    hostname, which is what the `path` setting below is for. GoatCounter keys
+    a pageview row on the path alone — never the hostname — so without this
+    the apex `/` and the docs `/` collapse into one row, merging away the one
+    distinction the funnel asks about: which venue someone landed on, and
+    whether they went on to the other. Rows instead read
+    `linkedparticles.org/why/` and
+    `docs.linkedparticles.org/user-guide/getting-started/`.
+
+    A `path` callback is handed count.js's own default path and returns the
+    value that is sent, so prefixing the host ADDS to the default instead of
+    replacing it: the `<link rel="canonical">` normalisation count.js already
+    does, and the requested path on a 404, both survive. The alternative,
+    `data-goatcounter-settings`, is JSON and JSON has no functions — it could
+    only carry a build-time string, which a hostname is not for a page
+    reachable at more than one, and a static per-page path would flatten every
+    404 onto `/404.html`. count.js runs `window.goatcounter =
+    window.goatcounter || {}` on load, so an object set before the async tag
+    survives it; setting just the one key (rather than assigning the object
+    wholesale, as the upstream example does) leaves anything else on it alone.
+    The `www.` strip mirrors count.js's own www-insensitive canonical check, so
+    the apex and its `www.` alias stay one row rather than two.
+  #}
+  {% if config.extra.goatcounter_code %}
+  <script>
+    window.goatcounter = window.goatcounter || {};
+    window.goatcounter.path = function (p) {
+      return location.hostname.replace(/^www\./, "") + p;
+    };
+  </script>
+  <script data-goatcounter="https://{{ config.extra.goatcounter_code }}.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
   {% endif %}
 {% endblock %}
