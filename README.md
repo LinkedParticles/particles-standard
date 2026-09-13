@@ -1,5 +1,9 @@
 # The Particles Standard
 
+**[linkedparticles.org](https://linkedparticles.org)** ·
+[Reference implementation](https://github.com/LinkedParticles/particles-engine-py) ·
+[License](docs/spec/LICENSE) (prose CC-BY-4.0, artifacts Apache-2.0)
+
 > **Particles is shared memory for humans and AI agents.** Each particle is one
 > claim, plus what you need to judge it: who said it, where, when, and how
 > confident they were. Facts, opinions, and memories are all claims, recorded
@@ -28,12 +32,15 @@ Apache-2.0. See [`docs/spec/LICENSE`](docs/spec/LICENSE).
 
 ## Implementations
 
-The reference implementation is Python, split into two distributions:
+The reference implementation is Python, split into two distributions. Start at
+**[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)** —
+it is the one you install (`pip install linkedparticles`) and the home of the
+reference implementation's issues, discussion, and documentation.
 
 | Repo | What it is |
 |---|---|
-| [`particles-core-py`](https://github.com/LinkedParticles/particles-core-py) | Client layer (`linkedparticles-core`) — store-free schema, extraction, interchange |
-| [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py) | Engine layer + surfaces (`linkedparticles`) |
+| **[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)** | **Start here** — Engine layer + surfaces (`linkedparticles`) |
+| [`particles-core-py`](https://github.com/LinkedParticles/particles-core-py) | Client layer (`linkedparticles-core`) — store-free schema, extraction, interchange; pulled in automatically |
 
 An implementation is **conforming** when it passes the conformance suite in this
 repository and round-trips interchange — not by virtue of its language or its

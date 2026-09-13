@@ -178,7 +178,9 @@ session notes and **2.5×** as many as retrieval over the raw transcript.
     ---
 
     `pip install linkedparticles`, then run the deposit → extract → query
-    loop against your own sources.
+    loop against your own sources. The reference implementation lives in
+    [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py) —
+    the repository to star, watch, and file issues against.
 
     [Getting started →](https://docs.linkedparticles.org/user-guide/getting-started/)
 

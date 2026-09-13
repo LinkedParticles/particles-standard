@@ -131,6 +131,26 @@ SPDX-FileCopyrightText = "2026 The Particles authors"
 SPDX-License-Identifier = "Apache-2.0"
 
 # --------------------------------------------------------------------------- #
+# The publication-metrics snapshots. Machine-written JSON reach data, one file
+# per scheduled capture, whose bytes are a verbatim record of what three APIs
+# answered — so nothing in them can hold a comment, and nothing in them may be
+# edited to add one.
+#
+# The blanket `**/*.json` entry above already matches these, so this block adds
+# no coverage the linter needs. It is here to NAME the class: the reason this
+# data is annotation-only is that it is an unmodifiable record, not that JSON
+# happens to lack comments, and a future reader deciding which half a new
+# metrics file belongs in should find the reasoning rather than infer it from a
+# suffix. Deliberately narrow — `metrics/snapshots/**`, not `metrics/**` — so
+# that a Python file landing anywhere under `metrics/` still needs its header.
+# --------------------------------------------------------------------------- #
+[[annotations]]
+path = "metrics/snapshots/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The Particles authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# --------------------------------------------------------------------------- #
 # The standard's prose is CC-BY-4.0, not Apache-2.0 — the split grant made at
 # activation and stated in `NOTICE`. This annotation comes after the
 # blanket `*.md` entry above and takes precedence over it.
