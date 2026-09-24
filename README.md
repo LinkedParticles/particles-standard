@@ -13,7 +13,7 @@
 
 Particles is an open standard for structured, auditable knowledge in AI agent
 systems: provenance-tracked, claim-granularity beliefs with calibrated
-uncertainty. This repository is the **standard itself** — the single public
+uncertainty. This repository is the **standard itself**: the single public
 source of truth for the design. It is independent of any one implementation.
 
 ## What's here
@@ -33,21 +33,21 @@ Apache-2.0. See [`docs/spec/LICENSE`](docs/spec/LICENSE).
 ## Implementations
 
 The reference implementation is Python, split into two distributions. Start at
-**[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)** —
-it is the one you install (`pip install linkedparticles`) and the home of the
+**[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)**.
+It is the one you install (`pip install linkedparticles`) and the home of the
 reference implementation's issues, discussion, and documentation.
 
 | Repo | What it is |
 |---|---|
-| **[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)** | **Start here** — Engine layer + surfaces (`linkedparticles`) |
-| [`particles-core-py`](https://github.com/LinkedParticles/particles-core-py) | Client layer (`linkedparticles-core`) — store-free schema, extraction, interchange; pulled in automatically |
+| **[`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py)** | **Start here**: Engine layer + surfaces (`linkedparticles`) |
+| [`particles-core-py`](https://github.com/LinkedParticles/particles-core-py) | Client layer (`linkedparticles-core`): store-free schema, extraction, interchange; pulled in automatically |
 
 An implementation is **conforming** when it passes the conformance suite in this
-repository and round-trips interchange — not by virtue of its language or its
+repository and round-trips interchange, not by virtue of its language or its
 repository shape. A second-language implementation is welcome and is, by design,
 a test of whether this specification stands on its own.
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are accepted under a
-Developer Certificate of Origin sign-off — there is no CLA.
+Developer Certificate of Origin sign-off; there is no CLA.

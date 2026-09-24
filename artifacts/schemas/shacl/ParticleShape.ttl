@@ -87,13 +87,13 @@ particles:ParticleShape
                 "LOWER_TRUST_SOURCE" "SUPERSEDED_BY_REINDEX" "VALIDITY_EXPIRED"
                 "CONFLICT_RESOLVED" "CONFLICT_PENDING" "EXPLICIT_RETRACTION"
                 "SOURCE_RETRACTED" "EXPLICIT_SUPERSESSION" "DOCUMENT_SUPERSEDED"
-                "DUPLICATE_MERGED" ) ;
-        sh:message "status_reason, when present, must be one of the thirteen StatusReason values." ;
+                "SUPERSEDED_BY_UPDATE" "DUPLICATE_MERGED" ) ;
+        sh:message "status_reason, when present, must be one of the fourteen StatusReason values." ;
     ] ;
 
     # particleType — optional; CLAIM default, REVIEW for review annotation
-    # records (§9.6), NARRATIVE for prose-level connective tissue over claims
-    #, ACTION / ANNOTATION reserved.
+    # records (§9.6), NARRATIVE for prose-level connective tissue over claims,
+    # ACTION / ANNOTATION reserved.
     sh:property [
         sh:path particles:particleType ;
         sh:maxCount 1 ;

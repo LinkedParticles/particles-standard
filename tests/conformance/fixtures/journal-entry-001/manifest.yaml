@@ -2,8 +2,8 @@
 #
 # Source: a synthesised first-person personal-journal entry in the shape a
 # `particles deposit --journal` / `--source-type JOURNAL` deposit writes —
-# plain dated-entry prose, author-agnostic (no byline resolution)
-#. Kept under `extraction.html_chunk_size` (15000) so the normal
+# plain dated-entry prose, author-agnostic (no byline resolution).
+# Kept under `extraction.html_chunk_size` (15000) so the normal
 # whole-entry single-pass path is exercised, not the JOURNAL_TRUNCATED
 # truncation branch (that long-input path is separate work).
 fixture_id: journal-entry-001

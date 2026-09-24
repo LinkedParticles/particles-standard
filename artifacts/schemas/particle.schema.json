@@ -68,6 +68,7 @@
         "SOURCE_RETRACTED",
         "EXPLICIT_SUPERSESSION",
         "DOCUMENT_SUPERSEDED",
+        "SUPERSEDED_BY_UPDATE",
         "DUPLICATE_MERGED"
       ],
       "description": "Cause of the current non-ACTIVE status"

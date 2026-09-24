@@ -1,12 +1,12 @@
 ---
 title: Version control for what your AI knows
-description: Particles keeps AI memory as sourced, dated, confidence-scored claims — nothing overwritten, trust applied at read time, disagreements kept visible.
+description: When an AI agent is confidently wrong, its memory gives you nowhere to look. Particles keeps that memory as sourced, dated claims, and nothing is overwritten.
 ---
 <!--
-  The landing page of https://linkedparticles.org — the standard's front door.
+  The landing page of https://linkedparticles.org, the standard's front door.
   See CONTRIBUTING.md for how changes to this page reach the repository.
 
-  Audience: a curious technical generalist — someone who knows what an LLM is
+  Audience: a curious technical generalist, someone who knows what an LLM is
   and has watched one be confidently wrong, but who may never have heard of
   RAG, Cyc, or bitemporality. The landing stays short and plain; the argument
   lives on why.md, the demos on walkthrough.md. Keep it that way: new detail
@@ -16,19 +16,20 @@ description: Particles keeps AI memory as sourced, dated, confidence-scored clai
 
 # Version control for what your AI knows
 
-A git-like ledger for what an AI system believes: every piece of knowledge is
-one claim — sourced, dated, confidence-scored — and nothing is ever
-overwritten.
+An AI agent remembers by writing notes to itself, and nothing records where a
+line came from, whether it is still true, or that two lines disagree.
 { .p-hero-sub }
 
 </div>
 
-A correction *supersedes* the old claim, a withdrawal *retracts* it, and a
-disagreement is recorded as a disagreement — never quietly resolved. The full
-history of what was believed, and when, is always there. Trust, doubt, and
-staleness are applied when you *read*, never written into the stored claim.
-And the thing reading and writing beliefs doesn't have to be an AI: the same
-store works as a sourced, dated second brain for a person.
+So when the agent is confidently wrong, there is nowhere to look. Particles
+keeps that memory as a git-like ledger instead: every piece of knowledge is
+one claim (sourced, dated, confidence-scored) and nothing is ever
+overwritten. A correction *supersedes* the old claim, a withdrawal *retracts*
+it, and a disagreement is recorded as a disagreement, never quietly resolved.
+Trust, doubt, and staleness are applied when you *read*, never written into
+the stored claim. And the thing reading and writing beliefs doesn't have to
+be an AI: the same store works as a sourced, dated second brain for a person.
 
 [Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button .md-button--primary }
 [See it work](walkthrough.md){ .md-button }
@@ -43,7 +44,7 @@ store works as a sourced, dated second brain for a person.
     ---
 
     A particle names the exact document snapshot it came from, so every answer
-    is traceable to the evidence it was built from — claim by claim, not
+    is traceable to the evidence it was built from: claim by claim, not
     "sources at the bottom."
 
 -   **Nothing is overwritten**
@@ -51,7 +52,7 @@ store works as a sourced, dated second brain for a person.
     ---
 
     A corrected claim *supersedes* the old one; a withdrawn claim is
-    *retracted*, not deleted. Ask the store what it believes now — or what it
+    *retracted*, not deleted. Ask the store what it believes now, or what it
     believed on any past date.
 
 -   **Trust is applied when you read**
@@ -60,7 +61,7 @@ store works as a sourced, dated second brain for a person.
 
     Each claim's stored confidence never changes. Source trust, extractor
     trust, and recency are composed at query time into the confidence used for
-    ranking — so you can change your trust policy without rewriting a single
+    ranking, so you can change your trust policy without rewriting a single
     record.
 
 -   **Disagreements are kept, not resolved silently**
@@ -72,17 +73,14 @@ store works as a sourced, dated second brain for a person.
 
 </div>
 
-In our August 2026 survey of the leading memory systems — Zep/Graphiti,
-mem0, Letta, Supermemory, Hindsight — none documented all four.
+In our August 2026 survey of the leading memory systems (Zep/Graphiti,
+mem0, Letta, Supermemory, Hindsight), none documented all four.
 [See the comparison](why.md#how-it-compares).
 
 ## Take your agent's memory out of its hands
 
-A coding agent remembers by appending lines to a file it writes itself.
-Nothing there records where a line came from, whether it is still true, or
-that two lines disagree — and the agent decides what is worth keeping.
-
-One command points that memory at a Particles store instead:
+One command moves a coding agent's memory out of its notes file and into a
+Particles store:
 
 ```bash
 particles init claude-code
@@ -90,8 +88,8 @@ particles init claude-code
 
 Remembering stops being the agent's job. Each session *ends* by **harvesting**
 what happened into the corpus, so nothing depends on the agent choosing to
-save it. Each session *starts* with a small ranked digest — the store's top
-standing beliefs, a few thousand tokens at most, never the whole store —
+save it. Each session *starts* with a small ranked digest (the store's top
+standing beliefs, a few thousand tokens at most, never the whole store)
 pushed into the context window, contradictions flagged rather than hidden;
 everything else stays out of the prompt, retrievable on demand. And on first
 run it audits the memory you already have:
@@ -107,8 +105,8 @@ Audited 23 memory files → 212 beliefs about 58 subjects.
 ```
 
 Those are questions a text file cannot answer about itself. And when your
-agent gets something wrong, you can see exactly why — which claim, from which
-source, superseded by what — and fix it at the source.
+agent gets something wrong, you can see exactly why (which claim, from which
+source, superseded by what) and fix it at the source.
 [Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)
 
 ## Watch a belief get replaced
@@ -116,9 +114,9 @@ source, superseded by what — and fix it at the source.
 In 2006 the IAU demoted Pluto. Below is a real Particles store that learned
 *"Pluto is the ninth planet"* in 1996 and the reclassification in 2006. Both
 claims are still there: the old one keeps its source, its confidence, and its
-dates, and gains a pointer to what replaced it — so the store can answer with
+dates, and gains a pointer to what replaced it, so the store can answer with
 what it believes now, or with what it believed in 2000. (That lens is about
-the store's own history — what it believed, and when that changed. Pluto
+the store's own history: what it believed, and when that changed. Pluto
 didn't change in 2006; the belief about it did.)
 
 <figure markdown="span">
@@ -130,18 +128,18 @@ didn't change in 2006; the belief about it did.)
     Click a link between <strong>Pluto</strong> and <strong>Solar
     System</strong> to read the claim behind it. The dashed edge is the retired
     belief; the panel names what replaced it and when. Uncheck
-    <em>show history</em> to drop it from view —
-    <a href="demo/pluto-belief-history.html">open it full-page</a>.
+    <em>show history</em> to drop it from view.
+    <a href="demo/pluto-belief-history.html">Open it full-page</a>.
   </figcaption>
 </figure>
 
-The full loop — getting sources in, extracting claims, querying with evidence,
-and time-traveling with `--as-of` — is on [See it work](walkthrough.md).
+The full loop (getting sources in, extracting claims, querying with evidence,
+and time-traveling with `--as-of`) is on [See it work](walkthrough.md).
 
 ## Ask, and see the evidence
 
 Here is the bundled web UI answering a question against that same Pluto store.
-The answer is built only from stored claims — and every claim behind it is
+The answer is built only from stored claims, and every claim behind it is
 listed with its stored confidence, the effective confidence it was ranked with
 at read time, its dates, and whether it revises an earlier belief. At the end,
 the same answer opens as a graph of the knowledge it consulted.
@@ -152,7 +150,7 @@ the same answer opens as a graph of the knowledge it consulted.
          style="width: 100%; max-width: 44rem; border: 1px solid var(--p-border); border-radius: var(--p-radius-lg); background: #f4f6fb;"></video>
   <figcaption>
     Asking <em>"Is Pluto still a planet?"</em> in the web UI that ships with
-    the engine. The top-cited belief is the 2006 reclassification — marked
+    the engine. The top-cited belief is the 2006 reclassification, marked
     <em>revises an earlier belief</em>, because the 1996 claim it replaced is
     still in the store.
   </figcaption>
@@ -161,12 +159,16 @@ the same answer opens as a graph of the knowledge it consulted.
 ## Measured, not just argued
 
 On a stratified 150-question run of LongMemEval, a long-term
-conversational-memory benchmark, an answering model given ten retrieved
-particles — a ~2,000-character read budget — answers **73.3%** of questions
-correctly, against **79.3%** for the same model handed the *entire*
-conversation history: 92% of the ceiling from under 2% of the tokens. At that
-same budget it answers **1.9×** as many questions correctly as LLM-written
-session notes and **2.5×** as many as retrieval over the raw transcript.
+conversational-memory benchmark, an answering model given the forty retrieved
+particles the shipped default returns (a measured 2,149-token read budget)
+answers **80.4%** of questions correctly, against **87.8%** for the same model
+handed the *entire* conversation history (scored over 148 questions): **92% of
+the ceiling from 1.3% of the tokens**. Give session notes or transcript
+retrieval that same budget and they answer **70.0%** and **60.0%**; notes need
+about half as much context again to draw level. Squeeze the budget to ten
+particles, 542 tokens, and Particles still answers **80.0%**, twice what
+either alternative manages there. Lift the budget entirely and session notes
+win.
 [The numbers, and their caveats →](why.md#measured-not-just-argued)
 
 ## Where to go next
@@ -179,7 +181,7 @@ session notes and **2.5×** as many as retrieval over the raw transcript.
 
     `pip install linkedparticles`, then run the deposit → extract → query
     loop against your own sources. The reference implementation lives in
-    [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py) —
+    [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py),
     the repository to star, watch, and file issues against.
 
     [Getting started →](https://docs.linkedparticles.org/user-guide/getting-started/)
@@ -198,7 +200,7 @@ session notes and **2.5×** as many as retrieval over the raw transcript.
     ---
 
     The whitepaper, the technical specification, the conformance profile, and
-    the machine-readable schemas — independent of any one implementation.
+    the machine-readable schemas, independent of any one implementation.
 
     [The specification →](specification.md)
 

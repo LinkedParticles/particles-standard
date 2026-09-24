@@ -25,7 +25,7 @@ specification cites for behaviour, and it carries its own version stamp.
 
 Operational parameters that do **not** affect epistemic outputs (network
 timeouts, byte caps, rate limits, batch sizes, progress-bar toggles) are
-explicitly **out of scope** — they may differ freely across implementations.
+explicitly **out of scope**; they may differ freely across implementations.
 
 ---
 
@@ -34,21 +34,21 @@ explicitly **out of scope** — they may differ freely across implementations.
 An implementation **declares the highest level it targets**. Each level is a
 superset of the ones below and is independently testable.
 
-- **L1 — Structural.** Schema validity, the §6.6 status machine, JSON-LD
+- **L1, Structural.** Schema validity, the §6.6 status machine, JSON-LD
   serialization round-trip, and relation-graph canonicalization. Covered by the
   existing schema/SHACL/context artifacts. *Reproducible exactly.*
-- **L2 — Deterministic-compute.** Every numeric/algorithmic output that is a
+- **L2, Deterministic-compute.** Every numeric/algorithmic output that is a
   pure function of stored inputs: `effective_confidence`, the noisy-OR
   confidence merge, the recency factor, calibration scaling, the
   conflict-resolution **ladder ordering**, the §16.1 fingerprint, and cascade
   gating. Given identical inputs, outputs MUST match within the float tolerance
   in §4. *Reproducible exactly, given inputs.*
-- **L3 — Profile-similarity.** Similarity-driven behaviour — retrieval,
-  co-evidential grouping, contradiction candidacy, subject-link scoring —
+- **L3, Profile-similarity.** Similarity-driven behaviour (retrieval,
+  co-evidential grouping, contradiction candidacy, subject-link scoring)
   **within a declared `embedding_profile`** that passes the §3 similarity test
   vectors. Cross-profile top-k *ordering* is implementation-defined and MUST be
   disclosed. *Reproducible within a profile; bounded by test vectors.*
-- **L4 — Full.** End-to-end behaviour including LLM-driven judgments (extraction
+- **L4, Full.** End-to-end behaviour including LLM-driven judgments (extraction
   granularity, semantic-contradiction verdicts, NL synthesis). Conformance is on
   the **structured envelope and disclosure** (§6), never the prose. *Not
   bit-exact.*
@@ -91,7 +91,7 @@ conformance level that observes it; **Spec** points to the governing section.
 
 | source_type | half_life_days | floor | Level | Notes |
 |---|---|---|---|---|
-| `REDDIT_POST` | `60` | `0.10` | L2 | Floor is the `SourceDecayConfig` field default — stated explicitly here so it can't drift. |
+| `REDDIT_POST` | `60` | `0.10` | L2 | Floor is the `SourceDecayConfig` field default, stated explicitly here so it can't drift. |
 | `GITHUB_REPO` | `365` | `0.40` | L2 | |
 | `GITHUB_GIST` | `180` | `0.20` | L2 | |
 | `GITHUB_PAGES` | `365` | `0.25` | L2 | |
@@ -100,11 +100,11 @@ conformance level that observes it; **Spec** points to the governing section.
 `age_days = (now_utc − content_published_at_utc) / 86400`, **fractional**;
 reference is `content_published_at` (not capture time); `None` or future-dated →
 `1.0` (`core/decay.py:43-55`). **Scope:** this is the store-local
-*base* — adopted trust lenses may overlay per-`source_type` / per-URL
+*base*; adopted trust lenses may overlay per-`source_type` / per-URL
 `decay_rules`; the table above is the default policy with no decay-bearing lens
 adopted.
 
-### 2.4 Similarity thresholds (L3 — profile-relative)
+### 2.4 Similarity thresholds (L3, profile-relative)
 
 These gate similarity-driven decisions and are meaningful only **on the §3
 normalized cosine scale, within a declared profile**.
@@ -112,6 +112,8 @@ normalized cosine scale, within a declared profile**.
 | Constant | Value | Purpose | Spec |
 |---|---|---|---|
 | `extraction.similarity_threshold` | `0.80` | Extract-time conflict candidacy | §9.2 step 7 |
+| `reconciliation.update_supersession.subject_floor` | `0.45` | Subject-scoped, cross-entry extract-time conflict candidacy | §9.2 step 7 |
+| `consolidation.max_update_probes` | `100` | Per-run probe budget for the same-subject update sweep | §6.4 |
 | `query.equivalence_threshold` (θ) | `0.0` | Co-evidential grouping; `0.0` reproduces prior binary behaviour | §6.10 |
 | `lint.contradiction_candidate_threshold` | `0.6` | `L-SEM-01` contradiction candidacy | §9.4 |
 | `find_duplicates_similarity_threshold` | `0.88` | Near-duplicate detection | §9.4 |
@@ -123,7 +125,7 @@ normalized cosine scale, within a declared profile**.
 
 | Constant | Value | Purpose | Level | Notes |
 |---|---|---|---|---|
-| `default_top_k` | `40` | Retrieval slice | L3 | Ordering non-normative across profiles. (Code default `40`; `config.yaml.sample` said `10` — sample corrected.) |
+| `default_top_k` | `40` | Retrieval slice | L3 | Ordering non-normative across profiles. (Code default `40`; `config.yaml.sample` said `10`; sample corrected.) |
 | `default_min_confidence` | `0.0` | Floor filter | L2 | |
 | `similarity_weight` / `confidence_weight` | `0.6` / `0.4` | Rank blend | L3 | **Resolved:** ranking is the **weighted sum** `similarity_weight·cos + confidence_weight·eff_conf` (`operations/query/main.py`). The §9.3 prose was corrected from the erroneous "×" alongside the activation. |
 | `lint.recency_decay_threshold` | `0.5` | Staleness flag on recency factor | L2 | |
@@ -131,13 +133,13 @@ normalized cosine scale, within a declared profile**.
 | `contestedness.callout_threshold` | `0.2` | Contested-claim callout surfacing | L2 | max−min effective-confidence spread across the policy set. Draft labelled this `review.callout_threshold`; the canonical config path is `contestedness.callout_threshold`. |
 | synthesis `layer_b_unrelated_tolerance` | `0.30` | Citation-validation Layer B | L4 | LLM-judge dependent. |
 
-### 2.6 Benchmark match semantics — §13.3
+### 2.6 Benchmark match semantics: §13.3
 
 These pin the claim-equivalence assignment and the ECE binning the §13.3
 benchmark runner uses, so two conformant runners' precision / recall /
 `calibration_error` are comparable numbers rather than artefacts of differing
-match rules. They are **code-level constants** — module-level defaults in
-`particles/benchmark/`, not config knobs — so they carry no `config_path`; the
+match rules. They are **code-level constants** (module-level defaults in
+`particles/benchmark/`, not config knobs), so they carry no `config_path`; the
 drift guard checks them against the live benchmark defaults directly
 (`tests/test_conformance_profile.py::test_benchmark_match_constants_match_live_code`).
 
@@ -146,6 +148,20 @@ drift guard checks them against the live benchmark defaults directly
 | `benchmark_equivalence_threshold` | `0.80` | Embedding judge: an emitted/expected pair matches when cosine ≥ this, assigned greedily one-to-one in similarity-descending order | L3 | On the §3 normalized cosine scale. |
 | `benchmark_llm_prefilter` | `0.65` | LLM-judge mode: only pairs scoring ≥ this cosine are sent to the LLM judge (a wider net; the pre-filter bounds LLM cost) | L3 | On the §3 normalized cosine scale. |
 | `benchmark_ece_bins` | `10` | Expected Calibration Error: number of equal-width confidence bins | L2 | Guo et al. 2017 convention; two runners MUST use the same binning. |
+
+**Subject-aware rendering (techspec §13.3).** Neither constant above
+changed, but what the embedding judge *reads* on the emitted side did. A
+runner scores each emitted particle under two renderings (bare `content`, and
+`content` prefixed with those of its subject names absent from it) and keeps
+the higher similarity per pair, because a particle's subjects are a field
+rather than part of its content. This is a **match-semantics change, and it
+moves reported numbers**: on `prose-article-seed-001` / `claude-haiku-4-5`,
+precision 0.800 → 0.912 and recall 0.714 → 0.857 over one fixed emission set.
+Figures produced before v1.140.0, including the published provider-survey
+pages, were measured without it and are **not comparable** with figures
+produced after. The reference SDK keeps the old behaviour reachable for
+reproducing them (`benchmark.subject_aware_matching: false`); that switch is
+for replaying history, not a conformance option.
 
 ---
 
@@ -163,7 +179,7 @@ Governed by the similarity-portability contract. Summary of the contract this Pr
 - **Similarity test vectors.** A frozen set of `(text_a, text_b) → expected
   similarity band` and `(query, corpus) → expected top-k membership` cases. A
   backend is profile-conformant if it reproduces the **bands** (ratified
-  tolerance methodology — bands, not `|Δ|≤ε`) and the top-k membership. The
+  tolerance methodology: bands, not `|Δ|≤ε`) and the top-k membership. The
   corpus is a small purpose-built set (~20–40 pairs + top-k cases).
 
 The concrete vector file is shipped at
@@ -179,8 +195,8 @@ file by name (`similarity_vectors_ref`).
 ## 4. Confidence & calibration math (L2)
 
 All formulas below are pure functions of stored inputs and MUST reproduce
-exactly. **Float tolerance (resolved — §8 decision #6):** two L2 outputs are
-conformant-equal iff `|a − b| ≤ 1e-9` — an **absolute** tolerance on the `[0, 1]`
+exactly. **Float tolerance (resolved; §8 decision #6):** two L2 outputs are
+conformant-equal iff `|a − b| ≤ 1e-9`, an **absolute** tolerance on the `[0, 1]`
 scale. It is loose enough to absorb cross-language `pow` / `exp` rounding, tight
 enough that a genuine formula divergence fails. The companion artifact carries
 the same value as `float_tolerance`, and `particles conformance check` applies
@@ -202,13 +218,13 @@ recency_factor = max(floor, 0.5 ^ (age_days / half_life_days))
 age_days       = (now_utc − content_published_at_utc) / 86400   # fractional days; None/future → factor 1.0
 ```
 
-**Stored confidence (calibration at creation, immutable — §6.3 / §14.3):**
+**Stored confidence (calibration at creation, immutable; §6.3 / §14.3):**
 
 ```
 confidence.value = sigmoid(logit(raw) / T),   T ∈ [0.01, 10.0]
 ```
-**Resolved:** the apply transform is **logit-space temperature scaling** — Guo
-et al. (2017) as written — and `T` is fit by **NLL** minimization (not ECE) over
+**Resolved:** the apply transform is **logit-space temperature scaling** (Guo
+et al. (2017) as written), and `T` is fit by **NLL** minimization (not ECE) over
 `[0.01, 10.0]` via `scipy.minimize_scalar(method="bounded")`. `T = 1` is the
 identity; `T > 1` pulls every value toward `0.5`; `T < 1` pushes toward the ends;
 `0.0` and `1.0` are exact fixed points. The stored enum
@@ -216,17 +232,17 @@ identity; `T > 1` pulls every value toward `0.5`; `T < 1` pushes toward the ends
 accurate.
 
 **Amended.** This section previously resolved the transform as
-`clamp(raw/T, 0, 1)` — *bounded reciprocal-temperature scaling of a `[0,1]`
-scalar* — on the reasoning that extractors expose a confidence rather than
+`clamp(raw/T, 0, 1)`, *bounded reciprocal-temperature scaling of a `[0,1]`
+scalar*, on the reasoning that extractors expose a confidence rather than
 logits. That reasoning was wrong: a confidence *is* a probability, and `logit`
 of a probability is defined. The approximation carried two defects the logit
-form does not — a `T<1` saturation that collapsed every value above `T` onto
+form does not: a `T<1` saturation that collapsed every value above `T` onto
 `1.0` (destroying order among them), and unbounded degradation at high `T`
 (at the bound, every confidence divided by ten). A stored calibration now
 declares its own transform; one that does not predates this decision and is not
 applied.
 
-**Co-evidential merge (noisy-OR, §6.9 — transcribed verbatim):** for a
+**Co-evidential merge (noisy-OR, §6.9; transcribed verbatim):** for a
 co-evidential group `G` (the same claim asserted from independent extractors or
 across co-evidential-linked sources), the merged confidence is **not** a max or
 average but a trust-weighted noisy-OR:
@@ -239,7 +255,7 @@ merged(G) = 1 − ∏_{p ∈ G} (1 − effective_confidence(p) × source_indepen
   to `[0, 1]`).
 - `source_independence(p)` is `1.0` for the **first** particle from a given
   source and `1/k` for the `k`-th particle from that same source within the
-  group — the throttle that stops one chatty source from saturating the merge.
+  group, the throttle that stops one chatty source from saturating the merge.
 - **Within-source ranking is by descending `effective_confidence`** (the
   strongest claim from a source carries full weight; weaker repeats absorb the
   `1/k` discount). This makes the result independent of input order. An empty
@@ -248,9 +264,9 @@ merged(G) = 1 − ∏_{p ∈ G} (1 − effective_confidence(p) × source_indepen
 This is the reference SDK's `merge_co_evidential_confidence`
 (`particles/core/confidence.py`). The `source_key` that groups particles is
 typically the first SOURCE provenance ref's `corpus_entry_id`, but may be a
-domain or author for finer throttling — the merge math is identical.
+domain or author for finer throttling; the merge math is identical.
 
-**Worked example.** A group of three particles — two from source `A`, one from
+**Worked example.** A group of three particles, two from source `A` and one from
 source `B`:
 
 | particle | source | effective_confidence | within-source rank `k` | `source_independence` | `1 − ec·si` |
@@ -259,8 +275,8 @@ source `B`:
 | p2 | A | 0.50 | 2 | 0.5 | `1 − 0.25 = 0.75` |
 | p3 | B | 0.60 | 1 | 1.0 | `1 − 0.60 = 0.40` |
 
-`merged = 1 − (0.30 × 0.75 × 0.40) = 1 − 0.09 = `**`0.91`**. Note p2 — the
-second voice from `A` — contributes `0.50 × 0.5 = 0.25`, not `0.50`: the
+`merged = 1 − (0.30 × 0.75 × 0.40) = 1 − 0.09 = `**`0.91`**. Note p2, the
+second voice from `A`, contributes `0.50 × 0.5 = 0.25`, not `0.50`: the
 discount keeps a single source from counting twice at full strength. The same
 three particles from three *distinct* sources would merge higher
 (`1 − 0.30·0.50·0.40 = 0.94`); three identical `0.60` voices from *one* source
@@ -272,7 +288,7 @@ These are the canonical L2 vectors **for the formula families above**, mirrored
 verbatim in `profile.yaml`'s `test_vectors` block; `particles conformance check
 --level L2` recomputes each via the SDK's own functions and asserts
 `|computed − expected| ≤ 1e-9`. The §5 deterministic *algorithms* carry their
-own vector families in the same block — see §5.1.
+own vector families in the same block; see §5.1.
 
 | # | Formula | Inputs | Expected |
 |---|---|---|---|
@@ -298,27 +314,27 @@ implementation runs `particles conformance check` to self-certify L2 and L3.
 Specified normatively elsewhere; the Profile pins them as L2 conformance
 requirements and points to the governing text:
 
-- **Status transitions** — the §6.6 transition table (exhaustive, normative).
-- **Relation canonicalization** — symmetric kinds → `(min(a,b), max(a,b))` on
+- **Status transitions**: the §6.6 transition table (exhaustive, normative).
+- **Relation canonicalization**: symmetric kinds → `(min(a,b), max(a,b))` on
   write; asymmetric kinds preserve direction (§6.10).
-- **Fingerprint** — the §16.1 Merkle/SHA-256 procedure ("MUST be followed
+- **Fingerprint**: the §16.1 Merkle/SHA-256 procedure ("MUST be followed
   exactly").
-- **Conflict-resolution ladder ordering** — the §6.4 rungs in order:
+- **Conflict-resolution ladder ordering**: the §6.4 rungs in order:
   `1 ALEATORY → 1.5 document-supersession → 1.7 truth-apt gate → 2 trust
   differential → 3 INCONSISTENCY`. The **ordering** is L2-normative; the
   similarity *candidacy* that feeds it is L3.
-- **Cascade gating** — N≥3 confirmations, `cascade_max_per_run` cap (§15).
+- **Cascade gating**: N≥3 confirmations, `cascade_max_per_run` cap (§15).
 
 ### 5.1 Machine-checkable vectors for the algorithms
 
-Three of the five above — the ladder ordering, the fingerprint, and cascade
-gating — carry runnable `test_vectors` families in the companion artifact
+Three of the five above (the ladder ordering, the fingerprint, and cascade
+gating) carry runnable `test_vectors` families in the companion artifact
 alongside the §4 formula families, and `particles conformance check --level L2`
 recomputes them with the rest. (Status transitions and relation
 canonicalization remain pinned by prose + the L1 structural artifacts.)
 
 The §4 families are numeric and conform within `float_tolerance`. These three
-are **categorical** — a verdict, a hex digest, a boolean and a count — and MUST
+are **categorical** (a verdict, a hex digest, a boolean and a count) and MUST
 match **exactly**; there is nothing to round.
 
 | Family | Pins | Governing text |
@@ -328,7 +344,7 @@ match **exactly**; there is nothing to round.
 | `cascade_gate`, `cascade_cap` | The policy gate (`OPERATOR_DIRECT` / `REGISTRY_ENDORSED` always; `REVIEWER_DERIVED` at N ≥ `cascade_min_reviewer_confirmations`) and the `cascade_max_per_run` truncation | §15.1 |
 
 **Structured inputs stay plain data.** Unlike the §4 vectors, which take
-scalars, these take structured inputs — but each vector publishes **only the
+scalars, these take structured inputs, but each vector publishes **only the
 fields its algorithm actually reads**, as flat records, never a serialized
 particle. A `conflict_ladder` vector's two particle stubs carry
 `assertion_modality` and `uncertainty_nature` and nothing else; a
@@ -338,7 +354,7 @@ fields rather than reproducing this SDK's object graph. An implementation that
 adds fields to its particle type does not invalidate the vectors.
 
 Because the ladder family is about **ordering** rather than any single rung's
-logic, its vectors deliberately put rungs in competition — a vector sets up a
+logic, its vectors deliberately put rungs in competition: a vector sets up a
 lower rung to decide one way and asserts that the higher rung overrides it. An
 `ALEATORY` pair carrying both a document-supersession edge and a decisive trust
 differential must still resolve to `INCONSISTENT`; that vector is what a
@@ -346,7 +362,7 @@ reordering of the ladder would break.
 
 ---
 
-## 6. LLM-judgment boundary (L4 — non-deterministic)
+## 6. LLM-judgment boundary (L4, non-deterministic)
 
 The following are **LLM-driven and therefore not bit-reproducible**. The
 standard's conformance contract around each is on the *deterministic envelope*,
@@ -355,7 +371,7 @@ not the model output:
 | Behaviour | Non-deterministic part | Deterministic contract (what IS conformance) |
 |---|---|---|
 | Extraction | Claim segmentation, confidence self-assessment, subject names | Output schema validity (L1); calibration applied deterministically (L2); candidate-subject resolution scoring (L3) |
-| Semantic lint (`L-SEM-*`) | The contradiction / equivalence *verdict* | Candidate *generation* is deterministic (similarity gate, §2.4) — conformance is on candidates, not verdicts |
+| Semantic lint (`L-SEM-*`) | The contradiction / equivalence *verdict* | Candidate *generation* is deterministic (similarity gate, §2.4); conformance is on candidates, not verdicts |
 | Synthesis (wiki/query NL) | The prose | Citation-validation Layers A/B must run; cited IDs MUST be members (L1/L4) |
 
 An L4 implementation MUST **disclose** which outputs are LLM-driven.
@@ -369,7 +385,7 @@ mirrors §2 (constants, each tagged with the `config_path` it restates), §3 (th
 embedding profile + a `similarity_vectors_ref` pointer to the vector
 file), §4 (formulas + the canonical `test_vectors`), and §5.1 (the algorithm
 vector families). It carries its own `profile_version` (`1.1`), decoupled from
-this document's and the spec's cadence — bump it when a default is re-tuned or
+this document's and the spec's cadence; bump it when a default is re-tuned or
 the vector set grows.
 
 **Single source of truth, kept in sync.** premise is that the Profile
@@ -378,15 +394,15 @@ reference SDK keeps the artifact and `particles/config.py` from drifting via a
 drift-guard test (`tests/test_conformance_profile.py`): for every constant it
 resolves the declared `config_path` off the live `get_config()` and asserts the
 published `value` still matches. Re-tuning a default without updating the Profile
-(or vice versa) fails the test — so the artifact never silently lags the code.
+(or vice versa) fails the test, so the artifact never silently lags the code.
 `config.py` remains the runtime source; the Profile is the published mirror the
 test pins to it.
 
-**Self-certification — `particles conformance check` (this milestone).** The
+**Self-certification: `particles conformance check` (this milestone).** The
 runner (`particles/conformance/runner.py`) loads `profile.yaml` and reports a
 per-level verdict:
 
-- **L2** recomputes every `test_vectors` entry via the SDK's own functions —
+- **L2** recomputes every `test_vectors` entry via the SDK's own functions:
   `core.scoring.confidence.compute_effective_confidence` /
   `merge_co_evidential_confidence`, `core.scoring.decay.recency_factor_from_params`,
   `extraction.calibration.TemperatureScaler` for the §4 formulas (asserting
@@ -416,35 +432,36 @@ claim.
 
 **Resolved (2026-06-25, owner-ratified after codebase investigation):**
 
-1. **Trust differential** — **`0.15`** canonical (`config.py`). The
+1. **Trust differential**: **`0.15`** canonical (`config.py`). The
    §6.4 / §9.4 "0.2" prose was corrected in the truth-sync. (§2.2)
-2. **Query ranking** — **weighted sum** `similarity_weight·cos +
+2. **Query ranking**: **weighted sum** `similarity_weight·cos +
    confidence_weight·eff_conf` (`operations/query/main.py`). The
    §9.3 "×" prose was corrected in the truth-sync. (§2.5)
-3. **Recency decay** — frozen per §2.3 (four configured types; unlisted →
+3. **Recency decay**: frozen per §2.3 (four configured types; unlisted →
    `1.0`); `age_days` fractional UTC from `content_published_at`. (§2.3)
-4. **Calibration** — `sigmoid(logit(raw)/T)`, `T` fit by NLL over `[0.01,10.0]`;
+4. **Calibration**: `sigmoid(logit(raw)/T)`, `T` fit by NLL over `[0.01,10.0]`;
    logit-space which amended this section's original resolution of
    "bounded reciprocal-temperature scalar scaling"; enum string retained. (§4)
-5. **Embedding reference / tolerance / corpus** —: reference
+5. **Embedding reference / tolerance / corpus**:: reference
    `all-MiniLM-L6-v2 @ 384 / l2`; **band** tolerance; small purpose-built corpus
    in `artifacts/conformance/`. (§3)
 
 Decisions 1–4 also imply small `technical-specification.md` prose corrections
 (the `0.15` differential, the weighted-sum ranking, and the `default_top_k`
-sample fix) — a docs truth-sync applied alongside the activation; this
+sample fix), a docs truth-sync applied alongside the activation; this
 document's activation additionally wires the spec to **cite** the Profile as the
 behavioural ground truth (techspec §6.3 / §6.4 / §8.5 / §13.2, the way it
 already cites the schema/SHACL artifacts for structure).
 
 **Resolved at activation (2026-06-25, owner-ratified in session):**
 
-6. **Float tolerance** for L2 equality — **`1e-9` absolute** on the `[0, 1]`
+6. **Float tolerance** for L2 equality: **`1e-9` absolute** on the `[0, 1]`
    scale (`|a − b| ≤ 1e-9`). Absorbs cross-language `pow`/`exp` rounding without
    admitting a real formula divergence. Carried as `float_tolerance` in
    `profile.yaml`. (§4)
-7. **Companion artifact & runner** — the artifact ships at
-   `artifacts/conformance/profile.yaml` (sibling of the `similarity_vectors.json`), shape per §7, parsed by
+7. **Companion artifact & runner**: the artifact ships at
+   `artifacts/conformance/profile.yaml` (sibling of the
+   `similarity_vectors.json`), shape per §7, parsed by
    `particles/conformance/profile.py`. A conformance-test **runner ships this
    milestone**: `particles conformance check` (L2 deterministic + L3 similarity;
    L1 delegated), backed by `particles/conformance/runner.py`, plus the
@@ -453,11 +470,11 @@ already cites the schema/SHACL artifacts for structure).
 
 **Resolved since (2026-08-02):**
 
-8. **Algorithm vector coverage** — the §5 deterministic algorithms named
+8. **Algorithm vector coverage**: the §5 deterministic algorithms named
    L2-normative but not previously machine-checkable now carry `test_vectors`
    families: the §6.4 conflict-ladder ordering, the §16.1 fingerprint, and
    §15.1 cascade gating. The vector schema grew to admit **structured** inputs
-   while staying language-agnostic — each vector publishes only the fields its
+   while staying language-agnostic: each vector publishes only the fields its
    algorithm reads, as flat plain-data records (§5.1). Categorical outputs
    compare exactly rather than within `float_tolerance`. `profile_version` →
    `1.1`. The one still-open item from decision #7 is the formal
