@@ -1,5 +1,4 @@
-# REUSE licensing annotations for files that do not carry an SPDX header
-#.
+# REUSE licensing annotations for files that do not carry an SPDX header.
 #
 # The licensing metadata is split in two, and the split is forced rather than
 # chosen. Authored source that carries a comment idiom holds its own SPDX

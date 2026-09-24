@@ -35,6 +35,7 @@ notes: |
 
   Note the deliberate `uncertainty_nature` uniformity: every particle is
   EPISTEMIC, because a structured reading reports what a source states and the
-  residual uncertainty is about the world, never about sampling. The diversity rule therefore flags this extractor, exactly as it flags
+  residual uncertainty is about the world, never about sampling. The
+  diversity rule therefore flags this extractor, exactly as it flags
   `rdf-extractor` and `numista-coin-extractor` — the standing shape for every
   structured extractor, not a regression.

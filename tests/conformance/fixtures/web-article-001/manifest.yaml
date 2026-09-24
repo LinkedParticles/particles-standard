@@ -16,8 +16,8 @@ source_type: WEB_PAGE
 expected_acceptors:
   - general-extractor
 notes: |
-  Exercises the general extractor's HTML → Markdown → single-pass prose path
-  ; at 2.6 KB it stays well under extraction.html_chunk_size (15000)
+  Exercises the general extractor's HTML → Markdown → single-pass prose path;
+  at 2.6 KB it stays well under extraction.html_chunk_size (15000)
   so the whole-document path runs, not the chunked carry-forward.
 
   The prose is deliberately mixed so claim mining has to discriminate rather
@@ -26,6 +26,7 @@ notes: |
   mechanism claim (artifacts keyed on the SHA-256 hash of declared inputs), a
   causal explanation (undeclared environment reads were the commonest miss),
   an evaluative pull quote (the hard part was input honesty, not hashing), a
-  declined alternative (remote execution, rejected for now — the polarity surface), and a forward-looking plan (Q3 2026 rollout). Boilerplate
+  declined alternative (remote execution, rejected for now — the
+  polarity surface), and a forward-looking plan (Q3 2026 rollout). Boilerplate
   the extractor must NOT mine as claims: the nav bar, the tag link, and the
   copyright footer.

@@ -1,5 +1,4 @@
-# Conformance fixture for the reference memory-server migration extractor
-#.
+# Conformance fixture for the reference memory-server migration extractor.
 #
 # Source: synthesised, not fetched. The entity names are the reference server's
 # own README example (`John_Smith` → `works_at` → `Anthropic`), reproduced with
@@ -36,7 +35,8 @@ notes: |
 
   Note the deliberate `uncertainty_nature` uniformity: every particle is
   EPISTEMIC, for the same reason as `rdf-graph-001` — a translator reports what
-  a source states, and the residual uncertainty is about the world. The diversity rule will flag this extractor, and as there, that is
+  a source states, and the residual uncertainty is about the world. The
+  diversity rule will flag this extractor, and as there, that is
   correct behaviour to observe rather than a defect to paper over. The same
   goes for confidence uniformity, which is not a calibration failure but the
   §5 decision: one number, one meaning.

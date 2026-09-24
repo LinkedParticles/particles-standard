@@ -63,6 +63,13 @@ constants:
     spec: "§9.1a"
 
   # § 2.2 Trust, demotion & cascade
+  # per-run probe budget for the same-subject update sweep.
+  - name: max_update_probes
+    value: 100
+    config_path: consolidation.max_update_probes
+    level: L2
+    spec: "§6.4"
+
   - name: trust_differential_threshold
     value: 0.15
     config_path: trust.differential_threshold
@@ -170,6 +177,13 @@ similarity_thresholds:
   - name: extraction_conflict
     value: 0.80
     config_path: extraction.similarity_threshold
+    level: L3
+    spec: "§9.2 step 7"
+  # the subject-scoped, cross-entry §6.6 candidacy floor. Finds
+  # candidates only; every pair still passes the contradiction probe.
+  - name: update_supersession_subject_floor
+    value: 0.45
+    config_path: reconciliation.update_supersession.subject_floor
     level: L3
     spec: "§9.2 step 7"
   - name: coevidential_theta
@@ -304,7 +318,8 @@ test_vectors:
   # (rung 2 skipped), trust_differential_threshold 0.15, single_trust_order true.
   #
   # Rungs, in order: 1 ALEATORY -> 1.5 document-supersession -> 1.7 truth-apt
-  # gate -> 2 trust differential -> 3 INCONSISTENCY.
+  # gate -> 2 trust differential -> 2.5 same-lineage update supersession ->
+  # 3 INCONSISTENCY.
   conflict_ladder:
     # rung 1 outranks BOTH 1.5 and 2: an irreducible disagreement is never
     # retired by an editorial relation nor by a trust gap.
@@ -406,6 +421,57 @@ test_vectors:
       trust_score_existing: 0.20
       trust_score_new: 0.90
       expected: INCONSISTENT
+    # rung 2.5: a same-lineage update — trust cannot tell the sides
+    # apart, so the strictly newer claim wins. update_order is the caller's
+    # verdict on lineage + dating: +1 new newer, -1 existing newer.
+    - id: cl-13
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.50
+      trust_score_new: 0.50
+      update_order: 1
+      expected: UPDATE_SUPERSEDES
+    # rung 2.5 mirror: an out-of-order (older) new claim is the loser.
+    - id: cl-14
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      update_order: -1
+      expected: UPDATE_SUPERSEDED_BY_EXISTING
+    # rung 2.5 fires in a multi store: a lineage updating itself is not the
+    # cross-contributor arbitration multi forbids (contrast cl-12).
+    - id: cl-15
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      single_trust_order: false
+      update_order: 1
+      expected: UPDATE_SUPERSEDES
+    # rung 2 outranks 2.5: a real trust differential decides first.
+    - id: cl-16
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      trust_score_existing: 0.90
+      trust_score_new: 0.20
+      update_order: 1
+      expected: SUPERSEDED_BY_EXISTING
+    # rung 1 outranks 2.5: an ALEATORY pair is never retired by a timestamp.
+    - id: cl-17
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      update_order: 1
+      expected: INCONSISTENT
+    # the probe outranks 2.5: no contradiction, no supersession.
+    - id: cl-18
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      update_order: 1
+      expected: CORROBORATES
+    # the truth-apt gate outranks 2.5: an opinion is never superseded by date.
+    - id: cl-19
+      existing: { assertion_modality: EVALUATIVE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      update_order: 1
+      expected: CORROBORATES
 
   # --- §16.1 context fingerprint -----------------------------------
   # Procedure: (1) take every ACTIVE particle in the store, (2) sort the UUIDs
