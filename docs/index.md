@@ -22,14 +22,14 @@ line came from, whether it is still true, or that two lines disagree.
 
 </div>
 
-So when the agent is confidently wrong, there is nowhere to look. Particles
+When the agent is confidently wrong, there is nowhere to look. Particles
 keeps that memory as a git-like ledger instead: every piece of knowledge is
 one claim (sourced, dated, confidence-scored) and nothing is ever
 overwritten. A correction *supersedes* the old claim, a withdrawal *retracts*
 it, and a disagreement is recorded as a disagreement, never quietly resolved.
 Trust, doubt, and staleness are applied when you *read*, never written into
-the stored claim. And the thing reading and writing beliefs doesn't have to
-be an AI: the same store works as a sourced, dated second brain for a person.
+the stored claim. The thing reading and writing beliefs doesn't have to be
+an AI, either: the same store works as a sourced, dated second brain for a person.
 
 [Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button .md-button--primary }
 [See it work](walkthrough.md){ .md-button }
@@ -91,8 +91,8 @@ what happened into the corpus, so nothing depends on the agent choosing to
 save it. Each session *starts* with a small ranked digest (the store's top
 standing beliefs, a few thousand tokens at most, never the whole store)
 pushed into the context window, contradictions flagged rather than hidden;
-everything else stays out of the prompt, retrievable on demand. And on first
-run it audits the memory you already have:
+everything else stays out of the prompt, retrievable on demand. On first run,
+it also audits the memory you already have:
 
 ```text
 Audited 23 memory files → 212 beliefs about 58 subjects.
@@ -104,7 +104,7 @@ Audited 23 memory files → 212 beliefs about 58 subjects.
   Also: 3 cited sources never captured · 6 beliefs have no resolvable subject
 ```
 
-Those are questions a text file cannot answer about itself. And when your
+Those are questions a text file cannot answer about itself. When your
 agent gets something wrong, you can see exactly why (which claim, from which
 source, superseded by what) and fix it at the source.
 [Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)

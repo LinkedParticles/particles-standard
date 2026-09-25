@@ -12,8 +12,8 @@
 > perspective applied at query time, never baked into the record.
 
 Particles is an open standard for structured, auditable knowledge in AI agent
-systems: provenance-tracked, claim-granularity beliefs with calibrated
-uncertainty. This repository is the **standard itself**: the single public
+systems: beliefs recorded one claim at a time, each with its source and a
+calibrated confidence. This repository is the **standard itself**: the single public
 source of truth for the design. It is independent of any one implementation.
 
 ## What's here

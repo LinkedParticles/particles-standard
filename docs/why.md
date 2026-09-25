@@ -14,9 +14,9 @@
 -->
 # Why Particles?
 
-When you ask an AI system a question, you want to know: *Where did this come
-from? Is it still true? What does the system actually believe, and what
-happens when two of its sources disagree?*
+When you ask an AI system a question, you want to know where the answer came
+from, whether it is still true, what the system actually believes, and what
+happens when two of its sources disagree.
 
 Most AI systems cannot answer any of those questions, because their memory
 has no concept of a claim, a source, or a correction. Particles is a memory
@@ -80,17 +80,17 @@ trust applied at read time under a policy you can change, and contradictions
 kept as first-class records for a human to rule on. Where a conflict is
 handled at all in these systems, it is resolved silently by the model
 ("the graph updated itself"), with no record that the disagreement existed and
-no way for your judgment of the sources to accumulate. And none of them
-publishes an implementation-independent specification: there is no schema or
-interchange format that outlives the vendor's own code. (For database people:
-the storage discipline underneath is bitemporal; append-only assertions with
-as-of reads, in the Datomic/XTDB lineage. The epistemic layer on top is the
-new part.)
+no way for your judgment of the sources to accumulate. None of them
+publishes an implementation-independent specification, either; there is no
+schema or interchange format that outlives the vendor's own code. (For
+database people: the storage discipline underneath is bitemporal; append-only
+assertions with as-of reads, in the Datomic/XTDB lineage. The epistemic layer
+on top is the new part.)
 
 Compiled August 2026 from each product's public documentation and
 repositories. **✗ means "not documented in the product's public materials at
-that date", never a verified absence**; ◐ is a partial mechanism; – means we
-could not determine it either way.
+that date", never a verified absence**; ◐ is a partial mechanism; a dash (–) means
+we could not determine it either way.
 
 | | Particles | Zep / Graphiti | mem0 | Letta | Supermemory | Hindsight |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -147,8 +147,8 @@ The honest reading, published with the numbers. **Given an unlimited read
 budget, LLM-written session notes beat Particles and draw level with the
 ceiling**, at 88.0% on four and a half times the context. Notes need about
 half as much context again as Particles (3,296 tokens against 2,149) just to
-match it, and at Particles' own budget they fall ten points behind. So the
-advantage is **information density**, the most answer per read-time token,
+match it, and at Particles' own budget they fall ten points behind. The
+advantage is therefore **information density**, the most answer per read-time token,
 which is what an agent with a context budget needs, and it widens as the
 budget tightens: at 542 tokens Particles answers twice what either alternative
 manages. The deficit is coverage, and it is real: given several times the
