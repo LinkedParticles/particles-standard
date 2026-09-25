@@ -83,8 +83,8 @@ opinion, only *claims that are true for a group of observers, for a
 period of time*. *"The 1932 quarter weighs 6.25 g"* and *"the 1932
 quarter is the most beautiful US coin"* differ not in kind but in
 observer scope: the first holds for very nearly every observer; the
-second holds for some observers, and its holders can be named. And
-even the plainest facts carry temporal scope: *"Pluto is a planet"*
+second holds for some observers, and its holders can be named. Even
+the plainest facts carry temporal scope: *"Pluto is a planet"*
 was true for every observer for seventy-six years, until the 2006 IAU
 reclassification changed what was true without changing Pluto. A
 knowledge system that forces an early fact-or-opinion classification
@@ -293,8 +293,8 @@ the bookkeeping that causes humans to abandon wikis.
 
 LLM-Wiki uses natural language markdown as the storage format for
 synthesized knowledge. This choice is pragmatic: it is human-readable
-and LLMs work with it natively. But it introduces a structural problem
-that the LLM-Wiki pattern has no solution for.
+and LLMs work with it natively. It does, however, introduce a
+structural problem that the LLM-Wiki pattern has no solution for.
 
 > **Failure mode.** In a comment on Karpathy's Gist, a production
 > practitioner reported: the LLM summarized documents and stored those
@@ -1134,7 +1134,7 @@ immutable claims differently without rewriting anyone's history.
 Two failure modes shape this door's design, both observed in the
 field rather than hypothesised. Agents forget to pull: a second brain
 behind a pull-only retrieval tool goes unconsulted, while a memory
-file that is already in the context window gets used. And agents
+file that is already in the context window gets used. Agents also
 forget to write (or half-write, or write the wrong thing), so any
 memory whose quality depends on the agent remembering to remember
 degrades with prompt discipline. The loop resolves both the same way:

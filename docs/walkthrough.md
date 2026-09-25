@@ -97,8 +97,8 @@ there.
 
 The retired claim is not deleted and not edited. It keeps its source, its
 confidence, and its dates, and it gains one thing: a pointer to the claim
-that replaced it, stamped with the day that happened. So the same question
-answers two ways: with what the store holds now, or with what it held on any
+that replaced it, stamped with the day that happened. That is what lets the
+same question answer two ways: with what the store holds now, or with what it held on any
 given date:
 
 ```bash
@@ -133,7 +133,7 @@ reclassification, which formally designated Pluto as a *dwarf planet* rather
 than a full planet — a status it retains today.
 ```
 
-And a date before the store knew anything answers honestly:
+A date before the store knew anything answers honestly, too:
 
 ```bash
 particles query "How many planets are in the Solar System?" --as-of 1980-01-01
