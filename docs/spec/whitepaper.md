@@ -122,6 +122,38 @@ shareable trust lenses). The substrate is observer-neutral;
 perspective is a lens applied at query time, never a property burned
 into the stored claim.
 
+**Adjudicability is a judgment too.** One classification survives the
+stance above, because an engine that weighs sources needs it: whether two
+claims may be adjudicated against each other at all. A pair is
+*adjudicable* when the two sources' disagreement can be settled by
+weighing those sources, so that a more trusted source or a later edition
+retires the other claim. That is a judgment about the claims, made by an
+observer, and never a property of either one. Two sources that give the
+1932 quarter's weight as 6.25 g and 6.3 g are adjudicable for very nearly
+every reader. Two collectors who disagree about the most beautiful US coin
+are not: no weighing of the two makes either one wrong. Community
+membership moves the line. *"This coin grades MS-65"* is adjudicable
+inside a numismatic grading standard, where the standard settles a second
+grader's dissent, and is not adjudicable outside it, where the grade is
+one community's convention. Particles therefore treats adjudicability as
+it treats claim equivalence, which is *"never a stored boolean truth"*,
+and recency decay, which is observer scope. The
+engine records a *default* at extraction, in the `assertion_modality`
+field, and uses it for exactly one thing: deciding
+which pairs it may arbitrate. A pair is arbitrated only when both claims are
+adjudicable under the default and a contradiction between them is
+confirmed; every other pair stands side by side, both claims kept, and
+abstention is the default outcome. Like every judgment in this design, the
+default belongs to the reader. The design keeps it regenerable rather
+than burned into the claim and lets the reader's lens override it, though
+today the default is fixed when the claim is extracted and no lens can
+override it (regeneration and the lens override are deferred).
+The symbolic tradition arrived at the same requirement from the other
+side: among the desiderata [Lenat and
+Marcus](https://arxiv.org/abs/2308.04445) set for a trustworthy reasoner
+is that "some statements are true in someone's (or some group's) belief
+system, but not in others'" (2023, desideratum 11).
+
 **The lineage, and the missing enabler.** The premise is not new;
 what was missing was a way to act on it. Cyc's *microtheories*
 conceded in the 1980s that a usable knowledge base must hold mutually
@@ -143,8 +175,9 @@ as a measurement* rather than imposed as a label: a claim whose
 effective confidence is invariant across every credible trust policy
 behaves as a fact; a claim whose effective confidence varies sharply
 across policies is visibly contested, with the holders of each
-position attributed and cited. The system does not adjudicate; it
-renders disagreement inspectable. This per-claim *contestedness*
+position attributed and cited. Beyond the pairs it judges adjudicable
+(above), the system does not adjudicate; it renders disagreement
+inspectable. This per-claim *contestedness*
 signal is the max−min spread of effective confidence across the
 viewer's policy set (the local policy plus each adopted lens),
 computed at read time and surfaced in query responses, prose

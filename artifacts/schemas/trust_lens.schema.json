@@ -2,8 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://linkedparticles.org/schemas/trust_lens.schema.json",
   "$defs": {
+    "AssertionModality": {
+      "description": "What *kind* of assertion a particle makes: the default for its adjudicability.\n\nOrthogonal to ``uncertainty_nature`` (which presupposes a fact of the\nmatter) and to scope (which lives in ``properties``). The write\npath arbitrates (the \u00a76.6 conflict ladder, L-SEM-01, L-IDX-01) only pairs\nof ``FALSIFIABLE`` particles (see :func:`is_truth_apt`); the other\nmodalities co-exist and are never contradiction-checked or\ntrust-arbitrated. The value is a regenerable default, not a property of\nthe claim: it is stamped with the classifier that set it, an operator may\ncorrect it, and a lens may read it differently at read time only.\nDefault ``FALSIFIABLE`` keeps every existing particle\nunchanged. Closed enum: adding a modality is an additive minor change.",
+      "enum": [
+        "FALSIFIABLE",
+        "EVALUATIVE",
+        "EXPERIENTIAL",
+        "CONSTITUTIVE"
+      ],
+      "title": "AssertionModality",
+      "type": "string"
+    },
     "TrustLensDecayRule": {
-      "description": "One portable content-age decay rule carried by a lens.\n\nSets the recency half-life / floor for content matching ``pattern`` — an\nexact ``source_type`` string (``scope=\"source_type\"``) or a trust-rule-style\nURL regex (``scope=\"url_pattern\"``, e.g. a per-subreddit half-life). Unlike\nthe URL *trust* rule's additive ``modifier``, a decay rule is an **absolute**\n``(half_life_days, floor)`` pair — half-life is not meaningfully additive.\nThe URL layer is more specific than the source_type layer (a per-subreddit\nrule overrides the source-type default in either direction); across adopted\nlenses the most-skeptical rule wins (shortest half-life / lowest floor).",
+      "description": "One portable content-age decay rule carried by a lens.\n\nSets the recency half-life / floor for content matching ``pattern`` \u2014 an\nexact ``source_type`` string (``scope=\"source_type\"``) or a trust-rule-style\nURL regex (``scope=\"url_pattern\"``, e.g. a per-subreddit half-life). Unlike\nthe URL *trust* rule's additive ``modifier``, a decay rule is an **absolute**\n``(half_life_days, floor)`` pair \u2014 half-life is not meaningfully additive.\nThe URL layer is more specific than the source_type layer (a per-subreddit\nrule overrides the source-type default in either direction); across adopted\nlenses the most-skeptical rule wins (shortest half-life / lowest floor).",
       "properties": {
         "scope": {
           "enum": [
@@ -39,8 +50,49 @@
       "title": "TrustLensDecayRule",
       "type": "object"
     },
+    "TrustLensModalityRule": {
+      "description": "One portable override of the adjudicability default carried by a lens.\n\n``assertion_modality`` is the extraction-time default for whether a claim\nmay be arbitrated against another; a lens may read it differently for its\nobserver. The rule applies to the claims ``scope`` + ``pattern`` select:\n\n- ``particle``: ``pattern`` is a particle id;\n- ``subject``: ``pattern`` is a subject id the claim is about;\n- ``url_pattern``: ``pattern`` is a regex searched in the claim's source\n  URIs (the trust-rule regex shape);\n- ``source_type``: ``pattern`` is an exact ``source_type`` string.\n\n``when``, if set, limits the rule to claims whose stored default is that\nmodality. Particle and subject ids are store-local: an interchange import\nmints fresh ids, so such a rule ports only to a faithful restore of its own\nstore, and elsewhere matches nothing, which leaves the stored default.\n\nRead-time only. A rule decides what renders contested and what the lint\nqueue names for the operator; it never reaches a write, ranking, or\n``effective_confidence``, and an operator verdict always wins over it.\nWithin one lens the most specific matching rule decides that lens's\nreading; across adopted lenses abstention (a non-``FALSIFIABLE`` reading)\nwins at any scope, so adopting a lens can only withdraw adjudication.",
+      "properties": {
+        "scope": {
+          "enum": [
+            "particle",
+            "subject",
+            "url_pattern",
+            "source_type"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "pattern": {
+          "minLength": 1,
+          "title": "Pattern",
+          "type": "string"
+        },
+        "modality": {
+          "$ref": "#/$defs/AssertionModality"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssertionModality"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "scope",
+        "pattern",
+        "modality"
+      ],
+      "title": "TrustLensModalityRule",
+      "type": "object"
+    },
     "TrustLensStatement": {
-      "description": "One portable SOURCE_TYPE-scoped trust statement carried by a lens.\n\n``CORPUS_ENTRY``-scoped statements are excluded from lenses by design —\nthey key on store-local entry ids and are not portable.",
+      "description": "One portable SOURCE_TYPE-scoped trust statement carried by a lens.\n\n``CORPUS_ENTRY``-scoped statements are excluded from lenses by design \u2014\nthey key on store-local entry ids and are not portable.",
       "properties": {
         "domain": {
           "minLength": 1,
@@ -130,7 +182,7 @@
       "type": "object"
     },
     "TrustLensUtilityRule": {
-      "description": "One portable usefulness (outcome-learning) utility rule carried by a lens.\n\nWhere a ``decay_rule`` is the *judgment* half of content-age\ndecay, a ``utility_rule`` is the judgment half of **usefulness**: it sets\n*how far* demonstrated use may reorder the projection / digest head, and\n*how fast* unreinforced utility fades. The per-belief utility *evidence*\n(the mined reinforcement count) is store-local and lives outside the lens—\nthis rule carries only the tunables.\n\n- ``half_life_uses_days`` — days for a single utility event's weight to halve\n  (the reinforcement half-life; ``> 0``).\n- ``rank_lift`` — the ``λ`` in ``rank_score = effective_confidence\n  + λ·ln(1 + R)`` (``≥ 0``; ``0`` disables the lift). **Promotion-only** by\n  construction — the bonus is never negative, so lack of use withholds the\n  lift rather than demoting.\n\nThis single knob replaced the old ``weight`` / ``floor`` / ``cap`` triple\nwhen the bounded multiplier was superseded; a lens\npublished under the old vocabulary carries no ``rank_lift`` and is treated\nas silent about utility (the store's local ``utility`` config applies).\n\nAcross adopted lenses the most-skeptical rule wins — *less* promotion:\nshortest ``half_life_uses_days``, lowest ``rank_lift`` (symmetric with the\ndecay rule). ``scope=\"default\"`` is the\nstore-wide rule; ``source_type`` / ``url_pattern`` scopes mirror the decay\nladder for finer control.",
+      "description": "One portable usefulness (outcome-learning) utility rule carried by a lens.\n\nWhere a ``decay_rule`` is the *judgment* half of content-age\ndecay, a ``utility_rule`` is the judgment half of **usefulness**: it sets\n*how far* demonstrated use may reorder the projection / digest head, and\n*how fast* unreinforced utility fades. The per-belief utility *evidence*\n(the mined reinforcement count) is store-local and lives outside the lens\u2014\nthis rule carries only the tunables.\n\n- ``half_life_uses_days`` \u2014 days for a single utility event's weight to halve\n  (the reinforcement half-life; ``> 0``).\n- ``rank_lift`` \u2014 the ``\u03bb`` in ``rank_score = effective_confidence\n  + \u03bb\u00b7ln(1 + R)`` (``\u2265 0``; ``0`` disables the lift). **Promotion-only** by\n  construction \u2014 the bonus is never negative, so lack of use withholds the\n  lift rather than demoting.\n\nThis single knob replaced the old ``weight`` / ``floor`` / ``cap`` triple\nwhen the bounded multiplier was superseded; a lens\npublished under the old vocabulary carries no ``rank_lift`` and is treated\nas silent about utility (the store's local ``utility`` config applies).\n\nAcross adopted lenses the most-skeptical rule wins \u2014 *less* promotion:\nshortest ``half_life_uses_days``, lowest ``rank_lift`` (symmetric with the\ndecay rule). ``scope=\"default\"`` is the\nstore-wide rule; ``source_type`` / ``url_pattern`` scopes mirror the decay\nladder for finer control.",
       "properties": {
         "scope": {
           "default": "default",
@@ -173,7 +225,7 @@
       "type": "object"
     }
   },
-  "description": "A depositable corpus artefact bundling portable trust policy.\n\nA community publishes its view of which sources to trust by depositing a\nJSON file; the ``TrustLensExtractor`` materialises it into the\n``trust_lenses`` / ``trust_lens_entries`` tables. Viewers adopt lenses per\nstore; the query-time ``TrustPolicy`` composes the store's local\npolicy over adopted lenses, most-skeptical-wins. Adopting a lens can only\ndemote (ranks are in [0, 1] and silence stays neutral), never promote.\n\nA lens carries a fourth portable layer, ``decay_rules`` —\nper-observer content-age decay (recency half-life / floor), composed through\nthe query-time ``DecayPolicy`` the same most-skeptical-wins way as the trust\nlayers. A lens silent about decay leaves the store's global\n``content_age_decay`` config untouched.\n\nA lens also carries ``utility_rules`` — the usefulness\n(outcome-learning) judgment, composed through the query-time ``UtilityPolicy``\ninto an additive rank-lift on the projection / digest ranking path\nonly. A lens silent about utility leaves the store's local ``utility`` config\nuntouched; with no utility evidence the bonus is ``+0`` (cold-start).",
+  "description": "A depositable corpus artefact bundling portable trust policy.\n\nA community publishes its view of which sources to trust by depositing a\nJSON file; the ``TrustLensExtractor`` materialises it into the\n``trust_lenses`` / ``trust_lens_entries`` tables. Viewers adopt lenses per\nstore; the query-time ``TrustPolicy`` composes the store's local\npolicy over adopted lenses, most-skeptical-wins. Adopting a lens can only\ndemote (ranks are in [0, 1] and silence stays neutral), never promote.\n\nA lens carries a fourth portable layer, ``decay_rules`` \u2014\nper-observer content-age decay (recency half-life / floor), composed through\nthe query-time ``DecayPolicy`` the same most-skeptical-wins way as the trust\nlayers. A lens silent about decay leaves the store's global\n``content_age_decay`` config untouched.\n\nA lens also carries ``utility_rules`` \u2014 the usefulness\n(outcome-learning) judgment, composed through the query-time ``UtilityPolicy``\ninto an additive rank-lift on the projection / digest ranking path\nonly. A lens silent about utility leaves the store's local ``utility`` config\nuntouched; with no utility evidence the bonus is ``+0`` (cold-start).\n\nA lens may also carry ``modality_rules``: a per-observer reading\nof the adjudicability default, applied at read time to the contested badge\nand the lint queue only. A lens silent about modality reads every claim as\nits stored default.",
   "properties": {
     "kind": {
       "const": "TrustLensDefinition",
@@ -252,6 +304,13 @@
         "$ref": "#/$defs/TrustLensUtilityRule"
       },
       "title": "Utility Rules",
+      "type": "array"
+    },
+    "modality_rules": {
+      "items": {
+        "$ref": "#/$defs/TrustLensModalityRule"
+      },
+      "title": "Modality Rules",
       "type": "array"
     },
     "corpus_entry_id": {
