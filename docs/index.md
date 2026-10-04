@@ -97,7 +97,7 @@ it also audits the memory you already have:
 ```text
 Audited 23 memory files → 212 beliefs about 58 subjects.
 
-  4 potential contradictions        (2 cross-file, 2 contested at extract time)
+  4 potential contradictions        (2 across files, 2 contested at extract time)
   11 likely-duplicate belief pairs  (unjudged similarity candidates; --judge to verify)
   7 probably-stale facts            (5 aged past their source's decay horizon, 2 expired)
 
