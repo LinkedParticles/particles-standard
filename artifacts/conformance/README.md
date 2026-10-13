@@ -65,11 +65,14 @@ its own types from them.
   `assertion_modality` (the §1.7 truth-apt gate; truth-apt iff `FALSIFIABLE`)
   and `uncertainty_nature` (the §1 `ALEATORY` exclusion) — plus the
   caller-resolved inputs (the replacement signal, the two supersession
-  directions, both trust scores, the differential threshold, and whether the
-  store has a single trust order). Omitted keys take the documented defaults.
+  directions, both trust scores, the differential threshold, whether the
+  store has a single trust order, and the rung 2.5 `update_order`). Omitted
+  keys take the documented defaults.
   Because the family is about *ordering*, the vectors deliberately set up rungs
   to compete: an `ALEATORY` pair with both a supersession edge and a decisive
-  trust gap must still come out `INCONSISTENT`.
+  trust gap must still come out `INCONSISTENT`. Rung 2.5 reads `ALEATORY` on
+  the newer claim only, the side the sign of `update_order` names:
+  the `cl-17` vectors pin all four arrangements.
 - `context_fingerprint` carries `(id, status)` rows rather than a bare id list,
   so all three steps are pinned: the ACTIVE-only filter (step 1), the
   lexicographic sort (step 2 — one vector supplies its ids out of order), and

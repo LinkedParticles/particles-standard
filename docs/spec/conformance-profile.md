@@ -321,7 +321,9 @@ requirements and points to the governing text:
   exactly").
 - **Conflict-resolution ladder ordering**: the §6.4 rungs in order:
   `1 ALEATORY → 1.5 document-supersession → 1.7 truth-apt gate → 2 trust
-  differential → 3 INCONSISTENCY`. The **ordering** is L2-normative; the
+  differential → 2.5 same-lineage update → 3 INCONSISTENCY`. The `ALEATORY`
+  exclusion covers rungs 1.5 and 2 on either side and rung 2.5 on the newer
+  claim only. The **ordering** is L2-normative; the
   similarity *candidacy* that feeds it is L3.
 - **Cascade gating**: N≥3 confirmations, `cascade_max_per_run` cap (§15).
 
@@ -358,7 +360,10 @@ logic, its vectors deliberately put rungs in competition: a vector sets up a
 lower rung to decide one way and asserts that the higher rung overrides it. An
 `ALEATORY` pair carrying both a document-supersession edge and a decisive trust
 differential must still resolve to `INCONSISTENT`; that vector is what a
-reordering of the ladder would break.
+reordering of the ladder would break. The `cl-17` vectors pin which side of a
+rung 2.5 pair the exclusion reads: an older `ALEATORY` claim is retired by a
+newer `EPISTEMIC` one in either direction of `update_order`, and a newer
+`ALEATORY` claim retires nothing.
 
 ---
 
