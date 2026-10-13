@@ -453,11 +453,41 @@ test_vectors:
       trust_score_new: 0.20
       update_order: 1
       expected: SUPERSEDED_BY_EXISTING
-    # rung 1 outranks 2.5: an ALEATORY pair is never retired by a timestamp.
+    # a settled report retires an earlier aleatory claim: rung 2.5
+    # reads ALEATORY on the newer claim only. Rungs 1.5 and 2 pick between
+    # sources and keep the exclusion on either side; a same-lineage update
+    # whose newer claim states the matter as settled is how aleatory
+    # uncertainty is resolved.
     - id: cl-17
       existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
       new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
       update_order: 1
+      expected: UPDATE_SUPERSEDES
+    # a newer ALEATORY claim (a forecast) never retires a settled one.
+    - id: cl-17b
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      update_order: 1
+      expected: INCONSISTENT
+    # two ALEATORY claims (a revised forecast, or a BOTH_VALID pair): nothing
+    # has been settled, so neither retires the other.
+    - id: cl-17c
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      update_order: 1
+      expected: INCONSISTENT
+    # "newer" follows the sign of update_order: an out-of-order ALEATORY new
+    # claim is the older one, and the settled existing claim retires it.
+    - id: cl-17d
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      update_order: -1
+      expected: UPDATE_SUPERSEDED_BY_EXISTING
+    # the -1 mirror of cl-17b: the newer side is the ALEATORY existing claim.
+    - id: cl-17e
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      update_order: -1
       expected: INCONSISTENT
     # the probe outranks 2.5: no contradiction, no supersession.
     - id: cl-18
@@ -471,6 +501,48 @@ test_vectors:
       existing: { assertion_modality: EVALUATIVE, uncertainty_nature: EPISTEMIC }
       new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
       update_order: 1
+      expected: CORROBORATES
+    # rung 2.5 rests on the same-slot check: with no contradiction
+    # signal, a settled same-slot update still resolves to the newer claim.
+    # Two claims giving one slot successive values can both be true at their
+    # own times, so the contradiction probe is not the test of an update.
+    - id: cl-20
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      update_order: 1
+      same_slot_update: true
+      expected: UPDATE_SUPERSEDES
+    # its mirror: an out-of-order (older) new claim is the one retired.
+    - id: cl-21
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      update_order: -1
+      same_slot_update: true
+      expected: UPDATE_SUPERSEDED_BY_EXISTING
+    # the ALEATORY condition reads the newer claim, as at rung 2.5.
+    - id: cl-22
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: ALEATORY }
+      has_contradiction_signal: false
+      update_order: 1
+      same_slot_update: true
+      expected: CORROBORATES
+    # the truth-apt gate outranks the update answer too.
+    - id: cl-23
+      existing: { assertion_modality: EVALUATIVE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      update_order: 1
+      same_slot_update: true
+      expected: CORROBORATES
+    # no lineage order, no update: the answer alone retires nothing.
+    - id: cl-24
+      existing: { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      new:      { assertion_modality: FALSIFIABLE, uncertainty_nature: EPISTEMIC }
+      has_contradiction_signal: false
+      same_slot_update: true
       expected: CORROBORATES
 
   # --- §16.1 context fingerprint -----------------------------------
