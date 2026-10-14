@@ -112,6 +112,25 @@ particles:ParticleShape
         sh:message "assertion_modality, when present, must be FALSIFIABLE, EVALUATIVE, EXPERIENTIAL, or CONSTITUTIVE." ;
     ] ;
 
+    # validKind — optional reading of the world-time pair: EVENT is
+    # a moment, STATE a span. An EVENT never carries a validUntil — a
+    # cardinality across two properties the shape cannot express without a
+    # SPARQL constraint, so the Core model validator enforces it.
+    sh:property [
+        sh:path particles:validKind ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "EVENT" "STATE" ) ;
+        sh:message "valid_kind, when present, must be EVENT or STATE." ;
+    ] ;
+
+    sh:property [
+        sh:path particles:validFrom ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "valid_from, when present, must be a single xsd:dateTime." ;
+    ] ;
+
     # canonicalForm — optional marker of which of the prose/structured pair is
     # the assertion; PROSE default. STRUCTURED additionally requires
     # a structuredClaim to be present — a cardinality the shape cannot express

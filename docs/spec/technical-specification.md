@@ -76,6 +76,8 @@ for a conformant Core implementation, Extension fields may be omitted.
 | `status_reason` | enum (Core) | The cause of the current status. Set alongside `status` by every operation that changes it. Values: `RETRACTED_DEPENDENCY`, `CORPUS_ENTRY_MISSING`, `TRUST_DEMOTED` (Ext B; **reserved, not emitted**: §6.6 assigns it to a Lint trust pass, which §9.4 does not define), `LOWER_TRUST_SOURCE` (Ext B, extract-time trust resolution), `SUPERSEDED_BY_REINDEX`, `VALIDITY_EXPIRED`, `CONFLICT_RESOLVED`, `CONFLICT_PENDING` (quarantined conflict loser awaiting Review; the only reason permitted on a born-`PROVENANCE_STALE` particle), `EXPLICIT_RETRACTION`, `SOURCE_RETRACTED`, `EXPLICIT_SUPERSESSION` (deliberate revision by the asserting principal via `particle_supersede`, §9.1a), `DUPLICATE_MERGED` (an identical-content redundant copy folded into its group's survivor by exact-duplicate auto-merge (the §6.10 normalized key, creation path 4); deliberately distinct from `EXPLICIT_SUPERSESSION` so a revert can select precisely auto-merge's own writes), `SUPERSEDED_BY_UPDATE` (an older claim retired by a strictly newer, contradicting claim from the same source lineage, §6.4 rung 2.5), `SUPERSEDED_BY_REANCHOR` (a claim that relied on a state an update supersession retired, replaced by a dated restatement anchored to that state, §6.4 rung 2.5 and §9.5). Omitted on initial ACTIVE status. |
 | `schema_version` | string, semver (Core) | The Particles schema version under which this particle was created (currently `1.0.0`, frozen). Enables lint to flag version mismatches and supports schema migrations. |
 | `valid_until` | timestamp (Core) | Expiry for time-bounded claims. Per PSUM `Belief.duration`. Enforced at query time as a lazy filter; see §9.3. Populated at extraction by the general extractor for genuinely date-bounded claims (§9.2), as well as operator-set. Distinct from active retraction, which is reserved for source-driven invalidation. |
+| `valid_from` | timestamp (Core) | When the claim begins to hold in the world: the counterpart of `valid_until` and the valid-time axis beside the assertion-time one (`asserted_at`; §9.3 As-of evaluation). Read only by the window evaluation of §9.3; never an input to conflict resolution, ranking or confidence. Populated at extraction when the source states a start (§9.2), by the deterministic prose-date default (`particles validity`), or operator-set; how a value was set rides in `properties` under `extraction:valid_from_basis` (`stated`, `prose`, `as-of`, `coarse`, `operator`). Absent means undated: a window read discloses the count and never places the claim. MUST NOT be after `valid_until`. |
+| `valid_kind` | enum (Core) | `EVENT` or `STATE`: how the pair `valid_from` / `valid_until` is read. An `EVENT` is a moment, the point `[valid_from, valid_from]`, and MUST NOT carry a `valid_until`; a `STATE` is a span from `valid_from` until it closes (its own `valid_until`, or for a retired claim the earliest of that, its successor's `valid_from` and its retirement instant; §9.3). Absent with a `valid_from` present means unkinded: matched only on its start. |
 | `supersedes` | particle UUID (Core) | Prior particle this one revises. The superseded particle is retained for audit with status `SUPERSEDED`. |
 | `properties` | dict[str, object] (Extension A) | Ontology-keyed structured data emitted by domain extractors that map cleanly to a formal ontology (e.g. Nomisma for coins). Schema is extractor-defined; keys are ontology IRIs. See §6.8. Not used by Core operations; preserved for domain-tool interop. |
 | `uncertainty_kind` | enum (Extension A) | `CONTENT`, `ENVIRONMENT`, `GEOGRAPHICAL_LOCATION`, `OCCURRENCE`, or `TIME`. Per PSUM `UncertaintyKind`. |
@@ -1826,6 +1828,11 @@ QueryRequest:
   as_of: datetime?              # evaluate the store as of this past instant
                                 # (assertion-time lens); a future
                                 # instant MUST be rejected
+  window: {start: datetime?, end: datetime?}?
+                                # select by world time: the claims
+                                # that began in, or were in force during, this
+                                # interval; at least one bound; start <= end;
+                                # start == end is the point form
 ```
 
 ### Query algorithm
@@ -1833,7 +1840,7 @@ QueryRequest:
 1. **Validate** the request; reject particles whose `schema_version` is incompatible with the current store version (surface as `schema_mismatch` rather than including in results).
 2. **Identify candidate corpus entries** via metadata + Subject store match. For entries with `extraction_status = PENDING` or `FAILED`, enqueue a background Extract job (do not block); record the entry as a `coverage_gap` in the response metadata.
 3. **Embed the question** using the SDK's embedding model.
-4. **Retrieve top-k particles.** Filter: `status = ACTIVE`; `subject_id` match if provided; `valid_until` is null or > now (lazy filter, §6.3); `recency_window_days` satisfied if provided; particles tagged `DOCUMENT_META` (`extraction:scope` in `properties`, §9.2 step 5a) are **excluded from the default factual surface** and returned only when the caller passes the explicit opt-in (`include_document_meta`); they remain `ACTIVE`, stored, and auditable, just out of the default encyclopedia. Rank by the combined score `similarity_weight · cosine_similarity + confidence_weight · effective_confidence` (reference weights 0.6 / 0.4), where *cosine similarity* is the normalized, `[0, 1]`-clamped metric pinned in §8.5; only particles whose stored vector matches the store's `embedding_profile` are comparable (§8.5). Exact top-k ordering at the margins is profile-relative and non-normative (§8.5).
+4. **Retrieve top-k particles.** Filter: `status = ACTIVE`; `subject_id` match if provided; `valid_until` is null or > now (lazy filter, §6.3); when `window` is set, the window evaluation below replaces the status filter and the candidate set is the claims it admits, applied before every other filter and before ranking; `recency_window_days` satisfied if provided; particles tagged `DOCUMENT_META` (`extraction:scope` in `properties`, §9.2 step 5a) are **excluded from the default factual surface** and returned only when the caller passes the explicit opt-in (`include_document_meta`); they remain `ACTIVE`, stored, and auditable, just out of the default encyclopedia. Rank by the combined score `similarity_weight · cosine_similarity + confidence_weight · effective_confidence` (reference weights 0.6 / 0.4), where *cosine similarity* is the normalized, `[0, 1]`-clamped metric pinned in §8.5; only particles whose stored vector matches the store's `embedding_profile` are comparable (§8.5). Exact top-k ordering at the margins is profile-relative and non-normative (§8.5).
 5. **Compute effective_confidence per particle** (§6.9): `confidence.value × extractor.trust_weight × source_trust_rank × recency_factor`. The domain for `SourceTrustStatement` applicability is derived from the particle's SOURCE corpus entry's `source_type` via the extractor registry's MUST-clause mapping, the same derivation the §6.6 conflict ladder uses; a source type with no MUST clause has no domain, and only URL-scoped trust rules can apply. Apply `min_confidence` filter post-computation (filtering on `effective_confidence`, not the raw `confidence.value`).
 6. **Co-evidential collapse** (if `collapse_co_evidential` and such links exist). Group retrieved particles linked `CO_EVIDENTIAL`; render one representative per group. Confidence shown is the §6.9 merged value over the group; all member particles' provenance is preserved as co-citations.
 7. **Generate the natural-language response.** Audience-driven template:
@@ -1854,6 +1861,47 @@ QueryRequest:
 | **SCHEMA VALIDATION AT QUERY TIME** |
 | --- |
 | The query layer MUST reject particles whose `schema_version` is incompatible with the current store version, surfacing them as `schema_mismatch` rather than including them in results. This prevents silently incorrect results from legacy particles after a schema migration. |
+
+### Window evaluation
+
+When `window` is set, Query selects on the **valid-time axis** (*what began
+in, or held during, this interval of world time*), independently of when the
+store learned it. The normative rules:
+
+1. **Candidates.** The candidate set is every dated particle (`valid_from`
+   present) **across statuses**, less the born-retired rows (INCONSISTENCY
+   records, quarantined conflict losers), which were never believed. The
+   window is applied before every other filter (subject, tags, structural
+   claim filters, recency), before ranking, and before `top_k`.
+2. **The interval.** An `EVENT` is the point `[valid_from, valid_from]`. A
+   `STATE` is `[valid_from, close)`, where `close` is its own `valid_until`,
+   or for a retired claim the earliest of that, the `valid_from` of the
+   successor its `supersedes` pointer names (when that successor's basis is
+   `stated`, `prose` or `operator`) and its retirement instant (the As-of
+   ladder below); open otherwise. A retired claim whose retirement instant
+   the ladder cannot date is excluded fail-closed and counted.
+3. **Two readings** of an interval window `[start, end]`: a claim **began**
+   in the window when its `valid_from` lies in it, whatever its kind (not a
+   basis-`as-of` claim, whose start is unknown); a `STATE` is **in force**
+   when its interval intersects the window and it started before it. An
+   `EVENT` before the window matches neither. The point form (`start ==
+   end`) admits an `EVENT` on the date and a `STATE` whose interval covers
+   it. A claim with a `valid_from` and no `valid_kind` matches the *began*
+   reading only.
+4. **A restatement stands in for what it restates.** When an admitted
+   retired claim's `supersedes` successor is itself admitted, the retired
+   original is dropped and the successor's hit names it.
+5. **Composition.** With `as_of` also set, the window selects and the as-of
+   visibility predicate then filters the selection. Structural claim
+   filters intersect with the window. With no question the result is the
+   deterministic listing: the admitted claims ordered by `valid_from`, no
+   embedding, no language model.
+6. **Disclosure.** Each hit carries its reading, its start and kind, its
+   close and the rule that closed it, and for a retired claim its
+   retirement note; the response carries the counts of candidates,
+   admitted, undated ACTIVE claims, unkinded claims, retired admitted and
+   restated. A window never changes a score: `effective_confidence` and the
+   ranking are unchanged.
 
 ### As-of evaluation
 
@@ -2156,7 +2204,7 @@ exporters (§10.3–§10.5), interchange is round-trippable. CLI:
 JSON-LD object carrying **only the immutable substrate**: `content`,
 the stored `confidence` record (value + nature + kind + calibration
 metadata), provenance, `asserted_by` / `asserted_at`, `status` +
-`status_reason`, `valid_until`, `extractor_ref`,
+`status_reason`, `valid_until`, `valid_from`, `valid_kind`, `extractor_ref`,
 `extraction_provider_model`, `properties`, `context_fingerprint`,
 `schema_version`, `contributors`, and `assertion_modality` where
 present. A unit **never** carries derived or per-observer quantities
