@@ -63,6 +63,8 @@
     "particleType": { "@id": "particles:particleType" },
     "assertionModality": { "@id": "particles:assertionModality" },
     "validUntil": { "@id": "psum:duration", "@type": "xsd:dateTime" },
+    "validFrom": { "@id": "particles:validFrom", "@type": "xsd:dateTime" },
+    "validKind": { "@id": "particles:validKind" },
     "supersedes": { "@id": "particles:supersedes", "@type": "@id" },
     "subjectIds": { "@id": "particles:subject", "@type": "@id", "@container": "@set" },
     "subjects": { "@id": "particles:subjects", "@container": "@list" },

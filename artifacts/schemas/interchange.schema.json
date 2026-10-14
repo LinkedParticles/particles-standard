@@ -85,6 +85,8 @@
         },
         "uncertaintyKind": { "type": "string" },
         "validUntil": { "type": "string", "format": "date-time" },
+        "validFrom": { "type": "string", "format": "date-time" },
+        "validKind": { "type": "string", "enum": ["EVENT", "STATE"] },
         "supersedes": { "type": "string" },
         "basis": {
           "type": "object",

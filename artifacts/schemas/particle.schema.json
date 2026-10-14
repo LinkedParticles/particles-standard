@@ -100,6 +100,16 @@
       "format": "date-time",
       "description": "Core: expiry for time-bounded claims (lazy query-time filter, §9.3)"
     },
+    "valid_from": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Core: when the claim begins to hold in the world, the counterpart of valid_until; read by the window route (§9.3), never by reconciliation"
+    },
+    "valid_kind": {
+      "type": ["string", "null"],
+      "enum": ["EVENT", "STATE", null],
+      "description": "Core: how the world-time pair is read; EVENT is a moment (the point [valid_from, valid_from], never with a valid_until), STATE a span"
+    },
     "supersedes": {
       "type": ["string", "null"],
       "format": "uuid",
