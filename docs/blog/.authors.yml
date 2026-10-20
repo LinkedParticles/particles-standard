@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 The Particles authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Authors of the posts under blog/posts/, by the id a post names in its
+# `authors:` front matter. The blog plugin renders the name on each post, and
+# hooks/blog_feed.py writes it into the feed as the item's dc:creator.
+#
+# The avatar is the project mark, served from this site: the About page
+# carries no photo by design, and a hotlinked one would send every reader's
+# address to a third party.
+authors:
+  jeff:
+    name: Jeff Gage
+    description: Builds Particles
+    avatar: assets/apple-touch-icon.png
+    url: https://linkedparticles.org/about/
