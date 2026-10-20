@@ -43,6 +43,14 @@
   {% endif %}
   <meta name="twitter:title" content="{{ og_title }}">
   {% if og_description %}<meta name="twitter:description" content="{{ og_description }}">{% endif %}
+  {#
+    The dev blog's feed, advertised only once the blog is live: hooks/blog_feed.py
+    sets `extra.blog_feed` when the nav names the blog and leaves it unset while
+    the blog is banked, so a banked blog leaves no trace in any page's head.
+  #}
+  {% if config.extra.blog_feed %}
+  <link rel="alternate" type="application/rss+xml" title="{{ config.site_name }} blog" href="{{ config.extra.blog_feed | url }}">
+  {% endif %}
   {% if config.extra.favicon_ico %}
   <link rel="icon" href="{{ config.extra.favicon_ico | url }}" sizes="32x32">
   <link rel="apple-touch-icon" href="{{ config.extra.apple_touch_icon | url }}">

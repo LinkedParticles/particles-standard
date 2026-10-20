@@ -78,6 +78,10 @@ hooks:
   # so the `#`-fragment vocabulary namespace dereferences. The post-deploy
   # dereference workflow re-checks the served bytes against this tree.
   - hooks/copy_schema_artifacts.py
+  # The dev blog's launch gate and its RSS feed (blog/feed.xml). Until the nav
+  # names blog/index.md the hook switches the blog plugin off and leaves
+  # everything under blog/ out of the build. See the `blog` plugin below.
+  - hooks/blog_feed.py
 
 # tokens.css is generated into docs/stylesheets/ by the hook; particles.css is
 # authored. Order matters: tokens first.
@@ -134,6 +138,30 @@ extra:
 
 plugins:
   - search
+  # ---- The dev blog (https://linkedparticles.org/blog/) ------------------- #
+  # BANKED, NOT LIVE. The blog goes live when the nav below gains the line
+  #
+  #     - Blog: blog/index.md
+  #
+  # and that one line is the whole launch: hooks/blog_feed.py keeps the plugin
+  # off and everything under docs/blog/ out of the build until the nav names
+  # it, so no page, feed, sitemap row, or head link exists before then. Each
+  # post is published separately, by deleting the `draft: true` line from its
+  # front matter (and setting `date` to the day it goes out); a draft is never
+  # built by `mkdocs build`. `PARTICLES_BLOG_PREVIEW=true mkdocs build
+  # --strict` (or `serve`) builds the banked blog with its drafts for checking;
+  # it is never set in the Pages workflow.
+  #
+  # Posts live in docs/blog/posts/, authors in docs/blog/.authors.yml. URLs
+  # are /blog/<slug>/, so a post's `slug` is its permanent address and also
+  # its campaign tag (utm_campaign) in the outreach log.
+  - blog:
+      blog_dir: blog
+      post_url_format: "{slug}"
+      post_excerpt: required
+      archive: false
+      categories: false
+      authors_file: "{blog}/.authors.yml"
 
 nav:
   - Home: index.md
