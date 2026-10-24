@@ -694,7 +694,7 @@ ontology:
   operators running the same SDK version against the same Wikidata
   dump get the same QID for the same string; (2) every resolution
   result is **operator-overridable** via the shipped operator surface:
-  `particles subjects merge` (combine two Subjects), `particles subjects
+  `particles subjects merge` (combine Subjects into one), `particles subjects
   split` (separate a misjoined Subject; the resolver re-canonicalises
   the new Subject against external KBs), and
   `particles subjects pin` (confirm an external-reference binding);
