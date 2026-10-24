@@ -39,7 +39,7 @@
         },
         "schemaVersion": {
           "type": "string",
-          "description": "Core particle schema version (frozen at 1.0.0 for this SDK)."
+          "description": "Core particle schema version the unit's record satisfies: the lower of the record's and the encoder's, compared on MAJOR.MINOR. A validator holding an older minor of the same major removes the keys it does not declare before validating, and reports them (technical specification 10.1)."
         },
         "sourceParticleId": {
           "type": "string",

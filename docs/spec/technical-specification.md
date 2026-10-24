@@ -51,7 +51,11 @@ runtime agent use.
 
 | **NORMATIVE MACHINE-READABLE ARTIFACTS** |
 | --- |
-| The following machine-readable artifacts are required deliverables and must be published on GitHub alongside the prose spec: (1) JSON Schema for Core particle and Subject fields (`artifacts/schemas/particle.schema.json`, including a `$defs/Subject` definition); (2) canonical JSON-LD @context document (`artifacts/schemas/context.jsonld`); (3) five normative SHACL shapes: ParticleShape, SubjectShape, CorpusSnapshotShape, ProvenanceChainShape, TrustStatementShape (`artifacts/schemas/shacl/*.ttl`). These artifacts are the ground truth for conformance testing. Where the prose spec and the artifacts conflict, the artifacts take precedence for implementation purposes. The current schema version is `1.0.0` (frozen; carried in the particle's `schema_version` field). |
+| The following machine-readable artifacts are required deliverables and must be published on GitHub alongside the prose spec: (1) JSON Schema for Core particle and Subject fields (`artifacts/schemas/particle.schema.json`, including a `$defs/Subject` definition); (2) canonical JSON-LD @context document (`artifacts/schemas/context.jsonld`); (3) five normative SHACL shapes: ParticleShape, SubjectShape, CorpusSnapshotShape, ProvenanceChainShape, TrustStatementShape (`artifacts/schemas/shacl/*.ttl`). These artifacts are the ground truth for conformance testing. Where the prose spec and the artifacts conflict, the artifacts take precedence for implementation purposes. The current schema version is `1.0.0` (frozen; carried in the particle's `schema_version` field). Within one major version the published artifacts evolve in place and only additively: `required` never grows, no enum gains or loses a member, no constraint tightens, and the root objects stay open (no `additionalProperties: false`, no `sh:closed`), so a record of a newer minor still validates against an older minor's artifacts. |
+
+| **SCHEMA VERSION COMPATIBILITY** |
+| --- |
+| A `schema_version` is `MAJOR.MINOR.PATCH`, three non-negative integers compared as integers, never as text (`1.10.0` follows `1.9.0`). Two versions are **compatible** when their majors are equal and nonzero; any other pair, and any value that does not parse, is **incompatible**. PATCH marks a change with no effect on a record's shape and is read by no comparison. A **minor** version may only add: every record written under `1.y` MUST be a correct record, with its writer's meaning for every field the reader knows, to a `1.x` reader (`x < y`) that ignores the fields it does not know. In practice a minor version adds optional fields whose absence means what a record meant before they existed. A new required field, a removed, renamed or retyped field, a narrowed constraint, a changed meaning, and a new member of an enum an older reader decodes are each a **major** change. An implementation reads and writes a store holding any compatible versions, stamping each record it creates with its own version, and refuses operations on a store holding an incompatible one (§9.3). An implementation older than a record MAY retire it by a judgment about the claim (conflict resolution, retraction, explicit supersession, expiry) and MUST NOT replace it with a copy of the same claim it re-creates itself (a re-extraction, a dated restatement, a duplicate merge), because the copy would lack the fields the older implementation cannot read. |
 
 ## 6.2 Field Reference
 
@@ -74,7 +78,7 @@ for a conformant Core implementation, Extension fields may be omitted.
 | `asserted_at` | ISO 8601 timestamp (Core) | When the particle was created. |
 | `status` | enum (Core) | `ACTIVE`, `SUPERSEDED`, `RETRACTED`, `PROVENANCE_STALE`, `INCONSISTENCY`. Set by system operations, not by the asserting agent at creation. See §6.6 for the normative status transition table. |
 | `status_reason` | enum (Core) | The cause of the current status. Set alongside `status` by every operation that changes it. Values: `RETRACTED_DEPENDENCY`, `CORPUS_ENTRY_MISSING`, `TRUST_DEMOTED` (Ext B; **reserved, not emitted**: §6.6 assigns it to a Lint trust pass, which §9.4 does not define), `LOWER_TRUST_SOURCE` (Ext B, extract-time trust resolution), `SUPERSEDED_BY_REINDEX`, `VALIDITY_EXPIRED`, `CONFLICT_RESOLVED`, `CONFLICT_PENDING` (quarantined conflict loser awaiting Review; the only reason permitted on a born-`PROVENANCE_STALE` particle), `EXPLICIT_RETRACTION`, `SOURCE_RETRACTED`, `EXPLICIT_SUPERSESSION` (deliberate revision by the asserting principal via `particle_supersede`, §9.1a), `DUPLICATE_MERGED` (an identical-content redundant copy folded into its group's survivor by exact-duplicate auto-merge (the §6.10 normalized key, creation path 4); deliberately distinct from `EXPLICIT_SUPERSESSION` so a revert can select precisely auto-merge's own writes), `SUPERSEDED_BY_UPDATE` (an older claim retired by a strictly newer, contradicting claim from the same source lineage, §6.4 rung 2.5), `SUPERSEDED_BY_REANCHOR` (a claim that relied on a state an update supersession retired, replaced by a dated restatement anchored to that state, §6.4 rung 2.5 and §9.5). Omitted on initial ACTIVE status. |
-| `schema_version` | string, semver (Core) | The Particles schema version under which this particle was created (currently `1.0.0`, frozen). Enables lint to flag version mismatches and supports schema migrations. |
+| `schema_version` | string, semver (Core) | The Particles schema version under which this particle was created (currently `1.0.0`, frozen): `MAJOR.MINOR.PATCH`, and never rewritten in place. A store may hold several compatible versions at once; §6.1 defines compatibility. Enables lint to classify the versions a store holds (L-STR-07) and the query layer to refuse an incompatible store. |
 | `valid_until` | timestamp (Core) | Expiry for time-bounded claims. Per PSUM `Belief.duration`. Enforced at query time as a lazy filter; see §9.3. Populated at extraction by the general extractor for genuinely date-bounded claims (§9.2), as well as operator-set. Distinct from active retraction, which is reserved for source-driven invalidation. |
 | `valid_from` | timestamp (Core) | When the claim begins to hold in the world: the counterpart of `valid_until` and the valid-time axis beside the assertion-time one (`asserted_at`; §9.3 As-of evaluation). Read only by the window evaluation of §9.3; never an input to conflict resolution, ranking or confidence. Populated at extraction when the source states a start (§9.2), by the deterministic prose-date default (`particles validity`), or operator-set; how a value was set rides in `properties` under `extraction:valid_from_basis` (`stated`, `prose`, `as-of`, `coarse`, `session`, `operator`). Absent means undated: a window read discloses the count and never places the claim. MUST NOT be after `valid_until`. |
 | `valid_kind` | enum (Core) | `EVENT` or `STATE`: how the pair `valid_from` / `valid_until` is read. An `EVENT` is a moment, the point `[valid_from, valid_from]`, and MUST NOT carry a `valid_until`; a `STATE` is a span from `valid_from` until it closes (its own `valid_until`, or for a retired claim the earliest of that, its successor's `valid_from` and its retirement instant; §9.3). Absent with a `valid_from` present means unkinded: matched only on its start. |
@@ -235,6 +239,8 @@ When two ACTIVE particles conflict and their provenance traces to different sour
 
 **Other phrasings of a retired value**. One value is often stated more than once ("the user lives in Delhi, in Lajpat Nagar" and "the user's home is in Delhi"), and a contradiction probe that finds one pair can miss the next. An implementation that retires a claim by update SHOULD also retire each other ACTIVE claim of the same subject and lineage that states the retired value for the same slot, each established by the same-slot check for that claim, and MUST NOT retire one without that check. Such a claim is a *paraphrase* of the retired claim R when it shares R's subject key, is close to R in content (the reference implementation uses a cosine floor of 0.70 on the §6.10 similarity scale), meets every rung 2.5 condition against R's winner U except the confirmed contradiction (extractor-asserted, the same lineage, U strictly newer, both adjudicable, U not ALEATORY (step 1), and an observer precondition that reconciles the pair), and is judged by the same-slot check, read twice, to fill the slot U gave a new value. On this route, as on every route of the rung, the twice-read same-slot judgment is the evidence; the contradiction was established for R, not for the paraphrase. The paraphrase is set `PROVENANCE_STALE` with `status_reason = SUPERSEDED_BY_UPDATE` and its winner recorded as U. A claim that only relied on the retired value (a setup step, a plan made under it, "near my flat") fills a different slot and is left for re-anchoring (§9.5).
 3. **Default.** Create an `INCONSISTENCY` particle referencing both and queue for human Review (§9.6).
+
+**Two generations of one source**. An implementation MUST NOT quarantine a candidate from the newest generation of a `MUTABLE` source against a claim stated only by an earlier generation of that source, unless the new generation restates that claim verbatim; rung 2.5 on such a pair retires only the earlier claim. A pair is of this kind when three conditions hold: every source that currently states the existing claim is the candidate's own entry (§7.4, read as the generation demotion reads it); the candidate's snapshot was captured after every snapshot of that entry the existing claim's provenance names; and the new snapshot neither carries the claim forward (§9.2), nor yields a candidate with the claim's normalized content (§6.10, subjects not compared), nor restates it in other words under the §7.4 restatement rule. On such a pair rung 3 does not apply: a verdict that would create an `INCONSISTENCY` is written as corroboration, the candidate `ACTIVE` with no quarantine and no record, and the §7.4 demotion then retires the earlier claim. Rung 2.5 takes the candidate as the newer claim whatever the two content dates say, since a file restored from a backup carries an older date than the text it replaces. The contradiction check and its second reading still run, because rung 2.5 needs their verdict. A restatement in other words counts as a restatement here only when the §7.4 restatement rule established it: the earlier claim then stays `ACTIVE` because the new generation states it, so a candidate that contradicts it is reconciled as any other pair. A snapshot extracted after a newer one of the same entry forms no such pair and keeps its recorded outcome. A pair settled this way leaves no record, so an implementation SHOULD disclose how many it settled, per extraction.
 
 **The second reading on the extraction path**. On the extraction path (§9.2 step 7), a contradiction signal counts only when a second reading confirms it. A pair the contradiction probe confirms is read again before any rung acts on it, with each claim's source name, source kind (a note kept current, or a time-stamped append-only record such as a session transcript), time and passage, under the instruction the pair's source kinds choose (the standing-facts reading for two notes, the observed-state reading when a claim comes from a record; §9.4, L-SEM-01). The candidate's passage is the chunk it was extracted from, windowed around both claims, and its time is its snapshot's content date, else its capture time. A pair the reading does not confirm is treated as a probe NO: the candidate corroborates, and no rung-1.5, rung-2 or rung-3 write and no observer `CONTRADICTS` edge rests on it. When the reading cannot run (the model is unavailable, the call fails, or the reply is still cut off after its retry), a pair whose existing claim comes from the candidate's own corpus entry keeps the probe's signal, because no other check reads a same-source pair; a cross-entry pair loses it, because the scheduled census reads cross-source pairs. The rung-2.5 extras are not read a second time: each already requires the same-slot verdict. Nor is a pair the same-slot judgment settled as an update (§6.4 rung 2.5): no contradiction reading can change that outcome. An implementation MAY disable the reading (`extraction.verify_conflicts`), which restores the probe alone. The assertion pathway (§9.1a) is unchanged.
 
@@ -559,10 +565,13 @@ The operator-overridable identity contract (whitepaper §3.3) is
 implemented through three CLI verbs that share the resolver path
 with extraction-time Subject creation:
 
-- **`particles subjects merge <source-id> <target-id>`**: combines
-  two Subjects. Source's `canonical_name` and `aliases` become
-  aliases on target; all `particle_subjects` rows pointing to source
-  are re-pointed to target; source is deleted.
+- **`particles subjects merge <source-id> [<source-id> …] <target-id>`**:
+  combines one or more Subjects into the target in one pass. Each
+  source's `canonical_name` and `aliases` become aliases on target;
+  all `particle_subjects` rows pointing to a source are re-pointed to
+  target; the sources are deleted. Every source is validated before
+  anything is written, so the merge is all-or-nothing, and one
+  `SUBJECTS_MERGED` operator event records it.
 - **`particles subjects split <source-id> --particle <pid> […]
   (--new-name NAME | --new-external-id NS:ID) [--dry-run]`**:
   separates a misjoined Subject (v0.43.0). The resolver
@@ -940,7 +949,7 @@ ParticleRelation:
   relation_type: enum               # see Relation kinds table above
   created_by: enum                  # AUTO_CLUSTER_v1 | HUMAN_REVIEW | EXTRACTOR_DIRECT
                                     #   | MANUAL_CLI | LLM_JUDGE | EXACT_DUPLICATE
-                                    #   | OBSERVER_DIVERGENCE
+                                    #   | REREAD_DUPLICATE | OBSERVER_DIVERGENCE
   created_at: ISO 8601
   confidence: float [0, 1]          # how confident the link is
 ```
@@ -980,8 +989,14 @@ this rule governs whether the second particle is created at all.
 **Normative.** When a creation path (§9.2 Extract, or any write path that
 reconciles through §6.6) produces a candidate whose
 
-* normalized `content` (whitespace runs collapsed and sentence-final
-  punctuation trimmed; case and wording preserved),
+* normalized `content` (Unicode NFC composition; double quotation marks
+  removed; typographic apostrophes read as `'`, hyphen and dash
+  variants and the minus sign as `-`, and the ellipsis character as `...`;
+  zero-width characters and the soft hyphen removed; whitespace runs
+  collapsed; sentence-final punctuation trimmed; case and wording
+  preserved. Single quotation marks are not removed, because the same
+  character is an apostrophe. Compatibility folding is not applied, because
+  it changes characters such as superscripts that carry meaning),
 * resolved subject-id set, and
 * `stance:holder` (§6.10)
 
@@ -991,6 +1006,13 @@ candidate rather than write it, and, when they do, **MUST** record the
 candidate's provenance ref on the surviving particle. Dropping the
 observation is a source-faithfulness violation: the second source's
 evidence has to land somewhere.
+
+A `MUTABLE` re-extraction has a second path to the same outcome: an
+earlier-generation claim of the same entry that the new snapshot restates in
+other words is recorded as re-observed rather than demoted (§7.4). That path
+rests on a duplicate judgment over one pair from one entry, not on the
+identity predicate below, and it records the candidate's provenance ref on the
+earlier claim exactly as this rule does.
 
 Four constraints bind the suppression:
 
@@ -1147,8 +1169,9 @@ substrate-production concern, lives.
 3. **Manual.** CLI: `particles links add p:abc p:def --type co-evidential`.
 4. **Exact-duplicate auto-merge** (widened). ACTIVE
    adjudicable-by-default particles whose `content` strings are **identical under the
-   §6.10 normalized key** (whitespace runs collapsed, sentence-final
-   punctuation trimmed, case and wording preserved) are one claim by
+   §6.10 normalized key** (typographic variants read as one spelling,
+   whitespace runs collapsed, sentence-final punctuation trimmed, case and
+   wording preserved; defined in full above) are one claim by
    construction; an implementation MAY elect a survivor
    deterministically, link it to each redundant copy with `created_by =
    EXACT_DUPLICATE`, and transition those copies to `SUPERSEDED` with
@@ -1175,6 +1198,21 @@ substrate-production concern, lives.
    subject-less survivor over a subject-linked copy of the same content, since
    that would drop the claim out of subject-filtered query (§6.7) even though
    an indexed copy of it existed.
+5. **Judged merge of a re-read**. Two ACTIVE claims whose every
+   `SOURCE` ref names one `APPEND_ONLY` entry, from disjoint snapshot sets of
+   it, are two readings of one passage: no second observation exists. An
+   implementation MAY merge such a pair in the shape of path 4 (the copy
+   `SUPERSEDED` with `status_reason = DUPLICATE_MERGED`, linked to the
+   survivor with `created_by = REREAD_DUPLICATE`) only when a duplicate
+   judgment answers that the two are one claim, no update reading answers
+   that the later gives the earlier's slot a new value, and no contradiction
+   between them is on record. The survivor is the first reading (the claim
+   whose earliest snapshot was captured first), is never mutated, and must
+   carry every Subject the copy carries. The judgment is a model verdict, so
+   an implementation MUST NOT apply it before the judge's precision on this
+   population has been measured against human labels; the reference
+   implementation's bar is a 95 % Wilson lower bound of at least 0.95 per
+   cosine stratum.
 
 ### Effects on Core operations
 
@@ -1274,9 +1312,10 @@ Snapshot:
   content_hash: string           # SHA-256 of raw content body
   etag: string?                  # HTTP ETag if available
   last_modified: ISO 8601?       # HTTP Last-Modified if available
-  warc_record_type: enum         # RESPONSE | REVISIT
-  archive_path: string?          # local path; null for REVISIT records
-  refers_to: snapshot_id?        # WARC-Refers-To for REVISIT records
+  warc_record_type: enum         # RESPONSE | REVISIT | ABSENT
+  archive_path: string?          # local path; null for REVISIT and ABSENT records
+  refers_to: snapshot_id?        # WARC-Refers-To for REVISIT records; the last
+                                 # RESPONSE for ABSENT records
   extraction_status: enum        # PENDING | IN_PROGRESS | COMPLETE | FAILED
   extraction_started_at: ISO 8601?  # when extraction last claimed this
                                     # snapshot (0.42.2); cleared on transition
@@ -1288,6 +1327,8 @@ Snapshot:
                                  # format: '{platform}:{identifier}'
   author_role: string?           # author role metadata, if available (§6.5)
 ```
+
+**`ABSENT` records**. An `ABSENT` snapshot is the observation that the source was looked for at `captured_at` and not found. It has no blob and no `archive_path`; `refers_to` names the entry's last `RESPONSE`; its `content_hash` is the SHA-256 of the empty body. Content-hash deduplication MUST read `RESPONSE` records only, so an absence never matches an empty source. An `ABSENT` record is written `PENDING`, because it owes one piece of work, the retirement described in §7.4, and is marked `COMPLETE` when that is done. The corpus stays append-only: a deletion is a new record, and the earlier snapshots and their blobs are untouched.
 
 `captured_at` is *when the importer fetched the content*; `content_published_at` is *when the source originally published it* (e.g. a Reddit comment's `created_utc`). The two diverge for UGC sources where retroactive deposit is common. Only `content_published_at` drives the content age decay factor (§6.3); `captured_at` drives the Lazy Fetch revisit cadence (§7.5).
 
@@ -1396,11 +1437,19 @@ The `mutability` field drives extraction behavior when a new snapshot is created
 **Ordering of the `MUTABLE` demotion is normative**. The demotion runs **after** the new snapshot has been extracted, and it is scoped by *snapshot generation* rather than by semantic comparison:
 
 1. Extract the new snapshot. Content-hash carry-forward (§9.2) keeps the particles whose source chunk is unchanged. Their existing provenance is never re-pointed: each keeps naming the snapshot it was first extracted from, and the re-observation is **recorded** by appending one provenance ref naming the newly-extracted snapshot, exactly as a suppressed duplicate's re-observation is (§6.10). The earliest ref stays the decay anchor.
-2. Demote the entry's remaining `ACTIVE` particles whose provenance names a snapshot other than the newly-extracted one, excluding those carried forward, to `PROVENANCE_STALE`, **unless another source currently states the claim**: a particle whose provenance names another `MUTABLE` entry's latest extracted snapshot, or any snapshot of an entry of another mutability, is not demoted. The cascade retires only what no current snapshot attests.
+2. Demote the entry's remaining `ACTIVE` particles whose provenance names a snapshot of this entry captured before its current generation (below), excluding those carried forward, to `PROVENANCE_STALE`, **unless another source currently states the claim**: a particle whose provenance names another `MUTABLE` entry's latest extracted snapshot, or any snapshot of an entry of another mutability, is not demoted. The cascade retires only what no current snapshot attests.
 
 Demoting *before* extraction is non-conformant: carry-forward matches on `ACTIVE` particles, so a pre-demotion defeats it, re-extracts unchanged text, and produces duplicate particles for claims that never changed.
 
-The demotion is deliberately **not** a semantic operation. The §6.4 conflict ladder compares individual claims and therefore cannot retire a claim the new version merely *deleted*, nor one that has been replaced by guidance that does not logically contradict it; only the document generation establishes which version is operative. Implementations MUST NOT substitute contradiction detection for this rule, and it requires no LLM.
+**A restated claim is not demoted**. An implementation SHOULD NOT demote in step 2 an earlier-generation claim that the new snapshot restates. A restatement is established by a duplicate judgment of the earlier claim against one candidate of the new snapshot (normalized-content equality, §6.10, or a judgment that the two assert the same fact), never by a similarity threshold alone, and a judged restatement SHOULD be confirmed by an update reading that does not find the earlier claim's value changed. An established restatement is recorded as a re-observation of the earlier claim: the candidate is not written, the earlier claim gains the new snapshot's provenance ref (as in step 1), and its asserted content is unchanged. Each pairs one candidate with one earlier claim of the same entry and the same `stance:holder`. A candidate judged to give the earlier claim's value a new value may instead retire it as rung 2.5 would (§6.4), with `supersedes` naming it. An implementation SHOULD disclose how many claims it carried this way, per extraction.
+
+**The current generation**. An entry's *current generation* is its latest **processed** record captured at or before the read instant: an extracted `RESPONSE` snapshot, or a completed `ABSENT` record (§7.2). A pending or collapsed record is not a generation yet. "A particle whose provenance names another `MUTABLE` entry's latest extracted snapshot" in step 2 above means its current generation. An `ABSENT` record is a generation that states nothing: processing it runs step 2 with the absence as the newly current generation, which retires every `ACTIVE` particle anchored to the entry, including provenance with no snapshot id, except one another source currently states. It makes no LLM call. An entry whose current generation is an absence attests no particle, through any provenance ref. A newer `RESPONSE` captured before an absence was processed replaces it unprocessed, and a restored source is a new `RESPONSE`, extracted as any other.
+
+**Extraction order never moves the current generation**. The current generation is decided by capture time, never by the order in which snapshots are extracted. Extracting a snapshot captured before the entry's current generation does not make it current: step 2 then runs against the current generation, so it retires the late extraction's own particles that no current snapshot attests and none of the current generation's. An implementation SHOULD NOT extract such a snapshot without an explicit operator override, and a re-extraction scope that names one (for example because a carried-forward particle's provenance still names the snapshot it was first extracted from) SHOULD re-extract the entry's current generation instead.
+
+Which sources may write `ABSENT` records is a reference-implementation choice, not a rule of the standard. The reference SDK writes one only from a completed walk of a local Markdown vault that no longer lists a previously imported note, behind confirmation guards against an unmounted or partly synced volume; a failed `stat` or an HTTP error never writes one (§7.5).
+
+The demotion is deliberately **not** a semantic operation. The §6.4 conflict ladder compares individual claims and therefore cannot retire a claim the new version merely *deleted*, nor one that has been replaced by guidance that does not logically contradict it; only the document generation establishes which version is operative. Implementations MUST NOT substitute contradiction detection for this rule, and it requires no LLM. The rule also governs the conflict ladder's own verdict on a pair of claims from two generations of one entry: a contradiction between a claim of the new version and one only an earlier version stated is settled by the generation, never quarantined (§6.4, two generations of one source).
 
 | **EXTENSION F: PRIVACY AND CONSENT (DEFERRED)** |
 | --- |
@@ -1422,7 +1471,7 @@ All floors are tunable via `config.yaml`'s `refetch_floors` section. The fetch p
 2. **Tier 2: Content hashing (authoritative).** If the tier-1 signal is unavailable, untrusted, or indicates a possible change, read the full content body and compare its SHA-256 hash against the prior snapshot. If hashes match, create a `REVISIT` snapshot. If hashes differ, create a `RESPONSE` snapshot and trigger extraction according to the mutability class (§7.4). A `REVISIT` created here SHOULD record the tier-1 signal observed alongside the match (for a local source, the file's modification time), so the next check can short-circuit at tier 1. Change detection uses the same SHA-256 that identifies the snapshot; implementations MUST NOT substitute a non-cryptographic hash, because `content_hash` is also the content-addressed identity used by the shared archive (§7.3).
 3. **Tier 3: Manual override.** Operators may force re-fetch and re-extraction of any corpus entry at any time, regardless of `fetch_policy`, re-fetch interval, or tier-1 signal. CLI: `particles deposit <url> --force-refetch`; `particles corpus refresh --force` for local sources.
 
-A local source that no longer exists or cannot be read yields no snapshot and MUST NOT, by that fact alone, cause its particles to be retracted or demoted: absence of a file is not falsification of the claims extracted from it.
+A local source that no longer exists or cannot be read yields no snapshot and MUST NOT, by that fact alone, cause its particles to be retracted or demoted: absence of a file is not falsification of the claims extracted from it. The refresh ladder therefore never writes an `ABSENT` record (§7.2); that record is the observation of a completed collection walk, which a single failed `stat` is not (§7.4).
 
 | **MEMENTO ALIGNMENT** |
 | --- |
@@ -1431,6 +1480,8 @@ A local source that no longer exists or cannot be read yields no snapshot and MU
 ## 7.6 WARC and Memento Alignment: Extension D
 
 Full WARC record type alignment (response/revisit) and Memento Protocol (RFC 7089) URI-R/URI-M/TimeMap integration are **Extension D** features. See §17. Core implementations use `content_hash` and `archive_path` directly without requiring WARC tooling interoperability.
+
+`ABSENT` (§7.2) has no WARC record type. A WARC writer emits it as a `metadata` record naming the target URI and `captured_at`, or omits it; it carries no payload either way.
 
 # 8. Storage Model
 
@@ -1753,8 +1804,8 @@ Each chunk is identified by `chunk_hash` (SHA-256 of the chunk text). **re-extra
    - Adjudicability gate (rung 1.7; scope narrowed) → if either particle is non-`FALSIFIABLE` (`assertion_modality` of `EVALUATIVE` / `EXPERIENTIAL` / `CONSTITUTIVE`), the pair is not adjudicable under the extraction-time default: it corroborates and both stay `ACTIVE`. Particles that are not adjudicable by default are not even selected as comparison pairs.
    - Source trust check (rung 2; Extension B) → set lower-trust particle `PROVENANCE_STALE` if differential exceeds threshold. When the *existing* particle wins, the candidate is dropped without persistence, but the drop is **audited**: a `CONFLICT_CANDIDATE_DROPPED` operator event (§9.7) records the candidate excerpt, the verdict, and the winning particle id.
    - Same-lineage update supersession (rung 2.5) → when trust cannot distinguish the pair, both are extractor-asserted, their source dates are strictly ordered, and the newer claim gives a new value for the older one's slot, demote the older claim `PROVENANCE_STALE` / `SUPERSEDED_BY_UPDATE` and point the newer one's `supersedes` at it. Where the trust rung is off (a multi-contributor store) the subject-keyed search offers only pairs this rung can act on, so a cross-entry pair never manufactures an `INCONSISTENCY` that the pre-0268 engine would not have surfaced.
-   - Default (rung 3) → persist the losing candidate **quarantined** (born `PROVENANCE_STALE` with `status_reason = CONFLICT_PENDING`, full content/provenance/confidence/subjects/embedding), then create an `INCONSISTENCY` particle whose PARTICLE provenance refs point at the two persisted rows; queue for Review. When a second reading confirmed the pair, the record carries `properties["conflict:reading"]`, the instruction it was read under; a record without it was opened on the probe alone.
-8. **Handle supersession.** If a candidate updates a prior claim from the same source, set `supersedes` and mark the prior `SUPERSEDED`. For `MUTABLE` re-extraction, set `PROVENANCE_STALE` on the prior particles from earlier snapshots of this entry that no current snapshot of any entry attests (§7.4).
+   - Default (rung 3; never for a pair of two generations of one `MUTABLE` source, §6.4) → persist the losing candidate **quarantined** (born `PROVENANCE_STALE` with `status_reason = CONFLICT_PENDING`, full content/provenance/confidence/subjects/embedding), then create an `INCONSISTENCY` particle whose PARTICLE provenance refs point at the two persisted rows; queue for Review. When a second reading confirmed the pair, the record carries `properties["conflict:reading"]`, the instruction it was read under; a record without it was opened on the probe alone.
+8. **Handle supersession.** If a candidate updates a prior claim from the same source, set `supersedes` and mark the prior `SUPERSEDED`. For `MUTABLE` re-extraction, set `PROVENANCE_STALE` on the prior particles from earlier snapshots of this entry that no current snapshot of any entry attests (§7.4). "Earlier" is by capture time against the entry's current generation, so extracting an older snapshot late never retires the current generation (§7.4).
 9. **Write the particle** with `status = ACTIVE` (or as `INCONSISTENCY` per step 7).
 10. **Update snapshot** `extraction_status = COMPLETE` (or `FAILED` with error detail; failed snapshots are picked up by Reindex auto-discovery, §9.5).
 
@@ -1849,7 +1900,7 @@ QueryRequest:
 
 ### Query algorithm
 
-1. **Validate** the request; reject particles whose `schema_version` is incompatible with the current store version (surface as `schema_mismatch` rather than including in results).
+1. **Validate** the request; refuse to run when the store holds an ACTIVE particle whose `schema_version` is incompatible with the implementation's (§6.1), surfacing `schema_mismatch` rather than answering from part of the store. A different minor version of the same major is compatible and is read normally.
 2. **Identify candidate corpus entries** via metadata + Subject store match. For entries with `extraction_status = PENDING` or `FAILED`, enqueue a background Extract job (do not block); record the entry as a `coverage_gap` in the response metadata.
 3. **Embed the question** using the SDK's embedding model.
 4. **Retrieve top-k particles.** Filter: `status = ACTIVE`; `subject_id` match if provided; `valid_until` is null or > now (lazy filter, §6.3); when `window` is set, the window evaluation below replaces the status filter and the candidate set is the claims it admits, applied before every other filter and before ranking; `recency_window_days` satisfied if provided; particles tagged `DOCUMENT_META` (`extraction:scope` in `properties`, §9.2 step 5a) are **excluded from the default factual surface** and returned only when the caller passes the explicit opt-in (`include_document_meta`); they remain `ACTIVE`, stored, and auditable, just out of the default encyclopedia. Rank by the combined score `similarity_weight · cosine_similarity + confidence_weight · effective_confidence` (reference weights 0.6 / 0.4), where *cosine similarity* is the normalized, `[0, 1]`-clamped metric pinned in §8.5; only particles whose stored vector matches the store's `embedding_profile` are comparable (§8.5). Exact top-k ordering at the margins is profile-relative and non-normative (§8.5).
@@ -1872,7 +1923,7 @@ QueryRequest:
 
 | **SCHEMA VALIDATION AT QUERY TIME** |
 | --- |
-| The query layer MUST reject particles whose `schema_version` is incompatible with the current store version, surfacing them as `schema_mismatch` rather than including them in results. This prevents silently incorrect results from legacy particles after a schema migration. |
+| The query layer MUST refuse to run on a store holding an ACTIVE particle whose `schema_version` is incompatible with the implementation's (another major version, or a value that does not parse; §6.1), surfacing `schema_mismatch` rather than filtering those particles out, since a filtered answer would silently come from part of the store. A particle of another minor version of the same major is compatible and MUST NOT be refused. The refusal SHOULD say which way the store differs: a store behind the implementation is rebuilt, while a store ahead of it needs a newer implementation and MUST NOT be advised to be rebuilt by the older one, which cannot re-create its records. |
 
 ### Window evaluation
 
@@ -1996,7 +2047,7 @@ Each check has an ID of the form `L-{CATEGORY}-{NN}` where category is `STR` (st
 | L-STR-04 | Corpus link integrity | structural | Find particles whose provenance references a `snapshot_id` no longer in the corpus. Flag as `PROVENANCE_STALE` with `status_reason = CORPUS_ENTRY_MISSING`. |
 | L-STR-05 | Staleness (`valid_until`) | structural | Find ACTIVE particles whose `valid_until` has passed. Set `PROVENANCE_STALE` with `status_reason = VALIDITY_EXPIRED`. (Query also filters lazily; §9.3. Lint persists the state transition under the fix opt-in.) |
 | L-STR-06 | Pending extraction report | structural | Report corpus entries with `extraction_status = PENDING` or `FAILED`. Surface as gaps in knowledge base coverage. |
-| L-STR-07 | Schema version audit | structural | Report distribution of `schema_version` values across ACTIVE particles. Flag particles whose `schema_version` is incompatible with the current store version as `schema_mismatch` candidates for migration. |
+| L-STR-07 | Schema version audit | structural | Report each `schema_version` value across ACTIVE particles other than the implementation's own (PATCH aside), classified by §6.1: an older minor of the same major as `SCHEMA_VERSION_OLDER_MINOR` (INFO; fields added since are unpopulated), a newer minor as `SCHEMA_VERSION_NEWER_MINOR` (INFO; a newer implementation wrote them), and an incompatible value as `SCHEMA_VERSION_MISMATCH` (WARNING; the store cannot be operated on, with the remedy for its direction). |
 | L-STR-08 | Orphan detection | structural | Find ACTIVE CLAIM particles with zero provenance references. no-provenance means orphan: the particle is anchored to no corpus entry. Flag as pruning candidates. (Subject linkage is L-STR-09's concern.) |
 | L-STR-09 | `NO_SUBJECT` | structural | Find ACTIVE CLAIM particles with empty `subject_ids`, excluding the §9 zero-subject populations: DOCUMENT_META claims, non-asserted claims, and claims marked `extraction:subject_scope = SELF`. §6.7: a claim SHOULD be about at least one subject; zero-subject claims are unreachable by subject-filtered query. The exclusion predicate is shared with §14.5's `subject_ids` measurement, so the lint and the conformance floor cannot disagree about which claims owe a subject. Severity: WARNING. |
 | L-STR-10 | `COMPOUND_ASSERTION` | structural | Find ACTIVE agent-asserted particles (`asserted_by` = the MCP write surface's bound identity) whose `content` breaches the claim-granularity soft-gate the write surface applies at assert time (`mcp.write.max_assertion_chars` / `max_assertion_sentences`). Surfaces compound beliefs asserted before the gate existed for operator review. Read-only; severity WARNING. The deterministic size proxy is interim. |
@@ -2225,7 +2276,17 @@ on import; round-trip preserves the substrate exactly (the
 recomputability contract). Units serialize one-per-line (JSONL) for
 bulk exchange and MUST validate against `particle.schema.json` and
 the SHACL shapes; the format inherits the three-layer conformance
-validation of §6.1. The **unit envelope itself** (the JSON-LD wire
+validation of §6.1. A unit's `schemaVersion` states the contract its
+record satisfies, so a unit is stamped with the lower of its record's
+version and the encoding implementation's, compared on `MAJOR.MINOR`
+(on a tie the record keeps its own): an implementation cannot carry
+fields it does not know, and MUST NOT claim them. An importer accepts
+a unit of a compatible version (§6.1), drops the keys it does not
+know and SHOULD report them, and stores the record under the same
+lower-of rule; it rejects a unit of an incompatible version, and
+refuses a bundle whose manifest version is incompatible before reading
+any member. A round trip through an implementation older than a record
+is therefore lossy, and the stamp says so. The **unit envelope itself** (the JSON-LD wire
 object's camelCase terms, its required/optional key set, and the
 `@context` / `@type` / `formatVersion` framing) is pinned by a
 dedicated normative artifact, `artifacts/schemas/interchange.schema.json`.
@@ -2233,7 +2294,12 @@ It describes both the **Particle unit** (`@type:
 "Particle"`) and the standalone **Subject unit** (`@type: "Subject"`)
 a store-export bundle carries; every emitted unit MUST validate against
 it, and `particle.schema.json` additionally governs the Core field
-semantics a Particle unit carries.
+semantics a Particle unit carries. The unit definitions are closed
+(`additionalProperties: false`), which catches a producer's misspelled
+key. A consumer validating a unit whose `schemaVersion` is a newer minor
+than the artifact it holds MUST NOT fail the unit for keys that artifact
+does not declare: it validates the unit with those keys removed and
+reports them.
 
 **Serializations (normative).** Two standard serializations carry the
 interchange unit, both bound to the same JSON-LD `@context`:
