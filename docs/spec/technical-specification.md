@@ -950,6 +950,7 @@ ParticleRelation:
   created_by: enum                  # AUTO_CLUSTER_v1 | HUMAN_REVIEW | EXTRACTOR_DIRECT
                                     #   | MANUAL_CLI | LLM_JUDGE | EXACT_DUPLICATE
                                     #   | REREAD_DUPLICATE | OBSERVER_DIVERGENCE
+                                    #   | AGENT_ASSERTED
   created_at: ISO 8601
   confidence: float [0, 1]          # how confident the link is
 ```
