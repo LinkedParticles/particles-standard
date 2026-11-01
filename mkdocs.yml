@@ -24,8 +24,12 @@
 site_name: Particles
 site_description: "A git-like ledger for what an AI system believes: an open specification for provenance-tracked, calibrated-confidence agent knowledge."
 site_url: https://linkedparticles.org
-repo_url: https://github.com/LinkedParticles/particles-standard
-repo_name: LinkedParticles/particles-standard
+# The header's repository link names the engine, the repository adopters star,
+# watch and file issues against; this site's own source repository is listed
+# under Repositories in the nav. The link drives nothing else here (no edit_uri,
+# no edit action), so it can point away from the site's source.
+repo_url: https://github.com/LinkedParticles/particles-engine-py
+repo_name: LinkedParticles/particles-engine-py
 
 # The site is the standard's front door. The whitepaper review driver is a
 # working document, not reader-facing: it stays in the repo and off the site.

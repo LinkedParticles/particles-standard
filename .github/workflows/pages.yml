@@ -47,11 +47,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          # Nothing here pushes to git; leave no token in .git/config.
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
+      # Hashed and wheels-only: this job's site artifact is what the deploy job
+      # publishes, schemas included, so nothing an index resolves at deploy
+      # time and no sdist's build backend may reach it (security review R33).
       - name: Install the docs toolchain
-        run: python -m pip install -r docs-requirements.txt
+        run: |
+          python -m pip install --require-hashes --only-binary=:all: -r docs-requirements.txt
       - name: Build the site (strict)
         run: mkdocs build --strict
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
