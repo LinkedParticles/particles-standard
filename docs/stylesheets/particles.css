@@ -216,3 +216,194 @@ body[data-md-color-scheme="slate"] {
 @media (max-width: 44rem) {
   .md-typeset .p-hero h1 { font-size: 1.9rem; }
 }
+
+/* ---- Landing README demo (.p-demo; index.md) ----------------------------- */
+/* Three steps switched by visually hidden radio inputs, so the demo needs no
+   script and every rule is scoped under .p-demo. The third step is checked in
+   the markup, so the page opens on the outcome. Sizes are in em against the
+   .md-typeset base so the smallest text (claim metadata) stays legible. */
+.md-typeset .p-demo {
+  margin: 1.2em 0 0.8em;
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  background: var(--p-surface);
+  box-shadow: var(--p-shadow-1);
+  overflow: hidden;
+}
+.md-typeset .p-demo__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.md-typeset .p-demo__steps {
+  display: flex;
+  border-bottom: 1px solid var(--p-border);
+  background: var(--p-surface-2);
+}
+.md-typeset .p-demo__steps label {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.75em 1em;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--p-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color var(--p-dur-fast) var(--p-ease), border-color var(--p-dur-fast) var(--p-ease);
+}
+.md-typeset .p-demo__steps label:hover { color: var(--p-text); }
+.md-typeset .p-demo__n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: var(--p-radius-pill);
+  border: 1px solid var(--p-border-strong);
+  font-size: 0.85em;
+}
+.md-typeset #p-demo-s1:checked ~ .p-demo__steps label[for="p-demo-s1"],
+.md-typeset #p-demo-s2:checked ~ .p-demo__steps label[for="p-demo-s2"],
+.md-typeset #p-demo-s3:checked ~ .p-demo__steps label[for="p-demo-s3"] {
+  color: var(--p-text);
+  border-bottom-color: var(--p-accent);
+  background: var(--p-surface);
+}
+.md-typeset #p-demo-s1:checked ~ .p-demo__steps label[for="p-demo-s1"] .p-demo__n,
+.md-typeset #p-demo-s2:checked ~ .p-demo__steps label[for="p-demo-s2"] .p-demo__n,
+.md-typeset #p-demo-s3:checked ~ .p-demo__steps label[for="p-demo-s3"] .p-demo__n {
+  background: var(--p-accent);
+  border-color: var(--p-accent);
+  color: var(--p-on-accent);
+}
+.md-typeset #p-demo-s1:focus-visible ~ .p-demo__steps label[for="p-demo-s1"],
+.md-typeset #p-demo-s2:focus-visible ~ .p-demo__steps label[for="p-demo-s2"],
+.md-typeset #p-demo-s3:focus-visible ~ .p-demo__steps label[for="p-demo-s3"] {
+  box-shadow: inset var(--p-focus-ring);
+}
+.md-typeset .p-demo__panel { display: none; padding: 1em 1.2em 1.2em; }
+.md-typeset #p-demo-s1:checked ~ .p-demo__panel--1,
+.md-typeset #p-demo-s2:checked ~ .p-demo__panel--2,
+.md-typeset #p-demo-s3:checked ~ .p-demo__panel--3 { display: block; }
+.md-typeset .p-demo__lede { margin: 0 0 0.9em; color: var(--p-text-muted); }
+.md-typeset .p-demo__source {
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-md);
+  background: var(--p-page);
+  margin-bottom: 0.9em;
+  overflow: hidden;
+}
+.md-typeset .p-demo__file {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.45em 0.9em;
+  border-bottom: 1px solid var(--p-border);
+  font-family: var(--p-font-mono);
+  font-size: 0.8em;
+  color: var(--p-text);
+}
+.md-typeset .p-demo__file span { color: var(--p-text-muted); }
+.md-typeset .p-demo__source pre {
+  margin: 0;
+  padding: 0.75em 0.9em;
+  font-family: var(--p-font-mono);
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: var(--p-text);
+  background: transparent;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.md-typeset .p-demo__source del,
+.md-typeset .p-demo__source ins { display: block; text-decoration: none; margin: 0 -0.9em; padding: 0 0.9em; }
+.md-typeset .p-demo__source del { background: var(--p-red-soft); color: var(--p-text); }
+.md-typeset .p-demo__source del::before { content: "− "; color: var(--p-red); }
+.md-typeset .p-demo__source ins { background: var(--p-green-soft); color: var(--p-text); }
+.md-typeset .p-demo__source ins::before { content: "+ "; color: var(--p-green); }
+.md-typeset .p-demo .p-demo__claims { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6em; }
+.md-typeset .p-demo .p-demo__claims > li { margin: 0; }
+.md-typeset .p-demo__claim {
+  display: grid;
+  grid-template-columns: 6.2em 1fr;
+  column-gap: 0.8em;
+  align-items: baseline;
+  padding: 0.7em 0.9em;
+  border: 1px solid var(--p-border);
+  border-left: 3px solid var(--p-status-active);
+  border-radius: var(--p-radius-sm);
+  background: var(--p-page);
+}
+.md-typeset .p-demo__claim p { margin: 0; color: var(--p-text); }
+.md-typeset .p-demo__meta {
+  grid-column: 2;
+  margin-top: 0.3em;
+  font-family: var(--p-font-mono);
+  font-size: 0.8em;
+  color: var(--p-text-muted);
+  overflow-wrap: anywhere;
+}
+.md-typeset .p-demo__claim--retired { border-left-color: var(--p-status-superseded); }
+.md-typeset .p-demo__claim--retired p { color: var(--p-text-muted); }
+.md-typeset .p-demo__chip {
+  justify-self: start;
+  padding: 0.15em 0.6em;
+  border-radius: var(--p-radius-pill);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.md-typeset .p-demo__chip--active { background: var(--p-green-soft); color: var(--p-green); }
+.md-typeset .p-demo__chip--superseded { background: var(--p-slate-soft); color: var(--p-text-muted); }
+.md-typeset .p-demo details.p-demo__more { font-size: inherit; margin: 0.9em 0 0; background: transparent; }
+.md-typeset .p-demo details.p-demo__more > summary { font-size: 0.85em; }
+.md-typeset .p-demo details.p-demo__more > .p-demo__claims { margin: 0.6em 0 0.8em; padding-right: 0.6em; }
+@media (max-width: 44rem) {
+  .md-typeset .p-demo__steps label { flex-direction: column; text-align: center; gap: 0.3em; padding: 0.6em 0.4em; font-size: 0.75em; }
+  .md-typeset .p-demo__panel { padding: 0.9em 0.8em 1em; }
+  .md-typeset .p-demo__claim { grid-template-columns: 1fr; }
+  .md-typeset .p-demo__meta { grid-column: 1; }
+  .md-typeset .p-demo__claim p { margin-top: 0.4em; }
+}
+
+/* ---- Landing result figures (.p-stats; index.md) ------------------------- */
+.md-typeset .p-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.8em;
+  margin: 1em 0 1.2em;
+}
+.md-typeset .p-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  padding: 0.9em 1em;
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius-lg);
+  background: var(--p-surface);
+}
+.md-typeset .p-stat__value {
+  font-size: 2.2em;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--p-accent);
+}
+.md-typeset .p-stat__label { font-size: 0.85em; line-height: 1.45; color: var(--p-text-muted); }
+
+/* ---- Landing width (index.md hides both sidebars) ------------------------ */
+/* :has(> .p-hero) matches only the landing, so every other page keeps the
+   documentation layout. The demo and the cards use the width; running prose
+   keeps a readable measure. */
+.md-content__inner:has(> .p-hero) { max-width: 56rem; margin-inline: auto; }
+.md-content__inner:has(> .p-hero) > p { max-width: 38rem; }
+.md-content__inner:has(> .p-hero) > .grid.cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+
+/* A captured terminal block whose prose lines should wrap, not scroll
+   (``` { .console .p-wrap } on the landing's query output). */
+.md-typeset .highlight.p-wrap code { white-space: pre-wrap; overflow-wrap: anywhere; }

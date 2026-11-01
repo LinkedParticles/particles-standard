@@ -150,6 +150,24 @@ The store held no beliefs matching this question as of 1980-01-01T00:00:00+00:00
     Pluto did not change in 2006; the belief about it did, and this is the
     record of that revision.
 
+The bundled web UI asks the same store the same kind of question. The answer
+is built only from stored claims, and every claim behind it is listed with
+its stored confidence, the effective confidence it was ranked with at read
+time, its dates, and whether it revises an earlier belief. At the end, the
+answer opens as a graph of the knowledge it consulted.
+
+<figure markdown="span">
+  <video src="../assets/query-demo.mp4" autoplay loop muted playsinline
+         title="The Particles web UI answering a question, with each cited belief's stored and effective confidence"
+         style="width: 100%; max-width: 44rem; border: 1px solid var(--p-border); border-radius: var(--p-radius-lg); background: #f4f6fb;"></video>
+  <figcaption>
+    Asking <em>"Is Pluto still a planet?"</em> in the web UI that ships with
+    the engine. The top-cited belief is the 2006 reclassification, marked
+    <em>revises an earlier belief</em>, because the 1996 claim it replaced is
+    still in the store.
+  </figcaption>
+</figure>
+
 Full guide:
 [as-of time travel](https://docs.linkedparticles.org/user-guide/as-of/).
 
