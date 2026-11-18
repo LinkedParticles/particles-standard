@@ -25,9 +25,19 @@
 
 *Schema, Operations, Storage Model, Phasing, and Open Questions*
 
-# 6. The Particle Schema
+Section numbers begin at 6 for a historical reason: this document and the
+[whitepaper](whitepaper.md) were once one document, whose first five sections
+became the whitepaper. The numbers are kept because many references cite
+them. The whitepaper has since added sections of its own, so a whitepaper
+section and a section here can share a number; the whitepaper cites this
+document's sections as "techspec §N". Readers looking for how a disagreement between two claims
+is settled will find the conflict-resolution ladder in
+[§6.4](#conflict-resolution-with-source-trust) and the status transitions it
+drives in [§6.6](#66-normative-status-transition-table).
 
-## 6.1 Definition
+## 6. The Particle Schema
+
+### 6.1 Definition
 
 A **claim** is a single falsifiable assertion in natural language:
 *"Acme acquired Widget"*, *"the half-life of caesium-137 is 30.17
@@ -57,7 +67,7 @@ runtime agent use.
 | --- |
 | A `schema_version` is `MAJOR.MINOR.PATCH`, three non-negative integers compared as integers, never as text (`1.10.0` follows `1.9.0`). Two versions are **compatible** when their majors are equal and nonzero; any other pair, and any value that does not parse, is **incompatible**. PATCH marks a change with no effect on a record's shape and is read by no comparison. A **minor** version may only add: every record written under `1.y` MUST be a correct record, with its writer's meaning for every field the reader knows, to a `1.x` reader (`x < y`) that ignores the fields it does not know. In practice a minor version adds optional fields whose absence means what a record meant before they existed. A new required field, a removed, renamed or retyped field, a narrowed constraint, a changed meaning, and a new member of an enum an older reader decodes are each a **major** change. An implementation reads and writes a store holding any compatible versions, stamping each record it creates with its own version, and refuses operations on a store holding an incompatible one (§9.3). An implementation older than a record MAY retire it by a judgment about the claim (conflict resolution, retraction, explicit supersession, expiry) and MUST NOT replace it with a copy of the same claim it re-creates itself (a re-extraction, a dated restatement, a duplicate merge), because the copy would lack the fields the older implementation cannot read. |
 
-## 6.2 Field Reference
+### 6.2 Field Reference
 
 The whitepaper's §2.1 worked example shows the literal field shapes
 in YAML. The same fields as a reference table follow. Every field
@@ -77,7 +87,7 @@ for a conformant Core implementation, Extension fields may be omitted.
 | `asserted_by` | string, agent ID (Core) | The PSUM `BeliefAgent` making this assertion. For extracted particles this is the extractor's agent identity; for directly-asserted particles it is the operator or the authorized agent's `platform:identifier` (§9.1a). |
 | `asserted_at` | ISO 8601 timestamp (Core) | When the particle was created. |
 | `status` | enum (Core) | `ACTIVE`, `SUPERSEDED`, `RETRACTED`, `PROVENANCE_STALE`, `INCONSISTENCY`. Set by system operations, not by the asserting agent at creation. See §6.6 for the normative status transition table. |
-| `status_reason` | enum (Core) | The cause of the current status. Set alongside `status` by every operation that changes it. Values: `RETRACTED_DEPENDENCY`, `CORPUS_ENTRY_MISSING`, `TRUST_DEMOTED` (Ext B; **reserved, not emitted**: §6.6 assigns it to a Lint trust pass, which §9.4 does not define), `LOWER_TRUST_SOURCE` (Ext B, extract-time trust resolution), `SUPERSEDED_BY_REINDEX`, `VALIDITY_EXPIRED`, `CONFLICT_RESOLVED`, `CONFLICT_PENDING` (quarantined conflict loser awaiting Review; the only reason permitted on a born-`PROVENANCE_STALE` particle), `EXPLICIT_RETRACTION`, `SOURCE_RETRACTED`, `EXPLICIT_SUPERSESSION` (deliberate revision by the asserting principal via `particle_supersede`, §9.1a), `DUPLICATE_MERGED` (an identical-content redundant copy folded into its group's survivor by exact-duplicate auto-merge (the §6.10 normalized key, creation path 4); deliberately distinct from `EXPLICIT_SUPERSESSION` so a revert can select precisely auto-merge's own writes), `SUPERSEDED_BY_UPDATE` (an older claim retired by a strictly newer, contradicting claim from the same source lineage, §6.4 rung 2.5), `SUPERSEDED_BY_REANCHOR` (a claim that relied on a state an update supersession retired, replaced by a dated restatement anchored to that state, §6.4 rung 2.5 and §9.5). Omitted on initial ACTIVE status. |
+| `status_reason` | enum (Core) | The cause of the current status. Set alongside `status` by every operation that changes it. Values: `RETRACTED_DEPENDENCY`, `CORPUS_ENTRY_MISSING`, `TRUST_DEMOTED` (Ext B; **reserved, not emitted**: §6.6 assigns it to a Lint trust pass, which §9.4 does not define), `LOWER_TRUST_SOURCE` (Ext B, extract-time trust resolution), `SUPERSEDED_BY_REINDEX`, `VALIDITY_EXPIRED`, `CONFLICT_RESOLVED`, `CONFLICT_PENDING` (quarantined conflict loser awaiting Review; one of the three reasons a particle may be born `PROVENANCE_STALE` with, §6.6), `EXPLICIT_RETRACTION`, `SOURCE_RETRACTED`, `EXPLICIT_SUPERSESSION` (deliberate revision by the asserting principal via `particle_supersede`, §9.1a), `DUPLICATE_MERGED` (an identical-content redundant copy folded into its group's survivor by exact-duplicate auto-merge (the §6.10 normalized key, creation path 4); deliberately distinct from `EXPLICIT_SUPERSESSION` so a revert can select precisely auto-merge's own writes), `DOCUMENT_SUPERSEDED` (a claim whose provenance corpus entry is (transitively) superseded by a conflicting claim's, §6.4 rung 1.5; on a particle born `PROVENANCE_STALE`, a candidate that lost to a claim already held before it was written, which was never believed and has no retirement instant), `SUPERSEDED_BY_UPDATE` (an older claim retired by a strictly newer, contradicting claim from the same source lineage, §6.4 rung 2.5; on a particle born `PROVENANCE_STALE`, an out-of-order older candidate that lost to a claim already held before it was written, which was never believed and has no retirement instant), `SUPERSEDED_BY_REANCHOR` (a claim that relied on a state an update supersession retired, replaced by a dated restatement anchored to that state, §6.4 rung 2.5 and §9.5). Omitted on initial ACTIVE status. |
 | `schema_version` | string, semver (Core) | The Particles schema version under which this particle was created (currently `1.0.0`, frozen): `MAJOR.MINOR.PATCH`, and never rewritten in place. A store may hold several compatible versions at once; §6.1 defines compatibility. Enables lint to classify the versions a store holds (L-STR-07) and the query layer to refuse an incompatible store. |
 | `valid_until` | timestamp (Core) | Expiry for time-bounded claims. Per PSUM `Belief.duration`. Enforced at query time as a lazy filter; see §9.3. Populated at extraction by the general extractor for genuinely date-bounded claims (§9.2), as well as operator-set. Distinct from active retraction, which is reserved for source-driven invalidation. |
 | `valid_from` | timestamp (Core) | When the claim begins to hold in the world: the counterpart of `valid_until` and the valid-time axis beside the assertion-time one (`asserted_at`; §9.3 As-of evaluation). Read only by the window evaluation of §9.3; never an input to conflict resolution, ranking or confidence. Populated at extraction when the source states a start (§9.2), by the deterministic prose-date default (`particles validity`), or operator-set; how a value was set rides in `properties` under `extraction:valid_from_basis` (`stated`, `prose`, `as-of`, `coarse`, `session`, `operator`). Absent means undated: a window read discloses the count and never places the claim. MUST NOT be after `valid_until`. |
@@ -103,7 +113,7 @@ for a conformant Core implementation, Extension fields may be omitted.
 | --- |
 | The whitepaper §2.1 worked example shows two particles in YAML form. The same shape applies here: Core fields are always present; Extension fields appear only when their extractor emits them. Where the prose spec and the worked example diverge on a field name or casing, the worked example is the ground truth and the spec is amended to match. |
 
-## 6.3 Confidence Representation
+### 6.3 Confidence Representation
 
 The confidence system defines two distinct quantities with different ownership and lifecycle. This separation is normative: implementations that conflate them will produce inconsistent behaviour across extraction, query, and trust evaluation. Calibration is an *input-side* transformation with full audit provenance on the stored record, not a read-side recompute. ( which revises three-quantity framing.)
 
@@ -135,7 +145,7 @@ Field semantics:
 
 The purpose of `calibration_method` is cross-extractor confidence interoperability: a confidence value of 0.8 should mean an empirical accuracy of approximately 80% regardless of which model architecture or vendor produced the extractor. Without a standard calibration method, confidence values are internally consistent within an extractor but not comparable across extractors. Temperature Scaling is the recommended default because it is model-agnostic, cheap to apply, and well-validated in the literature.
 
-### Recency factor (content age decay)
+#### Recency factor (content age decay)
 
 `effective_confidence` is additionally modulated by a `recency_factor` computed from the source's `content_published_at` timestamp (§7.2) and a per-`source_type` half-life and floor:
 
@@ -145,7 +155,7 @@ recency_factor = max(floor, 0.5 ^ (age_days / half_life_days))
 
 For example, REDDIT_POST defaults to a 60-day half-life with a 0.10 floor: an 18-month-old Reddit comment retains at most 10% of its at-extraction effective confidence. Half-lives and floors are operator-configurable per `source_type` in `config.yaml`. STABLE sources (PDFs, published papers) typically have no decay (`recency_factor = 1.0`). The recency factor is applied at query time only; `confidence.value` itself is never modified.
 
-### `valid_until` lazy filter
+#### `valid_until` lazy filter
 
 `valid_until` is enforced at query time as a lazy filter: expired particles are filtered out of the candidate set without active retraction. Active retraction (status transition to `RETRACTED`) is reserved for source-driven invalidation (the source has been superseded, or its author downgraded), not for the routine passage of time. The mechanism lives in §9.3; this section is the schema-side note.
 
@@ -153,13 +163,17 @@ For example, REDDIT_POST defaults to a 60-day half-life with a 0.10 floor: an 18
 | --- |
 | Any extractor claiming `calibration_source = CALIBRATED_BENCHMARK` MUST document its `calibration_method`. The reference SDK ships a temperature-scaling calibration utility (`particles extractor calibrate <id>`) that consumes the benchmark harness's gold-standard particles to fit the scaler; once an extractor carries an active calibration, every subsequent extraction stores the scaled value stamped `CALIBRATED_BENCHMARK`. Extractor authors are encouraged to evaluate against the TruthfulQA and HaluEval benchmark suites once those are wrapped as `BenchmarkSuite` artefacts; the harness itself (`particles extractor benchmark <id>`, v0.21.0) accepts any conformant suite (§13.3). |
 
-## 6.4 Source Trust Model
+<a id="64-source-trust-model"></a>
+
+### 6.4 Source Trust and Conflict Resolution
+
+This section holds the source trust model and the normative conflict-resolution ladder it feeds ([*Conflict resolution with source trust*](#conflict-resolution-with-source-trust)). Its earlier title was "Source Trust Model", and links to `#64-source-trust-model` still land here.
 
 The Source Trust Model allows operators to specify how much weight to give to particles whose provenance traces to a particular source, source type, or author within a source. It is the counterpart to the Extractor Trust Model (§14.4): while extractor trust discounts confidence based on *how* particles were extracted, source trust discounts confidence based on *where* the underlying content came from. (.)
 
 The conflict-resolution ladder's ordering and its threshold constants (the trust differential, `0.15`; the demotion/cascade caps; and the recency-decay table) are pinned as **L2** conformance requirements in the **Conformance Profile** (`docs/spec/conformance-profile.md` §2, §5; `artifacts/conformance/profile.yaml`), the single source of truth this spec cites for those values. The ladder ordering and the cascade gates are additionally **machine-checkable**: the Profile's `conflict_ladder`, `cascade_gate`, and `cascade_cap` test-vector families (§5.1) state, as plain data, which rung fires for a given pair and which batches the per-run cap truncates.
 
-### SourceTrustStatement schema
+#### SourceTrustStatement schema
 
 A `SourceTrustStatement` is a durable, operator-defined policy record that scopes a trust rank to a domain and optionally to a specific author within a source. Trust statements are stored in the particle store as first-class records and consulted by conflict resolution and query operations.
 
@@ -216,7 +230,7 @@ The `policy_provenance` field makes trust statements self-describing about their
 | --- |
 | Trust statements are themselves claims with provenance. The `policy_provenance` field is the trust statement's equivalent of a particle's `calibration_source`. Systems that treat a `REVIEWER_DERIVED` trust rank as equivalent to an `OPERATOR_DIRECT` rank are making the same mistake as systems that treat `EXTRACTOR_DIRECT` confidence as equivalent to `CALIBRATED_BENCHMARK` confidence. |
 
-### Layered trust lookup
+#### Layered trust lookup
 
 When evaluating a particle's source trust at query or conflict time, the engine consults `SourceTrustStatement` records in a four-tier cascade:
 
@@ -227,26 +241,54 @@ When evaluating a particle's source trust at query or conflict time, the engine 
 
 The first match wins; later tiers do not aggregate. This ordering ensures that more-specific policies dominate more-general ones.
 
-### Conflict resolution with source trust
+#### Conflict resolution with source trust
 
-When two ACTIVE particles conflict and their provenance traces to different sources, the conflict resolution algorithm in §9.2 and §9.4 applies source trust statements before surfacing an `INCONSISTENCY`. The ladder is normative:
+When two ACTIVE particles conflict and their provenance traces to different sources, the conflict resolution algorithm in §9.2 and §9.4 applies source trust statements before surfacing an `INCONSISTENCY`. The ladder is normative. Its steps run in the order below, and the first that applies decides the pair. The table is an informative summary; the text of each rung governs.
 
-1. **ALEATORY exclusion.** If either particle has `uncertainty_nature = ALEATORY`, the pair is excluded from the rungs that pick a winner between two sources, namely the supersession prior (1.5) and the source trust check (2), because neither a document relation nor a trust differential can resolve irreducible uncertainty. Update supersession (2.5) reads the exclusion on the **newer** claim only, the side its source-date order names: an older ALEATORY claim (a plan, a schedule) is retired by a newer EPISTEMIC claim from the same lineage that fills its slot, because a settled report of what happened or what was decided is how aleatory uncertainty is resolved; a newer ALEATORY claim (a forecast, a revised forecast) never retires anything. This is an exclusion, **not** a short-circuit: the pair still falls through the adjudicability gate (1.7) and the contradiction-signal gate, either of which returns corroboration and ends the ladder. An ALEATORY pair with a side that is not adjudicable, or with no confirmed contradiction, therefore surfaces no `INCONSISTENCY` at all; only a *confirmed* contradiction between two adjudicable claims reaches rung 3.
-1.5. **Document-supersession prior**. If one particle's provenance corpus entry **(transitively) supersedes** the other's (an authored, in-corpus editorial relation that *this document replaces that one*, e.g. an ADR's `supersedes:` frontmatter, captured at ingest by a genre adapter), prefer the superseding claim: set the superseded particle `PROVENANCE_STALE` with `status_reason = DOCUMENT_SUPERSEDED` and surface **no** `INCONSISTENCY`. **This prior is made modality-independent and placed above the adjudicability gate (step 1.7):** an authored replacement is an *editorial* fact that does not depend on whether either claim is adjudicable, so it MUST retire a superseded `CONSTITUTIVE` definition (a formula/rule the truth engine would otherwise never see). The replacement is confirmed by a conflict signal reframed for the non-adjudicable case ("does the superseding claim replace, not merely restate, the superseded one?"); absent that signal both claims are kept (default-safe). It fires **only on an actual conflict between two specific claims**: a still-true, non-conflicting claim from the superseded document never conflicts, so it is never demoted (the relation is document-level, but the prior is claim-level and conflict-gated). It sits *above* both the adjudicability gate and the trust rung but *below* the ALEATORY exclusion. Single-trust-order stores only (same gating as rung 2). Rung 1.5 only ever sees the pairs §9.2 step 7's candidacy step produced, and at extract time that candidacy is the candidate's own corpus entry plus the narrow, subject-scoped cross-entry candidate search §9.2 step 7 adds, not a general cross-entry reconciliation; the dedicated reconcile sweep is what runs this rung cross-entry over already-extracted particles. A second sweep mode applies rung 2.5 the same way, over already-extracted particles grouped by subject: it probes only pairs rung 2.5 could act on (same lineage, extractor-asserted, strictly dated), highest-similarity first under a per-run probe cap, and is idempotent. Each retirement it makes also reaches the other phrasings of the retired value (rung 2.5, *Other phrasings of a retired value*).
-1.7. **Adjudicability gate** (scope narrowed). A pair is *adjudicable* when the two sources' disagreement can be settled by weighing those sources. That is a judgment an observer makes about the pair, never a property of either claim, on the same footing as claim equivalence (§6.10) and recency decay, and it is community-relative: *"this coin grades MS-65"* is adjudicable inside a numismatic grading standard and not outside it. The engine records a per-claim default at extraction (`assertion_modality`, §6.2) and uses it to decide which pairs it may arbitrate: this gate, and the matching candidate filters of L-SEM-01 and L-IDX-01 (§9.4). If either particle is not adjudicable by default (`assertion_modality ≠ FALSIFIABLE`), the truth engine (the contradiction probe, trust arbitration (step 2), update supersession (step 2.5), and `INCONSISTENCY` manufacture (step 3)) abstains, and the two co-exist. Abstention is the default outcome: a pair is arbitrated only when both claims are adjudicable and a contradiction is confirmed. This gate governs *only* the truth-engine rungs below it; the editorial supersession prior (step 1.5) is lifted above it. The gate reads the **stored** default only. An operator may correct a claim's default, and a regenerating classifier may rewrite it; an implementation SHOULD NOT let a regenerating classifier make a claim adjudicable without an operator, because a wrongly superseded claim has no general road back while an unarbitrated pair is recoverable. A lens's reading of adjudicability (§6.4, *Trust lenses*) governs read-time rendering only and MUST NOT reach this gate or any other write.
-2. **Source trust check** (Extension B only; see below). Evaluate via layered lookup. If `trust_rank` differential exceeds the configured threshold (default 0.15), set the lower-trust particle `PROVENANCE_STALE` with `status_reason = LOWER_TRUST_SOURCE`.
-2.5. **Same-lineage update supersession** (amended). If rung 2 did not resolve the pair, both particles are extractor-asserted (neither operator-asserted, `HUMAN_REVIEW`, nor agent-asserted), their provenance is indistinguishable to every trust key except the corpus entry itself (the same URL authority, source type, snapshot author, and contributor attribution), their source content dates are both known and strictly ordered, and **both fill the same slot**, prefer the **newer** claim: set the older particle `PROVENANCE_STALE` with `status_reason = SUPERSEDED_BY_UPDATE`, set the newer particle's `supersedes` to the older one's id, and surface **no** `INCONSISTENCY`. A later-arriving *older* claim (an out-of-order deposit) is itself stored demoted. A claim's date is that of its **latest** SOURCE observation, not its first: a restated claim gains a provenance ref rather than a copy (§6.10), and dating it by its first ref would retire a value that is current again. This rung applies in single-trust-order **and** multi-contributor stores: one lineage updating itself is not arbitration between contributors. In a multi-contributor store the lineage MUST additionally be **positively attributed** (a non-empty, identical snapshot author or contributor set) because two anonymous claims there cannot be assumed to share a principal; an unattributed pair is left alone, both claims ACTIVE. On the agent assertion pathway (§9.1a) the rung fires only for an agent's **own** earlier assertion (same asserter identity, ordered by assertion time); every other pair there still fails closed. `SUPERSEDED_BY_UPDATE` records that the world changed, not a verdict on the value, so it is not a judgment retirement (§6.4, the retired-value rule): a later restatement of the older value is reconciled normally. **Same slot** means the two claims state a value for the same attribute of the same subject and the newer one gives a new value for it, so the older value no longer holds. The same-slot judgment, read twice, is required, and a confirmed contradiction is not: two claims that give one slot successive values can both be true at their own times, so a check of whether both can be true at once is not the test of an update. An implementation SHOULD therefore ask the same-slot question of a pair that meets every other condition of this rung before any contradiction check, and MAY skip the contradiction check where the same-slot answer already decides the pair. Two exceptions keep a confirmed contradiction as a condition: a pair whose older claim records only a past value, marked by its own words (a value said to have ended at a stated year, "used to", "previously", "formerly", "no longer", "had been", "before" or "back in" a year), and a dated restatement of a time that is over; and a claim written by re-anchoring (§9.5) is never either side of this rung, because it is dated history and gives no slot a value. Claims about different attributes of one subject do not fill one slot, and neither do a lasting preference, evaluation or trait and a statement limited to a period, place or situation ("the user's favourite restaurant is X" and "the user has not yet found a regular place to eat"), and a claim that only records a past value ("was previously X") gives the slot no new value, while a claim reporting a change from one value to another ("moved from X to Y") gives it the new value Y, whatever its tense, and fills only the slot that states the value, not a claim that relied on the old value, such as a setup step or a limitation. A claim limited to a period (a trip, a visit, a contract, an interim role) and a later claim reporting that the same place or arrangement has become lasting, once the move or change has happened, do fill one slot, the later claim giving it the new value even though the place or party is the same ("in Lisbon for a month" and then "now rents a flat in Lisbon"); a later claim that the change is decided, accepted or planned gives it no new value, and a later claim limited to a period never gives a new value for a lasting earlier one. The slot MUST also be one that holds one value at a time and changes over time (where someone lives, their employer, a count that grows). A slot whose value, once true, stays true (who wrote a work, a release date, a product's specification or price as one source stated it) is not updated by a later statement: two values for it are a contradiction that no source date settles, and the pair continues down the ladder to rung 3. An implementation MUST establish the same-slot condition positively before this rung fires, on every path that applies it (extraction, the assertion carve-out, and the update sweep); when it is not established the rung does not fire. A subject-scoped cross-entry pair (§9.2 step 7) judged to fill different slots is left alone, both claims ACTIVE, since that search exists to find updates; any other pair continues down the ladder. On the update sweep, which acts on claims already in recall, rung 3 is disclosure: the `INCONSISTENCY` is recorded for review and both claims stay ACTIVE. A claim cut from the retired claim's snapshot that depended on the retired state being current ("a ten-minute walk from the user's flat") SHOULD NOT stay current unchanged: §9.5 defines the re-anchoring that replaces it with a dated restatement, and the shape that restatement MUST take.
+| Rung | Name | Applies when | Outcome |
+| --- | --- | --- | --- |
+| 1 | ALEATORY exclusion | Either claim has `uncertainty_nature = ALEATORY` | The pair is excluded from rungs 1.5 and 2; rung 2.5 reads the exclusion on the newer claim only. The pair still falls through the gates below. |
+| 1.5 | Document-supersession prior | One claim's corpus entry (transitively) supersedes the other's, and a replacement signal confirms the conflict | The superseded claim becomes `PROVENANCE_STALE` / `DOCUMENT_SUPERSEDED`; no `INCONSISTENCY` |
+| 1.7 | Adjudicability gate | Either claim's stored `assertion_modality` is not `FALSIFIABLE` | The rungs below abstain, and both claims co-exist |
+| (gate) | Contradiction signal | No contradiction is confirmed, and rung 2.5 has not settled the pair as an update | Corroboration; both claims co-exist |
+| 2 | Source trust check (Extension B) | The trust-rank differential exceeds the threshold (default 0.15) | The lower-trust claim becomes `PROVENANCE_STALE` / `LOWER_TRUST_SOURCE` |
+| 2.5 | Same-lineage update supersession | One lineage, both claims dated in strict order, and the same-slot judgment, read twice, says the newer claim gives the older one's slot a new value | The older claim becomes `PROVENANCE_STALE` / `SUPERSEDED_BY_UPDATE`; no `INCONSISTENCY` |
+| 3 | Default | Nothing above resolved the pair | An `INCONSISTENCY` record, queued for Review (§9.6) |
+
+##### Rung 1: ALEATORY exclusion
+
+**ALEATORY exclusion.** If either particle has `uncertainty_nature = ALEATORY`, the pair is excluded from the rungs that pick a winner between two sources, namely the supersession prior (1.5) and the source trust check (2), because neither a document relation nor a trust differential can resolve irreducible uncertainty. Update supersession (2.5) reads the exclusion on the **newer** claim only, the side its source-date order names: an older ALEATORY claim (a plan, a schedule) is retired by a newer EPISTEMIC claim from the same lineage that fills its slot, because a settled report of what happened or what was decided is how aleatory uncertainty is resolved; a newer ALEATORY claim (a forecast, a revised forecast) never retires anything. This is an exclusion, **not** a short-circuit: the pair still falls through the adjudicability gate (1.7) and the contradiction-signal gate, either of which returns corroboration and ends the ladder. An ALEATORY pair with a side that is not adjudicable, or with no confirmed contradiction, therefore surfaces no `INCONSISTENCY` at all; only a *confirmed* contradiction between two adjudicable claims reaches rung 3.
+##### Rung 1.5: Document-supersession prior
+
+**Document-supersession prior**. If one particle's provenance corpus entry **(transitively) supersedes** the other's (an authored, in-corpus editorial relation that *this document replaces that one*, e.g. an ADR's `supersedes:` frontmatter, captured at ingest by a genre adapter), prefer the superseding claim: set the superseded particle `PROVENANCE_STALE` with `status_reason = DOCUMENT_SUPERSEDED` and surface **no** `INCONSISTENCY`. **This prior is made modality-independent and placed above the adjudicability gate (step 1.7):** an authored replacement is an *editorial* fact that does not depend on whether either claim is adjudicable, so it MUST retire a superseded `CONSTITUTIVE` definition (a formula/rule the truth engine would otherwise never see). The replacement is confirmed by a conflict signal reframed for the non-adjudicable case ("does the superseding claim replace, not merely restate, the superseded one?"); absent that signal both claims are kept (default-safe). It fires **only on an actual conflict between two specific claims**: a still-true, non-conflicting claim from the superseded document never conflicts, so it is never demoted (the relation is document-level, but the prior is claim-level and conflict-gated). It sits *above* both the adjudicability gate and the trust rung but *below* the ALEATORY exclusion. Single-trust-order stores only (same gating as rung 2). Rung 1.5 only ever sees the pairs §9.2 step 7's candidacy step produced, and at extract time that candidacy is the candidate's own corpus entry plus the narrow, subject-scoped cross-entry candidate search §9.2 step 7 adds, not a general cross-entry reconciliation; the dedicated reconcile sweep is what runs this rung cross-entry over already-extracted particles. A second sweep mode applies rung 2.5 the same way, over already-extracted particles grouped by subject: it probes only pairs rung 2.5 could act on (same lineage, extractor-asserted, strictly dated), highest-similarity first under a per-run probe cap, and is idempotent. Each retirement it makes also reaches the other phrasings of the retired value (rung 2.5, *Other phrasings of a retired value*).
+##### Rung 1.7: Adjudicability gate
+
+**Adjudicability gate** (scope narrowed). A pair is *adjudicable* when the two sources' disagreement can be settled by weighing those sources. That is a judgment an observer makes about the pair, never a property of either claim, on the same footing as claim equivalence (§6.10) and recency decay, and it is community-relative: *"this coin grades MS-65"* is adjudicable inside a numismatic grading standard and not outside it. The engine records a per-claim default at extraction (`assertion_modality`, §6.2) and uses it to decide which pairs it may arbitrate: this gate, and the matching candidate filters of L-SEM-01 and L-IDX-01 (§9.4). If either particle is not adjudicable by default (`assertion_modality ≠ FALSIFIABLE`), the truth engine (the contradiction probe, trust arbitration (step 2), update supersession (step 2.5), and `INCONSISTENCY` manufacture (step 3)) abstains, and the two co-exist. Abstention is the default outcome: a pair is arbitrated only when both claims are adjudicable and a contradiction is confirmed. This gate governs *only* the truth-engine rungs below it; the editorial supersession prior (step 1.5) is lifted above it. The gate reads the **stored** default only. An operator may correct a claim's default, and a regenerating classifier may rewrite it; an implementation SHOULD NOT let a regenerating classifier make a claim adjudicable without an operator, because an unarbitrated pair is recoverable while a wrong arbitration is costly to undo: a claim an automatic rung retired as replaced can be restored by an operator's ruling on its replacement, and a trust or review retirement has no general road back. A lens's reading of adjudicability (§6.4, *Trust lenses*) governs read-time rendering only and MUST NOT reach this gate or any other write.
+##### Rung 2: Source trust check
+
+**Source trust check** (Extension B only; see below). Evaluate via layered lookup. If `trust_rank` differential exceeds the configured threshold (default 0.15), set the lower-trust particle `PROVENANCE_STALE` with `status_reason = LOWER_TRUST_SOURCE`.
+##### Rung 2.5: Same-lineage update supersession
+
+**Same-lineage update supersession** (the same-slot judgment). If rung 2 did not resolve the pair, both particles are extractor-asserted (neither operator-asserted, `HUMAN_REVIEW`, nor agent-asserted), their provenance is indistinguishable to every trust key except the corpus entry itself (the same URL authority, source type, snapshot author, and contributor attribution), their source content dates are both known and strictly ordered, and **both fill the same slot**, prefer the **newer** claim: set the older particle `PROVENANCE_STALE` with `status_reason = SUPERSEDED_BY_UPDATE`, set the newer particle's `supersedes` to the older one's id, and surface **no** `INCONSISTENCY`. A later-arriving *older* claim (an out-of-order deposit) is itself stored demoted, born `PROVENANCE_STALE` (§6.6). A claim's date is that of its **latest** SOURCE observation, not its first: a restated claim gains a provenance ref rather than a copy (§6.10), and dating it by its first ref would retire a value that is current again. Two different corpus entries whose shared lineage rests on no principal (a harness's own transcripts, whose URI authority names no publisher, or local files joined only because both are the owner's own memory-file harvests) are one lineage only when their project keys (the keys observer scope reads) intersect, and an entry with no project key is one lineage with no other entry; the rule reads the entries' own keys, so it holds whether or not observer scope is engaged. A recorded snapshot author or contributor set is a principal and keeps its pair as it was. This rung applies in single-trust-order **and** multi-contributor stores: one lineage updating itself is not arbitration between contributors. In a multi-contributor store the lineage MUST additionally be **positively attributed** (a non-empty, identical snapshot author or contributor set, or the same **harvest principal**: a depositor the implementation reserves to the store owner's own capture processes, which no other intake may record) because two anonymous claims there cannot be assumed to share a principal; an unattributed pair is left alone, both claims ACTIVE. This rung retires a claim only for a newer claim of the **same principal**: the snapshot author or contributor set, else the harvest principal, else, in a single-trust-order store only, the store's one principal. An operator's explicit supersession or retraction is an act of the operator, not this rung, and the rule does not bind it. On the agent assertion pathway (§9.1a) the rung fires only for an agent's **own** earlier assertion (same asserter identity, ordered by assertion time); every other pair there still fails closed. `SUPERSEDED_BY_UPDATE` records that the world changed, not a verdict on the value, so it is not a judgment retirement (§6.4, the retired-value rule): a later restatement of the older value is reconciled normally. **Same slot** means the two claims state a value for the same attribute of the same subject and the newer one gives a new value for it, so the older value no longer holds. The same-slot judgment, read twice, is required, and a confirmed contradiction is not. The second reading reads each claim's source name, kind, date and the passage it was extracted from, as §9.2 step 7 says of the second reading of a contradiction, and a value the newer passage shows only as something read or fetched, quoted, reported of someone else or supposed gives the slot no new value; a claim with no source passage (the agent assertion pathway) is read on its text, and a newer claim whose passage cannot be read is kept: two claims that give one slot successive values can both be true at their own times, so a check of whether both can be true at once is not the test of an update. An implementation SHOULD therefore ask the same-slot question of a pair that meets every other condition of this rung before any contradiction check, and MAY skip the contradiction check where the same-slot answer already decides the pair. Two exceptions keep a confirmed contradiction as a condition: a pair whose older claim records only a past value, marked by its own words (a value said to have ended at a stated year, "used to", "previously", "formerly", "no longer", "had been", "before" or "back in" a year), and a dated restatement of a time that is over; and a claim written by re-anchoring (§9.5) is never either side of this rung, because it is dated history and gives no slot a value. Claims about different attributes of one subject do not fill one slot, and neither do a lasting preference, evaluation or trait and a statement limited to a period, place or situation ("the user's favourite restaurant is X" and "the user has not yet found a regular place to eat"), and a claim that only records a past value ("was previously X") gives the slot no new value, while a claim reporting a change from one value to another ("moved from X to Y") gives it the new value Y, whatever its tense, and fills only the slot that states the value, not a claim that relied on the old value, such as a setup step or a limitation. A claim limited to a period (a trip, a visit, a contract, an interim role) and a later claim reporting that the same place or arrangement has become lasting, once the move or change has happened, do fill one slot, the later claim giving it the new value even though the place or party is the same ("in Lisbon for a month" and then "now rents a flat in Lisbon"); a later claim that the change is decided, accepted or planned gives it no new value, and a later claim limited to a period never gives a new value for a lasting earlier one. The slot MUST also be one that holds one value at a time and changes over time (where someone lives, their employer, a count that grows). A slot whose value, once true, stays true (who wrote a work, a release date, a product's specification or price as one source stated it) is not updated by a later statement: two values for it are a contradiction that no source date settles, and the pair continues down the ladder to rung 3. An implementation MUST establish the same-slot condition positively before this rung fires, on every path that applies it (extraction, the assertion carve-out, and the update sweep); when it is not established the rung does not fire. A subject-scoped cross-entry pair (§9.2 step 7) judged to fill different slots is left alone, both claims ACTIVE, since that search exists to find updates; any other pair continues down the ladder. On the update sweep, which acts on claims already in recall, rung 3 is disclosure: the `INCONSISTENCY` is recorded for review and both claims stay ACTIVE. A claim cut from the retired claim's snapshot that depended on the retired state being current ("a ten-minute walk from the user's flat") SHOULD NOT stay current unchanged: §9.5 defines the re-anchoring that replaces it with a dated restatement, and the shape that restatement MUST take. An implementation SHOULD bound the retirements this rung makes whose winning claim comes from one corpus entry over a rolling period, counted over every route, and send a pair past the bound on down the ladder (the reference implementation allows five in any 24 hours); and SHOULD disclose each automatic retirement by replacement to the owner, with a way to restore the retired claim that mints a successor rather than reviving the row.
 
 **Other phrasings of a retired value**. One value is often stated more than once ("the user lives in Delhi, in Lajpat Nagar" and "the user's home is in Delhi"), and a contradiction probe that finds one pair can miss the next. An implementation that retires a claim by update SHOULD also retire each other ACTIVE claim of the same subject and lineage that states the retired value for the same slot, each established by the same-slot check for that claim, and MUST NOT retire one without that check. Such a claim is a *paraphrase* of the retired claim R when it shares R's subject key, is close to R in content (the reference implementation uses a cosine floor of 0.70 on the §6.10 similarity scale), meets every rung 2.5 condition against R's winner U except the confirmed contradiction (extractor-asserted, the same lineage, U strictly newer, both adjudicable, U not ALEATORY (step 1), and an observer precondition that reconciles the pair), and is judged by the same-slot check, read twice, to fill the slot U gave a new value. On this route, as on every route of the rung, the twice-read same-slot judgment is the evidence; the contradiction was established for R, not for the paraphrase. The paraphrase is set `PROVENANCE_STALE` with `status_reason = SUPERSEDED_BY_UPDATE` and its winner recorded as U. A claim that only relied on the retired value (a setup step, a plan made under it, "near my flat") fills a different slot and is left for re-anchoring (§9.5).
-3. **Default.** Create an `INCONSISTENCY` particle referencing both and queue for human Review (§9.6).
+##### Rung 3: Default
+
+**Default.** Create an `INCONSISTENCY` particle referencing both and queue for human Review (§9.6).
+
+##### Two generations of one source
 
 **Two generations of one source**. An implementation MUST NOT quarantine a candidate from the newest generation of a `MUTABLE` source against a claim stated only by an earlier generation of that source, unless the new generation restates that claim verbatim; rung 2.5 on such a pair retires only the earlier claim. A pair is of this kind when three conditions hold: every source that currently states the existing claim is the candidate's own entry (§7.4, read as the generation demotion reads it); the candidate's snapshot was captured after every snapshot of that entry the existing claim's provenance names; and the new snapshot neither carries the claim forward (§9.2), nor yields a candidate with the claim's normalized content (§6.10, subjects not compared), nor restates it in other words under the §7.4 restatement rule. On such a pair rung 3 does not apply: a verdict that would create an `INCONSISTENCY` is written as corroboration, the candidate `ACTIVE` with no quarantine and no record, and the §7.4 demotion then retires the earlier claim. Rung 2.5 takes the candidate as the newer claim whatever the two content dates say, since a file restored from a backup carries an older date than the text it replaces. The contradiction check and its second reading still run, because rung 2.5 needs their verdict. A restatement in other words counts as a restatement here only when the §7.4 restatement rule established it: the earlier claim then stays `ACTIVE` because the new generation states it, so a candidate that contradicts it is reconciled as any other pair. A snapshot extracted after a newer one of the same entry forms no such pair and keeps its recorded outcome. A pair settled this way leaves no record, so an implementation SHOULD disclose how many it settled, per extraction.
 
+##### The second reading on the extraction path
+
 **The second reading on the extraction path**. On the extraction path (§9.2 step 7), a contradiction signal counts only when a second reading confirms it. A pair the contradiction probe confirms is read again before any rung acts on it, with each claim's source name, source kind (a note kept current, or a time-stamped append-only record such as a session transcript), time and passage, under the instruction the pair's source kinds choose (the standing-facts reading for two notes, the observed-state reading when a claim comes from a record; §9.4, L-SEM-01). The candidate's passage is the chunk it was extracted from, windowed around both claims, and its time is its snapshot's content date, else its capture time. A pair the reading does not confirm is treated as a probe NO: the candidate corroborates, and no rung-1.5, rung-2 or rung-3 write and no observer `CONTRADICTS` edge rests on it. When the reading cannot run (the model is unavailable, the call fails, or the reply is still cut off after its retry), a pair whose existing claim comes from the candidate's own corpus entry keeps the probe's signal, because no other check reads a same-source pair; a cross-entry pair loses it, because the scheduled census reads cross-source pairs. The rung-2.5 extras are not read a second time: each already requires the same-slot verdict. Nor is a pair the same-slot judgment settled as an update (§6.4 rung 2.5): no contradiction reading can change that outcome. An implementation MAY disable the reading (`extraction.verify_conflicts`), which restores the probe alone. The assertion pathway (§9.1a) is unchanged.
+
+##### ALEATORY pairs
 
 For ALEATORY conflicts, source trust never resolves; the standard's ladder is explicit on this point. Update supersession resolves one only when the newer claim is EPISTEMIC (rung 1). Rung 1.5 likewise never fires on an ALEATORY pair (rung 1, now lifted to the top of the ladder, wins above it). ALEATORY is the one exclusion that outranks the supersession prior: an irreducible disagreement is never retired by an editorial relation.
 
-### Trust statements as review outputs
+#### Trust statements as review outputs
 
 Human review of `INCONSISTENCY` particles (§9.6) is the primary mechanism for generating new `SourceTrustStatement` records. When a reviewer resolves a conflict by preferring one source over another, the Review operation creates a `SourceTrustStatement` with `policy_provenance = REVIEWER_DERIVED`. This statement is then available to resolve future conflicts in the same domain (subject to the cascade gating in Extension B), making the system progressively smarter without requiring upfront policy configuration.
 
@@ -258,7 +300,7 @@ Human review of `INCONSISTENCY` particles (§9.6) is the primary mechanism for g
 | --- |
 | `SourceTrustStatement` automatic cascade (the resolution of conflicts without human review using stored trust statements) is Extension B. It is implemented and shipped. The cascade gate is policy-aware: `OPERATOR_DIRECT` statements cascade unconditionally; `REVIEWER_DERIVED` statements require N ≥ 3 reviewer confirmations (operator-configurable) before they cascade. The auto-cascade is bounded by a `max_cascade` parameter (default 500) per statement to prevent runaway propagation. See §15 for the full Extension B specification. |
 
-### Trust lenses: shareable policy bundles
+#### Trust lenses: shareable policy bundles
 
 A **`TrustLensDefinition`** is a named, versioned, depositable corpus
 artifact (`source_type = TRUST_LENS_DEFINITION`, detected by its
@@ -377,7 +419,7 @@ demotion; an operator who disagrees overrides locally, which is itself
 an auditable act. In federated queries the **viewer's** adopted lenses
 apply to every store's candidates (§6.3).
 
-## 6.5 Author Identity Scoping
+### 6.5 Author Identity Scoping
 
 For user-generated content (UGC) sources, the identity of the content creator is captured in the corpus snapshot metadata and propagated through to extracted particles via the `provenance.corpus_entry_id` → snapshot lookup chain. This enables source trust statements (§6.4) to be evaluated at query time and lets the wiki article exporter attribute each cited claim to its individual author.
 
@@ -402,22 +444,22 @@ Extractors for UGC sources SHOULD populate `author_id` from platform metadata wh
 
 The Review operation (§9.6) surfaces `author_id` and `author_role` in its UI so a reviewer can quickly assess the source of conflicting claims and produce author-scoped trust statements (§6.4) when appropriate.
 
-## 6.6 Normative Status Transition Table
+### 6.6 Normative Status Transition Table
 
 The following table is the single authoritative source for particle status transitions. Every operation in §9 that changes particle status must conform to this table. Implementations that define additional transitions are non-conformant.
 
 | **From status** | **To status** | **Triggering operation** | **Condition** | **status_reason** |
 | --- | --- | --- | --- | --- |
 | (new) | ACTIVE | Extract (§9.2) | Extraction produces a new particle with no conflicts. | (omitted on initial ACTIVE) |
-| (new) | PROVENANCE_STALE | Extract (§9.2), INCONSISTENT verdict | The losing candidate of an unresolved §6.4 conflict is persisted *quarantined* (full content, provenance, confidence, and subjects intact), invisible to Query/Lint by the existing status filters. **Condition: this birth is permitted only with `status_reason = CONFLICT_PENDING`**, enforced at the persistence seam. | CONFLICT_PENDING |
+| (new) | PROVENANCE_STALE | Extract (§9.2): an INCONSISTENT verdict, or a §6.4 rung 1.5 or rung 2.5 verdict that the candidate loses to the existing claim | A candidate the §6.4 ladder decided, from the pair alone and before anything is written, loses to a claim the store holds `ACTIVE` is persisted already demoted (full content, provenance, confidence, and subjects intact), invisible to Query/Lint by the existing status filters. It was never believed, so it never passes through `ACTIVE` and has no retirement instant. The losing candidate of an unresolved conflict is *quarantined* for Review (`CONFLICT_PENDING`); a candidate whose corpus entry is (transitively) superseded by the existing claim's takes `DOCUMENT_SUPERSEDED`; an out-of-order older candidate of the same lineage takes `SUPERSEDED_BY_UPDATE`. **Condition: this birth is permitted only with one of these three reasons, and each of the last two only on the write of the verdict that decided it**, enforced at the persistence seam. A particle carrying either of the last two in any other write (for example, the restore of a bundle whose particle was retired after it was held) describes a belief once held and MUST NOT be born with it. | CONFLICT_PENDING, DOCUMENT_SUPERSEDED, SUPERSEDED_BY_UPDATE |
 | ACTIVE | SUPERSEDED | Extract (§9.2) or agent REVISE | A new particle is created that sets supersedes = this particle's id. | SUPERSEDED_BY_REINDEX, or EXPLICIT_SUPERSESSION for agent REVISE (§6.2; the §6.10 retired-claim rule keys on it) |
 | ACTIVE | RETRACTED | Agent RETRACT or operator action | Explicit withdrawal. Lazy propagation sets dependents to PROVENANCE_STALE. | EXPLICIT_RETRACTION (single particle); SOURCE_RETRACTED for a bulk `corpus retract`, which also covers INCONSISTENCY → RETRACTED for the same reason |
 | ACTIVE | PROVENANCE_STALE (retraction cascade) | Lint (§9.4) | A particle in the provenance chain was retracted or superseded. | RETRACTED_DEPENDENCY |
 | ACTIVE | PROVENANCE_STALE (corpus missing) | Lint (§9.4) | The referenced corpus snapshot no longer exists. | CORPUS_ENTRY_MISSING |
 | ACTIVE | PROVENANCE_STALE (expired) | Lint (§9.4) | valid_until timestamp has passed. | VALIDITY_EXPIRED |
 | ACTIVE | PROVENANCE_STALE (trust demotion) | Extract (§9.2), or Lint (§9.4) for the reserved reason below; Extension B only | Source trust rank differential exceeds threshold; a higher-trust conflicting particle exists. | LOWER_TRUST_SOURCE when the §6.4 conflict-resolution ladder demotes at extract time. TRUST_DEMOTED is **reserved** for a Lint trust pass (a post-extraction re-scan that demotes when a source's trust changes *after* the claim was written), which §9.4 does not define. Until it does, no conformant implementation emits TRUST_DEMOTED and every trust demotion carries LOWER_TRUST_SOURCE. |
-| ACTIVE | PROVENANCE_STALE (document supersession) | Extract (§9.2) / reconciliation; §6.4 ladder rung 1.5 | The conflicting claim's provenance corpus entry is **(transitively) superseded** by the winning claim's: an authored in-corpus *"this document replaces that one"* relation. Fires only on an actual conflict; non-conflicting context from the superseded document is never touched. The superseded claim is demoted (and stays auditable: demotion-only); no `INCONSISTENCY` is surfaced. | DOCUMENT_SUPERSEDED |
-| ACTIVE | PROVENANCE_STALE (update supersession) | Extract (§9.2); §6.4 ladder rung 2.5, and its other-phrasings route | A strictly newer, contradicting claim from the same source lineage (every trust key but the corpus entry equal; both extractor-asserted; both dated) that gives a new value for the same slot, one that changes over time, is written. The older claim is demoted (auditable; demotion-only) and the newer one's `supersedes` names it; no `INCONSISTENCY` is surfaced. An out-of-order older candidate is instead stored and demoted at once. | SUPERSEDED_BY_UPDATE |
+| ACTIVE | PROVENANCE_STALE (document supersession) | Extract (§9.2) / reconciliation; §6.4 ladder rung 1.5 | The conflicting claim's provenance corpus entry is **(transitively) superseded** by the winning claim's: an authored in-corpus *"this document replaces that one"* relation. Fires only on an actual conflict; non-conflicting context from the superseded document is never touched. The superseded claim is demoted (and stays auditable: demotion-only); no `INCONSISTENCY` is surfaced. When the superseded claim is the candidate, it is instead born `PROVENANCE_STALE` (the birth row above). | DOCUMENT_SUPERSEDED |
+| ACTIVE | PROVENANCE_STALE (update supersession) | Extract (§9.2); §6.4 ladder rung 2.5, and its other-phrasings route | A strictly newer, contradicting claim from the same source lineage (every trust key but the corpus entry equal; both extractor-asserted; both dated) that gives a new value for the same slot, one that changes over time, is written. The older claim is demoted (auditable; demotion-only) and the newer one's `supersedes` names it; no `INCONSISTENCY` is surfaced. An out-of-order older candidate is instead born `PROVENANCE_STALE` (the birth row above). | SUPERSEDED_BY_UPDATE |
 | ACTIVE | SUPERSEDED (re-anchor) | Re-anchoring after an update supersession (§9.5) | The claim was cut from the snapshot of a claim retired with `SUPERSEDED_BY_UPDATE`, depended on that state being current, and has been replaced by a dated restatement anchored to it, whose `supersedes` names it (or by an ACTIVE claim that already states that restatement). The restatement changes no other belief; the replaced claim stays auditable. | SUPERSEDED_BY_REANCHOR |
 | ACTIVE | INCONSISTENCY | Extract (§9.2) or Lint (§9.4) | A semantic conflict is detected with another ACTIVE particle and the conflict resolution ladder does not resolve it automatically. The INCONSISTENCY status is set on a new particle referencing both; the originals remain ACTIVE. A scheduled census (§9.4, L-SEM-01) discloses a confirmed contradiction between two sources this way without running the resolving rungs, one record per disagreement. | (set on the INCONSISTENCY particle, not the originals) |
 | INCONSISTENCY | (resolved; see below) | Review (§9.6) | Human reviewer selects a resolution action. | — |
@@ -427,15 +469,13 @@ The following table is the single authoritative source for particle status trans
 | INCONSISTENCY | INCONSISTENCY (deferred) | Review: DEFER | Status unchanged. Reviewer note appended. Re-queued. | (no change) |
 | PROVENANCE_STALE | SUPERSEDED | Reindex supersession of a stale particle; Review PREFER B / BOTH VALID or trust cascade over a quarantined loser | A new ACTIVE particle replaces the stale one. For a quarantined loser whose conflict resolved in its favour, the new particle is *minted from it* (fresh id, `supersedes` set, provenance and embedding carried over: the Reindex pattern) and the quarantined row is superseded. Promotion never reactivates a stale particle. | SUPERSEDED_BY_REINDEX (reindex) or CONFLICT_RESOLVED (quarantine promotion) |
 | PROVENANCE_STALE | RETRACTED | Operator action | Explicit cleanup. | EXPLICIT_RETRACTION |
-| SUPERSEDED | ACTIVE | Unmerge, the revert of a recorded exact-duplicate auto-merge | The **only** exit from a terminal state, and the only reversible transition in this table. **Condition: permitted only when the row's *current* `status_reason` is `DUPLICATE_MERGED`**, enforced at the persistence seam (the table is keyed on status alone, as with the `CONFLICT_PENDING` birth gate above). The governing rule is that a status transition is reversible only if it encoded no judgment: an auto-merge is a hash predicate over identical content (§6.10 creation path 4), with no model and no principal's opinion, so it qualifies. The retirement stamp is **cleared** with the transition (write-once is per *retirement*, not per row: a withdrawn retirement releases the stamp, while a later hop within a retirement still never overwrites it). | (cleared; the pre-merge row carried none, and the revert restores the row rather than tagging it; the audit lives in the operator event log) |
+| SUPERSEDED | ACTIVE | Unmerge, the revert of a recorded exact-duplicate auto-merge | The **only** exit from a terminal state, and the only reversible transition in this table. **Condition: permitted only when the row's *current* `status_reason` is `DUPLICATE_MERGED`**, enforced at the persistence seam (the table is keyed on status alone, as with the born-`PROVENANCE_STALE` birth gate above). The governing rule is that a status transition is reversible only if it encoded no judgment: an auto-merge is a hash predicate over identical content (§6.10 creation path 4), with no model and no principal's opinion, so it qualifies. The retirement stamp is **cleared** with the transition (write-once is per *retirement*, not per row: a withdrawn retirement releases the stamp, while a later hop within a retirement still never overwrites it). | (cleared; the pre-merge row carried none, and the revert restores the row rather than tagging it; the audit lives in the operator event log) |
 | SUPERSEDED | (terminal for every other reason) | — | Retained for audit. Terminal for `EXPLICIT_SUPERSESSION`, `SUPERSEDED_BY_REINDEX`, `SUPERSEDED_BY_REANCHOR`, `LOWER_TRUST_SOURCE`, `DOCUMENT_SUPERSEDED`, and `CONFLICT_RESOLVED`; each of those records a judgment, and only the single reason-gated exception above is reversible. | (unchanged) |
 | RETRACTED | (terminal) | — | Retained for audit. Retraction is always a principal's judgment, so it is **not** reversible; the `SUPERSEDED → ACTIVE` exception above does not generalise to it. | (unchanged) |
 
-| **CONFLICT RESOLUTION LADDER** |
-| --- |
-| The full normative ladder lives in §6.4. Summary: (1) ALEATORY exclusion: if either particle has `uncertainty_nature = ALEATORY`, the pair is excluded from rungs 1.5 and 2, and rung 2.5 reads it on the newer claim only, so a newer EPISTEMIC claim may retire an older ALEATORY one; this is an exclusion, not a short-circuit, so the pair still falls through the gates below and a *confirmed* contradiction between two adjudicable claims is what reaches rung 3. (1.5) Document-supersession prior: if one particle's provenance document (transitively) supersedes the other's and a replacement signal confirms the conflict, demote the superseded particle PROVENANCE_STALE / DOCUMENT_SUPERSEDED (no INCONSISTENCY); **modality-independent and above the adjudicability gate**, so it reaches superseded CONSTITUTIVE definitions; single-trust-order stores only. (1.7) Adjudicability gate: a pair is arbitrated only when both claims are adjudicable under the extraction-time default (`FALSIFIABLE`); any other pair abstains and both claims co-exist; this gate governs only the truth-engine rungs below it. (2) Source trust check (Extension B): apply layered trust lookup; if differential exceeds threshold, set lower-trust particle PROVENANCE_STALE. (2.5) Same-lineage update supersession: a confirmed contradiction between two extractor-asserted claims that no trust key but the entry distinguishes, and that fill the same slot (the newer gives a new value for the older's attribute, and that attribute changes over time), resolves to the strictly newer one by source content date (older → PROVENANCE_STALE / SUPERSEDED_BY_UPDATE; no INCONSISTENCY); applies in single and multi stores. (3) Default: create INCONSISTENCY and queue for Review. Implementations MUST apply steps in order. Co-evidential paraphrase pairs (§6.10) are excluded from conflict candidacy at step 0, as are stance pairs except a same-holder reversal. An implementation that partitions observation by scope MUST NOT retire a claim observed by a scope the update is not observed by, and MUST record the confirmed contradiction as a `CONTRADICTS` relation (§6.10). An implementation that lets an observer override the adjudicability default MUST apply the override only to read-time rendering, never to a write. |
+**Conflict resolution ladder.** Which of these transitions a conflict takes is decided by the ladder in §6.4 (*Conflict resolution with source trust*), which opens with a summary of its rungs. Implementations MUST apply steps in order. Co-evidential paraphrase pairs (§6.10) are excluded from conflict candidacy at step 0, as are stance pairs except a same-holder reversal. An implementation that partitions observation by scope MUST NOT retire a claim observed by a scope the update is not observed by, and MUST record the confirmed contradiction as a `CONTRADICTS` relation (§6.10). An implementation that lets an observer override the adjudicability default MUST apply the override only to read-time rendering, never to a write.
 
-## 6.7 Subject as First-Class Entity
+### 6.7 Subject as First-Class Entity
 
 A `Subject` is a canonical real-world entity that one or more
 particles are *about*. Subjects are the knowledge-graph backbone of
@@ -480,7 +520,7 @@ The cardinality of `subject_ids` is meaningful:
 | 1 | The particle is a **property** of that subject (e.g. *"POET Technologies is headquartered in Toronto"* → property of `Q-POET`). |
 | ≥ 2 | The particle is an **edge** in the subject graph (e.g. *"Acme acquired Widget"* → edge between `Q-Acme` and `Q-Widget`). |
 
-### Subject resolution
+#### Subject resolution
 
 When an extractor produces a particle, the subject resolver maps each
 candidate subject name to a canonical `Subject` via the following
@@ -498,6 +538,13 @@ ladder:
 3. **Bare local.** If no external match is found, create a new local
    `Subject` with `canonical_name = candidate` and no `external_ids`.
    Future extraction of the same name will reuse this subject.
+
+   *Informative note.* A deployment that admits several write principals may
+   hold a Subject an agent principal minted back from other writers'
+   resolution until it is confirmed: the reference SDK resolves such a name
+   to it only for agent principals, until an operator accepts it or an
+   independent resolution reaches the same external reference. An
+   implementation with a single writer resolves exactly as this step states.
 
 Per the Subject Authority Registry, the external-ontology
 step is pluggable: each supported ontology is a registered
@@ -551,7 +598,7 @@ in. The reference SDK implements the classifier as a deterministic lexical
 rule in the Client layer and records each suppressed or qualified name on the
 particle (`extraction:gated_subjects`, §6.8).
 
-### Alias management
+#### Alias management
 
 when the resolver produces multiple aliases that point
 to the same canonical subject (e.g. *"POET Technologies"*, *"POET"*,
@@ -559,7 +606,7 @@ to the same canonical subject (e.g. *"POET Technologies"*, *"POET"*,
 review operation. Alias merges propagate to all particles' `subject_ids`
 automatically; the merged subject's `aliases` list grows.
 
-### Operator-correction surface
+#### Operator-correction surface
 
 The operator-overridable identity contract (whitepaper §3.3) is
 implemented through three CLI verbs that share the resolver path
@@ -592,7 +639,7 @@ with extraction-time Subject creation:
 All four verbs preserve particle confidence and content; they are
 metadata corrections, not re-extractions.
 
-### Subject-level lint
+#### Subject-level lint
 
 Two lint checks specifically target subject quality:
 
@@ -603,7 +650,7 @@ Two lint checks specifically target subject quality:
   Wikidata link has low cosine similarity to the particle content,
   suggesting the wrong entity was matched. Surfaced as a WARNING.
 
-## 6.8 Domain Extractors and `properties` / External References
+### 6.8 Domain Extractors and `properties` / External References
 
 Particles' centre of gravity is natural-language claim storage (§3.3
 in the whitepaper). Some domain extractors, however, emit additional
@@ -613,7 +660,7 @@ ontology, for example, or a Linked-Open-Data IRI for a
 referenced concept. The schema accommodates this without
 inflating Core.
 
-### `properties: dict[str, object]`
+#### `properties: dict[str, object]`
 
 Extension A field. Ontology-keyed structured data emitted by a
 domain extractor when the source supports it. Keys are ontology IRIs
@@ -636,7 +683,7 @@ field is preserved so domain tools (a numismatic catalogue browser,
 a coin valuation engine) can consume the structured data without
 re-parsing the natural-language `content`.
 
-### Prefix registry
+#### Prefix registry
 
 Property keys use a colon-separated `prefix:term` convention so
 multi-extractor stores can disambiguate which extractor / ontology
@@ -709,7 +756,7 @@ not expand to IRIs; this is harmless because `properties` is an opaque
 `@json` payload that no conforming code path expands, but it is why
 rung 3 of the ladder carries the no-collision constraint.
 
-### External references: `ExternalRef` on the Subject record
+#### External references: `ExternalRef` on the Subject record
 
 Linked-Open-Data references live on the **`Subject` record** (§6.7),
 not on the particle. An external ontology entity (a Wikidata Q-ID, a
@@ -750,7 +797,7 @@ the registered Subject Authorities.
 | --- |
 | `properties` is part of **Extension A** (Extractor Registry). A Core-only implementation MUST preserve the field when present (do not strip it on serialisation) but is not required to populate or consume it. `external_ids` is part of the Core Subject record but is never required to be non-empty (the bare-local resolution rung in §6.7 creates Subjects without external links). The Reference SDK ships extractors that populate both surfaces (Numista, Nomisma, Wikidata) as evidence the architecture supports it. |
 
-## 6.9 Trust-Weighted Confidence Merging
+### 6.9 Trust-Weighted Confidence Merging
 
 Effective confidence is computed at query time as the product of
 several modulating factors (§6.3). When multiple particles assert
@@ -759,7 +806,7 @@ fan-out, or via a co-evidential group, §6.10), the engine merges
 their effective confidences into a single rendered value. This
 section defines the merge.
 
-### Per-particle effective confidence
+#### Per-particle effective confidence
 
 ```
 effective_confidence(p) = p.confidence.value
@@ -782,7 +829,7 @@ present-time queries use now, and an as-of query (§9.3)
 computes the recency factor at the requested instant T while trust
 weights remain the viewer's current policy.
 
-### Merging across a group
+#### Merging across a group
 
 For a group of particles G (all asserting the same claim, either
 from independent extractors of the same source or from a co-evidential
@@ -802,7 +849,7 @@ merge. Implementations MAY use simpler max-based merging during
 prototyping but MUST adopt the noisy-OR form before claiming
 trust-weighted merge conformance.
 
-### Where the merge runs
+#### Where the merge runs
 
 - **Query (§9.3).** Applied during the co-evidential collapse step.
   The merge result is rendered as the single citation's confidence
@@ -821,7 +868,7 @@ trust-weighted merge conformance.
 | --- |
 | When a particle is in both an Extension A multi-extractor pool and a §6.10 co-evidential group, the merge is computed once over the full union; nested merging is incorrect. The cascade in §6.4 evaluates the merged group as a single unit when comparing against another conflicting group. |
 
-### Per-claim contestedness (lens-divergence)
+#### Per-claim contestedness (lens-divergence)
 
 A claim's **contestedness** is a derived, read-time-only quantity (a
 sibling of `effective_confidence`): the **spread (max − min)
@@ -875,7 +922,7 @@ are the two instruments of one concept, *this claim is
 contested*: one measuring rendered-confidence divergence (viewer-side),
 the other declared positions (substrate-side).
 
-### The composed contested badge
+#### The composed contested badge
 
 The read surfaces compose the contest signals into **one badge**: a
 claim renders *contested* iff at least one of three named bases fires,
@@ -905,7 +952,7 @@ fired basis labels, never a blended scalar:
   INCONSISTENCY reference) remain the drill-down; the badge does not
   duplicate them.
 
-## 6.10 Claim Identity and the Relation Graph
+### 6.10 Claim Identity and the Relation Graph
 
 Particles can be linked to each other via typed relations stored in
 `particle_relations`. The registry is a **closed enum** (
@@ -913,7 +960,7 @@ active in v0.37.0): extractors and lint checks MUST NOT emit kinds
 outside the registry, and renames or removals require a major-version
 bump.
 
-### Relation kinds
+#### Relation kinds
 
 | Kind | Symmetry | Status | Meaning |
 |---|---|---|---|
@@ -940,7 +987,7 @@ namespace is reserved at 1.0 so a future Bluesky `BOOSTS` edge will
 have the same shape and downstream semantics as a Mastodon `BOOSTS`
 edge.
 
-### `particle_relations` schema
+#### `particle_relations` schema
 
 ```yaml
 ParticleRelation:
@@ -964,7 +1011,7 @@ closure is computed at query time, not stored). Storage cost is
 O(group_size²) per group in the worst case, but real groups are
 small (typically 2–5 members).
 
-### Claim Identity: Co-Evidential as the active case
+#### Claim Identity: Co-Evidential as the active case
 
 Each source's claim is its own particle: source-faithfulness is
 preserved (§3.1 of the whitepaper). When two or more particles assert
@@ -979,7 +1026,7 @@ decision weighed three options (deterministic semantic hashing,
 query-time clustering, explicit co-evidential link); option (c),
 explicit link, is the standard's approach.
 
-### Re-observation is not a second claim
+#### Re-observation is not a second claim
 
 Source-faithfulness makes each *source's* claim its own particle. It does
 not make each *observation* of one claim a new particle: re-reading a
@@ -1040,7 +1087,7 @@ operation's result or quality notes); a pass that recognises forty
 already-known claims must not be indistinguishable from one that found
 nothing.
 
-### A retired claim is not re-minted
+#### A retired claim is not re-minted
 
 The re-observation rule above asks whether a candidate is already held
 `ACTIVE`. Its companion asks whether the candidate was already **judged
@@ -1093,7 +1140,7 @@ Four constraints bind the hold:
 4. **Disclosure.** A hold **MUST** be disclosed in the operation's result
    or quality notes, exactly as a suppression is.
 
-### Endorsement stances and the agreement distribution
+#### Endorsement stances and the agreement distribution
 
 A **stance** is an ordinary `FALSIFIABLE` particle asserting an attribution
 fact (*"agent A endorses / disputes claim B"*) bound to its target by an
@@ -1127,7 +1174,7 @@ On target retraction the stance edge is preserved as a *dangling* edge rather
 than hard-deleted, so a retracted target does not silently drop the holder from
 the distribution.
 
-### Graded, observer-relative equivalence
+#### Graded, observer-relative equivalence
 
 *"Are these the same claim"* is **never a stored boolean truth**.
 Claim equivalence is graded and observer-relative: a
@@ -1145,7 +1192,7 @@ particles surface as separate ranked results. The full design
 contract, including cross-language equivalence as a
 substrate-production concern, lives.
 
-### Creation paths
+#### Creation paths
 
 1. **Extraction time.** A domain extractor that processes a source
    which itself aggregates multiple sources (a Wikipedia article
@@ -1215,7 +1262,7 @@ substrate-production concern, lives.
    implementation's bar is a 95 % Wilson lower bound of at least 0.95 per
    cosine stratum.
 
-### Effects on Core operations
+#### Effects on Core operations
 
 - **Query (§9.3).** After top-k retrieval, group particles linked
   `CO_EVIDENTIAL`. Render one representative per group in the
@@ -1233,7 +1280,7 @@ substrate-production concern, lives.
   particle leaves. The group is dissolved only when it falls to a
   single member.
 
-### Scope and constraints
+#### Scope and constraints
 
 - Co-evidential links are scoped within at-least-one-shared-Subject.
   Cross-Subject claim identity is out of scope (see Subject aliasing,
@@ -1254,9 +1301,9 @@ substrate-production concern, lives.
 > §6 v2 ends here. §6.11 (Benchmark Suite Interface) from v1 has
 > moved to §13.3 per the Phase 2 outline decision.
 
-# 7. The Source Corpus
+## 7. The Source Corpus
 
-## 7.1 Overview and Two-Layer Architecture
+### 7.1 Overview and Two-Layer Architecture
 
 The Source Corpus is the foundational layer of the Particles architecture. It is an append-only archive of all materials from which particles have been or may be extracted. The particle store is a derived view over the corpus; the corpus is the system of record.
 
@@ -1285,7 +1332,7 @@ Ingest is split into two operations with very different cost profiles:
 | --- |
 | The corpus is always preserved. The particle store is always rebuildable from the corpus. No information that enters the corpus is ever lost due to extraction error. |
 
-## 7.2 Corpus Entry and Snapshot Schema
+### 7.2 Corpus Entry and Snapshot Schema
 
 A `CorpusEntry` is the stable record of a source and its relationship to its origin. Each entry has one or more `Snapshot`s: timestamped, content-addressed captures of the source at a point in time.
 
@@ -1354,7 +1401,7 @@ ProvenanceRef:
 
 The `type` field is the model-level (snake-case) name; the canonical wire / RDF predicate for it is **`refType`** (`particles:refType`), the single name used consistently across the interchange codec, the JSON-LD `@context`, and the `ProvenanceChainShape` SHACL predicate. The shape constrains it to `SOURCE | PARTICLE | AGENT`.
 
-### `corpus_follow_edges` schema
+#### `corpus_follow_edges` schema
 
 When an importer for a *link-shaped* source (Reddit / Hacker News /
 Mastodon link cards) recognises its post format, the deposit
@@ -1409,7 +1456,7 @@ outgoing follows (this entry → linked) and / or incoming follows
 (others → this entry). This is what makes the curation signal
 queryable rather than just stored.
 
-## 7.3 Shared Archive
+### 7.3 Shared Archive
 
 A shared archive is a content-addressed mirror of corpus snapshots that multiple operators can read from. The same SHA-256 `content_hash` produced by one operator's deposit identifies the same content regardless of who fetched it, so a snapshot fetched once can be reused everywhere, reducing both bandwidth and the risk of source link rot (whitepaper Risk #6). (.)
 
@@ -1424,7 +1471,7 @@ The shared archive is an **Extension A** feature; Core implementations may opera
 - §14.2, Shared Archiving for Public Sources (the Extension A spec for participating in a shared archive ecosystem).
 - §6.4: source trust statements apply equally to snapshots whose content was fetched from a shared archive vs. directly from the origin.
 
-## 7.4 Mutability Classes
+### 7.4 Mutability Classes
 
 The `mutability` field drives extraction behavior when a new snapshot is created. Operators declare the nature of a source at deposit time; the system handles the consequences. (.)
 
@@ -1456,7 +1503,7 @@ The demotion is deliberately **not** a semantic operation. The §6.4 conflict la
 | --- |
 | The Core privacy primitives (`EPHEMERAL` mutability here in §7.4, ODRL rights metadata in §10.2, optional `author_id` and pseudonymisation in §6.5, and operator-controlled allowlists in §14.6) give operators the building blocks for privacy-compliant deployments without prescribing a policy. A future **Extension F: Privacy and Consent** is reserved for normative privacy controls for regulated deployments (HIPAA / GDPR / CCPA), including mandatory `EPHEMERAL` handling rules for defined data categories, consent tracking as a first-class corpus entry field, deletion propagation through provenance chains, and audit-log expungement requirements. Extension F is deferred pending engagement with privacy and regulatory stakeholders; see Appendix A. Whitepaper §3.8 mentions Extension F as future work; this callout is the techspec's forward-reference. |
 
-## 7.5 Lazy Fetch Protocol
+### 7.5 Lazy Fetch Protocol
 
 Corpus entries with `fetch_policy = LAZY` are re-fetched when referenced by a query, subject to a minimum re-fetch interval. **Resolved** (was OQ-8 in v1): the re-fetch floor is *fixed*, operator-configurable per source type, not adaptive. Adaptive backoff is a deferred future feature (Appendix A). The shipped defaults:
 
@@ -1472,21 +1519,23 @@ All floors are tunable via `config.yaml`'s `refetch_floors` section. The fetch p
 2. **Tier 2: Content hashing (authoritative).** If the tier-1 signal is unavailable, untrusted, or indicates a possible change, read the full content body and compare its SHA-256 hash against the prior snapshot. If hashes match, create a `REVISIT` snapshot. If hashes differ, create a `RESPONSE` snapshot and trigger extraction according to the mutability class (§7.4). A `REVISIT` created here SHOULD record the tier-1 signal observed alongside the match (for a local source, the file's modification time), so the next check can short-circuit at tier 1. Change detection uses the same SHA-256 that identifies the snapshot; implementations MUST NOT substitute a non-cryptographic hash, because `content_hash` is also the content-addressed identity used by the shared archive (§7.3).
 3. **Tier 3: Manual override.** Operators may force re-fetch and re-extraction of any corpus entry at any time, regardless of `fetch_policy`, re-fetch interval, or tier-1 signal. CLI: `particles deposit <url> --force-refetch`; `particles corpus refresh --force` for local sources.
 
+**A local source is refreshed only on the host it names**. A `file://` URI-R carries no host, and a store can move between machines or serve a client on another machine, so a path can exist on a host whose file it does not name. A `file://` URI-R names a file on the host that deposited it; a local-transport refresh MUST NOT read it on any other host, and an implementation that cannot tell which host an entry's path names MUST NOT read it. A refresh that is forced (tier 3) is no exception. The reference SDK records the host on each `file://` entry and leaves the entries of other hosts to those hosts, which deposit their changes themselves.
+
 A local source that no longer exists or cannot be read yields no snapshot and MUST NOT, by that fact alone, cause its particles to be retracted or demoted: absence of a file is not falsification of the claims extracted from it. The refresh ladder therefore never writes an `ABSENT` record (§7.2); that record is the observation of a completed collection walk, which a single failed `stat` is not (§7.4).
 
 | **MEMENTO ALIGNMENT** |
 | --- |
 | Corpus entries align with the Memento Protocol (RFC 7089). The entry's `uri_r` maps to a Memento URI-R (the original resource URI). Each snapshot maps to a URI-M (a memento, an archived version at a specific datetime). The ordered snapshot list constitutes a TimeMap. Implementations may optionally expose a Memento-compatible HTTP interface over the corpus to interoperate with existing web archival tooling. |
 
-## 7.6 WARC and Memento Alignment: Extension D
+### 7.6 WARC and Memento Alignment: Extension D
 
 Full WARC record type alignment (response/revisit) and Memento Protocol (RFC 7089) URI-R/URI-M/TimeMap integration are **Extension D** features. See §17. Core implementations use `content_hash` and `archive_path` directly without requiring WARC tooling interoperability.
 
 `ABSENT` (§7.2) has no WARC record type. A WARC writer emits it as a `metadata` record naming the target URI and `captured_at`, or omits it; it carries no payload either way.
 
-# 8. Storage Model
+## 8. Storage Model
 
-## 8.1 Representation
+### 8.1 Representation
 
 A Particles deployment has two distinct storage subsystems:
 
@@ -1494,7 +1543,7 @@ A Particles deployment has two distinct storage subsystems:
 
 - Particle store: a directed acyclic graph (DAG) where nodes are particles and edges are provenance relationships. Implementations may use any storage backend that supports the required query patterns; a property graph database (e.g., Neo4j, TigerGraph) or a document store with graph traversal support are the natural fits.
 
-## 8.2 Required Query Patterns
+### 8.2 Required Query Patterns
 
 All conformant implementations must support the following query patterns efficiently:
 
@@ -1512,7 +1561,7 @@ All conformant implementations must support the following query patterns efficie
 
 - Corpus entry lookup: retrieve all particles derived from a given corpus entry or snapshot; O(k) where k is particle count for that entry
 
-## 8.3 Corpus Storage Requirements
+### 8.3 Corpus Storage Requirements
 
 The source corpus must support:
 
@@ -1524,7 +1573,7 @@ The source corpus must support:
 
 - Extraction status tracking: update extraction_status on snapshots as extraction progresses
 
-## 8.4 Scale Targets
+### 8.4 Scale Targets
 
 Scale targets come in two tiers, and the distinction is **normative**:
 
@@ -1554,7 +1603,7 @@ Scale targets come in two tiers, and the distinction is **normative**:
 > future work) lands, conformance is measured against the reference-SDK column;
 > the architectural-ceiling column is a design target, not a test gate.
 
-## 8.5 Embedding and Similarity Contract
+### 8.5 Embedding and Similarity Contract
 
 Many observable behaviours in this standard ride on the similarity between text
 embeddings: query retrieval and ranking (§9.3), co-evidential grouping
@@ -1565,7 +1614,7 @@ cross-implementation epistemic interoperability, the similarity substrate cannot
 be left implicit. This subsection pins what is portable and is explicit about
 what is not. It is **normative**.
 
-### Similarity metric and scale
+#### Similarity metric and scale
 
 Content similarity is **cosine similarity over L2-normalized embedding vectors,
 clamped to `[0, 1]`**: a negative cosine MUST be clamped to `0`. This clamped
@@ -1582,7 +1631,7 @@ without naming any particular encoder.
 | --- |
 | The clamp affects only the `[-1, 0)` half of the raw cosine range, anti-correlated vectors. For the near-paraphrase text pairs the thresholds gate on, this region does not arise in practice, so clamping leaves every non-negative similarity (and therefore every threshold comparison expressed on the `[0, 1]` scale) unchanged. Its sole effect is to forbid an anti-correlated pair from sorting *below* an unrelated zero-similarity pair, which would otherwise corrupt ranking and candidate selection. |
 
-### The recorded `embedding_profile`
+#### The recorded `embedding_profile`
 
 An implementation MUST record, in its particle-store metadata, a structured
 **`embedding_profile`** identifying the embedding space its stored vectors
@@ -1613,7 +1662,7 @@ standard is:
 
 > **Reference profile:** `{ model: "all-MiniLM-L6-v2", dim: 384, normalization: "l2" }`
 
-### Conformance: the frozen test-vector set
+#### Conformance: the frozen test-vector set
 
 Similarity *behaviour* is made portable by a frozen, language-agnostic
 **test-vector set** rather than by freezing an encoder. The set lives at
@@ -1631,7 +1680,7 @@ The bands are authored to comfortably bracket the reference profile's scores
 with margin on both sides. See `artifacts/conformance/README.md` for the file
 format and the precise band semantics.
 
-### What is normative, and what is implementation-defined
+#### What is normative, and what is implementation-defined
 
 Conformance to similarity behaviour is asserted on two surfaces:
 
@@ -1661,15 +1710,15 @@ warrants for its natural-language synthesis: the confidence numbers become
 reproducible *given the same retrieved inputs*, while *which* inputs are
 retrieved is profile-relative, bounded by the test vectors, and disclosed.
 
-# 9. Operations
+## 9. Operations
 
 Six operations make up the standard's runtime contract: **Deposit**, **Extract**, **Query**, **Lint**, **Reindex**, and **Review**. Each maps to a CLI subcommand and a `POST` API endpoint in the reference SDK. The two ingest operations (Deposit, Extract) are deliberately split (Deposit is cheap and structureless, Extract is asynchronous and re-runnable) so an operator can capture material faster than the extraction pipeline can process it without losing anything.
 
-## 9.1 Deposit
+### 9.1 Deposit
 
 Deposit writes a source to the corpus. It is intentionally trivial and carries no extraction cost. Any agent or operator can deposit at any time without schema knowledge.
 
-### Importer plugin registry
+#### Importer plugin registry
 
 An `ImporterRegistry` dispatches a deposit request to the appropriate importer plugin by matching the input URL or source descriptor against each registered importer's URL pattern. The dispatch is opaque to operators (`particles deposit <url>` works regardless of whether the URL is a GitHub gist, a Reddit thread, a Wikidata entity, or an arbitrary web page), but it is the documented Core conformance interface for source-format extensibility.
 
@@ -1690,7 +1739,7 @@ The reference SDK ships six domain importers plus a generic-HTTP fallback. an an
 | `wikidata-importer` | `wikidata.org/wiki/Q{id}`, REST API URLs | REST-API fetch. |
 | `generic-http` | any other `http(s)://` URL | Fallback. |
 
-### Deposit algorithm
+#### Deposit algorithm
 
 1. Receive source material (URL, file path, raw text, structured data, conversation transcript) and optional operator overrides.
 2. The `ImporterRegistry` selects the most-specific matching importer; if none match, the generic-HTTP fallback is used. Operators may force an importer with `--importer <name>`.
@@ -1710,7 +1759,7 @@ The reference SDK ships six domain importers plus a generic-HTTP fallback. an an
 | --- |
 | Deposit has no dependency on the extraction pipeline. A corpus entry is useful immediately as an archival record even before extraction completes. This makes Deposit suitable for bulk ingestion workflows where extraction is deferred; `particles deposit <urls.txt>` is a valid pattern. |
 
-## 9.1a Assertion pathway
+### 9.1a Assertion pathway
 
 *Normative for any implementation exposing a direct-assertion surface (e.g. the
 read-write MCP write tools). Direct assertion is **not** a seventh
@@ -1761,11 +1810,11 @@ pathway MUST:
 asserted with `supersedes`: the deliberate-revision ledger entry, distinct from
 the system-driven supersession reasons.
 
-## 9.2 Extract
+### 9.2 Extract
 
 Extract derives particles from a corpus snapshot. It is asynchronous, incremental, and re-runnable. Extraction is triggered lazily when a corpus entry's particles are needed by a query, or eagerly by `particles extract <entry-id>`.
 
-### Extractor plugin registry and dispatch
+#### Extractor plugin registry and dispatch
 
 an `ExtractorRegistry` selects an extractor for a given snapshot using a dispatch ladder driven by per-extractor `APPLICABILITY` clauses (see also §14.1):
 
@@ -1775,7 +1824,7 @@ an `ExtractorRegistry` selects an extractor for a given snapshot using a dispatc
 
 The reference SDK's current extractor catalogue is in §14.4.
 
-### Chunked extraction and carry-forward
+#### Chunked extraction and carry-forward
 
 For sources whose rendered text exceeds the single-call context budget, the extractor pipeline chunks the input. Per-source-type chunkers:
 
@@ -1785,7 +1834,7 @@ For sources whose rendered text exceeds the single-call context budget, the extr
 
 Each chunk is identified by `chunk_hash` (SHA-256 of the chunk text). **re-extraction uses content-hash carry-forward**: a re-run skips chunks whose `chunk_hash` is unchanged from the prior extraction. Particles from carried-forward chunks remain `ACTIVE` without being re-extracted, and each gains one provenance ref naming the new snapshot (§7.4); only changed or new chunks invoke the LLM. This makes incremental updates cheap and is the dominant re-extraction pattern in practice.
 
-### Extract algorithm
+#### Extract algorithm
 
 1. **Identify the snapshot set.** For `APPEND_ONLY` sources with prior extractions, compute the delta. For `MUTABLE` sources, extract from the full new snapshot. For `STABLE` sources, extract once.
 2. **APPEND_ONLY with edits to prior content** (resolved OQ-9). Run a cheap text diff between prior and new snapshot. If the changed regions are limited to tail content (new additions), treat as `APPEND_ONLY` delta. If changed regions include non-tail content, fall back to `MUTABLE` handling for *this* snapshot: re-extract from the full new snapshot and set `PROVENANCE_STALE` on particles whose `provenance.location` falls within the changed regions. Full semantic diffing is deferred (Appendix A).
@@ -1801,16 +1850,16 @@ Each chunk is identified by `chunk_hash` (SHA-256 of the chunk text). **re-extra
 7. **Detect conflicts.** For each candidate, query the particle store for `ACTIVE` particles with overlapping subjects and content similarity above a threshold. Candidacy has two sources: the candidate's own corpus entry at the conflict threshold (`extraction.similarity_threshold`, reference 0.80), and, keyed on the candidate's **about-subject** (its structured-claim subject when it has one, else its sole subject; a claim that opens on the deployment's speaker reference and is bound to the speaker's Subject is also keyed on that Subject, since an extractor often leaves the speaker out of a first-person claim's subjects), `ACTIVE` particles about that subject in **any** corpus entry at the lower subject-scoped floor (`reconciliation.update_supersession.subject_floor`, reference 0.45), at most `max_candidates` (reference 3) per candidate. A value update differs from its predecessor in exactly the word carrying the value, so it rarely clears the entry-level threshold; the floor only finds candidates, and every pair still passes the contradiction probe. Apply the conflict resolution ladder (§6.4):
    - Second reading → before the write phase, every pair the contradiction probe confirmed that the ladder or the observer precondition would act on is read a second time with each claim's source kind, name, time and passage (§6.4, *The second reading on the extraction path*). Its verdict replaces the probe's: an unconfirmed pair corroborates, and a confirmed one proceeds as below. A failed reading keeps a same-entry pair's signal and drops a cross-entry pair's; either way the operation's result counts the pair as unread. The reading is an LLM round trip and MUST NOT run while the write phase holds the store's write lock.
    - ALEATORY exclusion (rung 1) → an ALEATORY pair is excluded from rungs 1.5 and 2, and from rung 2.5 when the newer claim is the ALEATORY one; it is not a short-circuit, so the pair still falls through the gates and only a *confirmed* contradiction between two adjudicable claims reaches the default rung.
-   - Document-supersession prior (rung 1.5) → if one particle's provenance corpus entry **(transitively) supersedes** the other's and the replacement signal confirms it, demote the superseded claim `PROVENANCE_STALE` / `DOCUMENT_SUPERSEDED` and surface no `INCONSISTENCY`. Modality-independent, so it runs *above* the adjudicability gate; single-trust-order stores only.
+   - Document-supersession prior (rung 1.5) → if one particle's provenance corpus entry **(transitively) supersedes** the other's and the replacement signal confirms it, demote the superseded claim `PROVENANCE_STALE` / `DOCUMENT_SUPERSEDED` (a superseded candidate is born so, §6.6) and surface no `INCONSISTENCY`. Modality-independent, so it runs *above* the adjudicability gate; single-trust-order stores only.
    - Adjudicability gate (rung 1.7; scope narrowed) → if either particle is non-`FALSIFIABLE` (`assertion_modality` of `EVALUATIVE` / `EXPERIENTIAL` / `CONSTITUTIVE`), the pair is not adjudicable under the extraction-time default: it corroborates and both stay `ACTIVE`. Particles that are not adjudicable by default are not even selected as comparison pairs.
    - Source trust check (rung 2; Extension B) → set lower-trust particle `PROVENANCE_STALE` if differential exceeds threshold. When the *existing* particle wins, the candidate is dropped without persistence, but the drop is **audited**: a `CONFLICT_CANDIDATE_DROPPED` operator event (§9.7) records the candidate excerpt, the verdict, and the winning particle id.
-   - Same-lineage update supersession (rung 2.5) → when trust cannot distinguish the pair, both are extractor-asserted, their source dates are strictly ordered, and the newer claim gives a new value for the older one's slot, demote the older claim `PROVENANCE_STALE` / `SUPERSEDED_BY_UPDATE` and point the newer one's `supersedes` at it. Where the trust rung is off (a multi-contributor store) the subject-keyed search offers only pairs this rung can act on, so a cross-entry pair never manufactures an `INCONSISTENCY` that the pre-0268 engine would not have surfaced.
+   - Same-lineage update supersession (rung 2.5) → when trust cannot distinguish the pair, both are extractor-asserted, their source dates are strictly ordered, and the newer claim gives a new value for the older one's slot, demote the older claim `PROVENANCE_STALE` / `SUPERSEDED_BY_UPDATE` (an older candidate is born so, §6.6) and point the newer one's `supersedes` at it. Where the trust rung is off (a multi-contributor store) the subject-keyed search offers only pairs this rung can act on, so a cross-entry pair never manufactures an `INCONSISTENCY` that the pre-0268 engine would not have surfaced.
    - Default (rung 3; never for a pair of two generations of one `MUTABLE` source, §6.4) → persist the losing candidate **quarantined** (born `PROVENANCE_STALE` with `status_reason = CONFLICT_PENDING`, full content/provenance/confidence/subjects/embedding), then create an `INCONSISTENCY` particle whose PARTICLE provenance refs point at the two persisted rows; queue for Review. When a second reading confirmed the pair, the record carries `properties["conflict:reading"]`, the instruction it was read under; a record without it was opened on the probe alone.
 8. **Handle supersession.** If a candidate updates a prior claim from the same source, set `supersedes` and mark the prior `SUPERSEDED`. For `MUTABLE` re-extraction, set `PROVENANCE_STALE` on the prior particles from earlier snapshots of this entry that no current snapshot of any entry attests (§7.4). "Earlier" is by capture time against the entry's current generation, so extracting an older snapshot late never retires the current generation (§7.4).
 9. **Write the particle** with `status = ACTIVE` (or as `INCONSISTENCY` per step 7).
 10. **Update snapshot** `extraction_status = COMPLETE` (or `FAILED` with error detail; failed snapshots are picked up by Reindex auto-discovery, §9.5).
 
-### Event-anchored validity boundaries
+#### Event-anchored validity boundaries
 
 The general extractor MAY populate a candidate's `valid_until` (§6.2) for a
 claim whose text carries a **genuine, resolvable, future-dated validity
@@ -1841,7 +1890,7 @@ the normative requirements are the mention-vs-boundary contract and the
 under-emission bias. The behaviour is config-gated (`extraction_validity`) and,
 disabled, reproduces the pre-ADR-0197 output.
 
-### Cross-entry reconciliation
+#### Cross-entry reconciliation
 
 Step 7's conflict detection originated as a per-entry check.
 Particle insertion on the import / contribution path
@@ -1862,11 +1911,11 @@ The full design contract lives.
 | --- |
 | Extractor confidence values reflect model belief, not evidence strength. All particles created by an extractor carry `calibration_source = EXTRACTOR_DIRECT` and should be treated as provisional until validated against benchmarks (§13.3) or human review. Extraction quality dashboards (§3.6 of the whitepaper) must be available to operators. The conformance validator (active in v0.19.0) is the tool for flagging extractors that populate fields mechanically, the *metadata theater* failure mode (whitepaper Risk #11). |
 
-## 9.3 Query
+### 9.3 Query
 
 Query retrieves relevant particles and generates a natural-language response tailored to the question and audience. Query MUST NOT block on extraction of large corpus entries; coverage gaps are disclosed in the response rather than resolved synchronously. The hot read path for the common case is *not* Query but the pre-rendered wiki article (§10.4), which Query falls back to via the wiki cache where applicable.
 
-### Navigation model
+#### Navigation model
 
 Per whitepaper §3.11, Query's navigation primitive is **vector similarity over particle embeddings, not graph traversal**. Three properties keep this cheap:
 
@@ -1876,7 +1925,7 @@ Per whitepaper §3.11, Query's navigation primitive is **vector similarity over 
 
 This is the standard's answer to the *ontology-traversal* failure mode common to deep formal knowledge graphs.
 
-### Query parameters
+#### Query parameters
 
 ```yaml
 QueryRequest:
@@ -1899,12 +1948,12 @@ QueryRequest:
                                 # start == end is the point form
 ```
 
-### Query algorithm
+#### Query algorithm
 
 1. **Validate** the request; refuse to run when the store holds an ACTIVE particle whose `schema_version` is incompatible with the implementation's (§6.1), surfacing `schema_mismatch` rather than answering from part of the store. A different minor version of the same major is compatible and is read normally.
 2. **Identify candidate corpus entries** via metadata + Subject store match. For entries with `extraction_status = PENDING` or `FAILED`, enqueue a background Extract job (do not block); record the entry as a `coverage_gap` in the response metadata.
 3. **Embed the question** using the SDK's embedding model.
-4. **Retrieve top-k particles.** Filter: `status = ACTIVE`; `subject_id` match if provided; `valid_until` is null or > now (lazy filter, §6.3); when `window` is set, the window evaluation below replaces the status filter and the candidate set is the claims it admits, applied before every other filter and before ranking; `recency_window_days` satisfied if provided; particles tagged `DOCUMENT_META` (`extraction:scope` in `properties`, §9.2 step 5a) are **excluded from the default factual surface** and returned only when the caller passes the explicit opt-in (`include_document_meta`); they remain `ACTIVE`, stored, and auditable, just out of the default encyclopedia. Rank by the combined score `similarity_weight · cosine_similarity + confidence_weight · effective_confidence` (reference weights 0.6 / 0.4), where *cosine similarity* is the normalized, `[0, 1]`-clamped metric pinned in §8.5; only particles whose stored vector matches the store's `embedding_profile` are comparable (§8.5). Exact top-k ordering at the margins is profile-relative and non-normative (§8.5).
+4. **Retrieve top-k particles.** Filter: `status = ACTIVE`; `subject_id` match if provided; `valid_until` is null or > now (lazy filter, §6.3); when `window` is set, the window evaluation below replaces the status filter and the candidate set is the claims it admits, applied before every other filter and before ranking; `recency_window_days` satisfied if provided; particles tagged `DOCUMENT_META` (`extraction:scope` in `properties`, §9.2 step 5a) are **excluded from the default factual surface** and returned only when the caller passes the explicit opt-in (`include_document_meta`); they remain `ACTIVE`, stored, and auditable, just out of the default encyclopedia. Rank by the combined score `similarity_weight · cosine_similarity + confidence_weight · effective_confidence` (reference weights 0.6 / 0.4), where *cosine similarity* is the normalized, `[0, 1]`-clamped metric pinned in §8.5; only particles whose stored vector matches the store's `embedding_profile` are comparable (§8.5). Exact top-k ordering at the margins is profile-relative and non-normative (§8.5). An implementation MAY add the **exact identifier-token addend** `μ · X(p, q)` to this score before the top-k cut, where `X` is the share of the question's identifier tokens that occur as tokens of the particle's `content`, from 0 to 1, and `μ ≥ 0` is static operator policy with a default of 0, under which the ranking is the combined score alone. For tokens, text is case-folded by Unicode full case folding with no normalisation form applied; a token is a maximal run of characters whose Unicode general category is a letter (L*) or a number (Nd, Nl, No), extended across a `.` only when the characters on both sides are decimal digits (Nd), so `REQ-0246`, `REQ 0246` and `#0246` each yield `0246` and `1.234.2` is one token. A question's identifier tokens are its tokens that hold a character whose Unicode Numeric_Type is Decimal or Digit and that are at least a configured minimum length long (default 3); a question with none adds nothing to any particle. The addend is added after any rank weights the implementation applies to the combined score, so none of them scales it. It is computed at read time, never stored, and is not a confidence: `effective_confidence`, the `min_confidence` filter and the relevance floor are unaffected. It reads only the particle's own text and the question, never a count over the store, so a federated query applies the viewer's `μ` to the union of every member store's candidates before that union is cut. The weight was measured on a single store and is an operator's opt-in; an implementation that omits the addend ranks exactly as one with `μ = 0`.
 5. **Compute effective_confidence per particle** (§6.9): `confidence.value × extractor.trust_weight × source_trust_rank × recency_factor`. The domain for `SourceTrustStatement` applicability is derived from the particle's SOURCE corpus entry's `source_type` via the extractor registry's MUST-clause mapping, the same derivation the §6.6 conflict ladder uses; a source type with no MUST clause has no domain, and only URL-scoped trust rules can apply. Apply `min_confidence` filter post-computation (filtering on `effective_confidence`, not the raw `confidence.value`).
 6. **Co-evidential collapse** (if `collapse_co_evidential` and such links exist). Group retrieved particles linked `CO_EVIDENTIAL`; render one representative per group. Confidence shown is the §6.9 merged value over the group; all member particles' provenance is preserved as co-citations.
 7. **Generate the natural-language response.** Audience-driven template:
@@ -1926,7 +1975,7 @@ QueryRequest:
 | --- |
 | The query layer MUST refuse to run on a store holding an ACTIVE particle whose `schema_version` is incompatible with the implementation's (another major version, or a value that does not parse; §6.1), surfacing `schema_mismatch` rather than filtering those particles out, since a filtered answer would silently come from part of the store. A particle of another minor version of the same major is compatible and MUST NOT be refused. The refusal SHOULD say which way the store differs: a store behind the implementation is rebuilt, while a store ahead of it needs a newer implementation and MUST NOT be advised to be rebuilt by the older one, which cannot re-create its records. |
 
-### Window evaluation
+#### Window evaluation
 
 When `window` is set, Query selects on the **valid-time axis** (*what began
 in, or held during, this interval of world time*), independently of when the
@@ -1934,7 +1983,8 @@ store learned it. The normative rules:
 
 1. **Candidates.** The candidate set is every dated particle (`valid_from`
    present) **across statuses**, less the born-retired rows (INCONSISTENCY
-   records, quarantined conflict losers), which were never believed. The
+   records and particles born `PROVENANCE_STALE`, §6.6), which were never
+   believed. The
    window is applied before every other filter (subject, tags, structural
    claim filters, recency), before ranking, and before `top_k`.
 2. **The interval.** An `EVENT` is the point `[valid_from, valid_from]`. A
@@ -1967,7 +2017,7 @@ store learned it. The normative rules:
    restated. A window never changes a score: `effective_confidence` and the
    ranking are unchanged.
 
-### As-of evaluation
+#### As-of evaluation
 
 When `as_of` is set to a past instant T, Query evaluates the store on
 the **assertion-time axis** (*what did the store believe at T*), never
@@ -1979,8 +2029,8 @@ above:
    had not yet been retired at T: it is currently ACTIVE, or its
    retirement instant R satisfies `R > T`. `valid_until` is evaluated
    against T rather than now. Particles that were never believed
-   (INCONSISTENCY records, quarantined conflict losers) are never
-   visible.
+   (INCONSISTENCY records and particles born `PROVENANCE_STALE`, §6.6)
+   are never visible.
 2. **Retirement instants are stored facts, never guesses.** R is exact
    when computed from standard particle fields: a successor particle's
    `supersedes` pointer dates the predecessor's retirement at the
@@ -2006,7 +2056,7 @@ above:
    candidates. Unset `as_of` MUST preserve present-time behaviour
    unchanged.
 
-### Federated cross-store query
+#### Federated cross-store query
 
 The engine is store-parameterised: a **store** is one
 database, named by an opaque `StoreHandle` resolved through a
@@ -2030,13 +2080,13 @@ first handle is the viewer whose trust policy ranks the merged
 results; omitted, the default store is queried. The full design
 contract lives.
 
-## 9.4 Lint
+### 9.4 Lint
 
 Lint is a formal operation over the particle store and corpus. Structural checks are fast and require no LLM. Semantic checks use the LLM or symbolic-reasoning layers operating on structured inputs. Lint produces a machine-readable JSON-LD report and a human-readable Markdown rendering (via the Markdown Bridge, §10.3).
 
 **Lint is read-only by default.** A plain lint invocation, on every surface (CLI, API, MCP), reports findings and mutates nothing; the status transitions described by the fix-capable checks below (L-STR-01, L-STR-04, L-STR-05) are applied **only when the operator passes the explicit fix opt-in**. Where a check row says "set" or "persist" a status, read it as *the transition the check pairs with its finding*, applied under opt-in; the default run reports what would be transitioned. The MCP surface is read-only and never mutates regardless. All other checks are diagnostic-only on every run.
 
-### Normative check set
+#### Normative check set
 
 Each check has an ID of the form `L-{CATEGORY}-{NN}` where category is `STR` (structural), `SEM` (semantic), or `IDX` (indexing).
 
@@ -2063,7 +2113,7 @@ Each check has an ID of the form `L-{CATEGORY}-{NN}` where category is `STR` (st
 | L-SEM-04 | *(retired)* | semantic | The former semantic phantom-subject check (common-noun / transient-phrase subjects) is superseded: prevention moved to the extraction-time non-entity gate (§6.7), and the `PHANTOM_SUBJECT` finding is the structural zero-coverage check under L-STR-02. The ID is retained so historical reports remain interpretable; a conforming implementation does not run a semantic phantom check. |
 | L-IDX-01 | *(relocated)* Candidate co-evidential links | indexing | Candidate proposal is **not a lint check**: lint emits no `CO_EVIDENTIAL_CANDIDATE` findings. Near-duplicate candidates within a Subject are surfaced by the links-suggest curation operation (§6.10 "Creation paths" path 2), which owns the report / LLM-judge / apply workflow. The mitigation for whitepaper Risk #10 (claim proliferation) lives there; the ID is retained for historical reports. |
 
-### Lint output
+#### Lint output
 
 ```yaml
 LintReport:
@@ -2088,11 +2138,11 @@ The report is rendered to Markdown via the Markdown Bridge (§10.3) for human re
 | --- |
 | The lint tool runs against existing LLM-Wiki and RAG knowledge bases via the retrospective import path, shipped in v0.31.1: `particles import vault <dir>` deposits every markdown note in an existing vault unmodified as a `LOCAL_MARKDOWN` corpus source (Obsidian YAML frontmatter is stripped before extraction), the standard extraction pass converts the notes into particles, and Lint runs normally. Lint is therefore useful on day one against an existing knowledge base without the operator rebuilding it by hand. An earlier revision of this callout promised a deterministic parser treating raw markdown as low-confidence particles with implicit provenance, bypassing extraction; that mechanism was rejected: sentence-split prose yields context-dependent fragments rather than self-contained claims, and uniform stamped confidence is metadata theater (whitepaper §5 Risk #11). Extraction is the conversion step. |
 
-## 9.5 Reindex
+### 9.5 Reindex
 
 Reindex re-extracts particles for a scoped set of corpus entries. It is the operation by which improved extractors propagate their improvements through the store, and by which previously-failed extractions are retried.
 
-### Auto-discovery scope
+#### Auto-discovery scope
 
 By default, Reindex auto-discovers two scopes:
 
@@ -2100,7 +2150,7 @@ By default, Reindex auto-discovers two scopes:
 2. **Stale extractor version.** Particles whose `extractor_ref.version` is older than the currently-registered version for the same extractor name. These are candidates for re-extraction with the upgraded extractor.
 3. **Extraction pairing.** Particles whose `extraction_provider_model` equals a requested `"<provider>:<model>"` pairing: the scope for re-extracting what one model produced, e.g. after an uncalibrated provider swap benchmarks badly. Matched by **exact equality**, never substring: pairings nest (`openai:gpt-5.6` is a prefix of `openai:gpt-5.6-luna`), so a substring match would select the sibling model the scope exists to distinguish. Particles with a `null` pairing never match. Note the scope unit is the snapshot, so a snapshot whose particles were produced by more than one model is re-extracted in full.
 
-### Explicit scoping (CLI flags)
+#### Explicit scoping (CLI flags)
 
 ```bash
 particles reindex                        # auto-discovery scope
@@ -2112,7 +2162,7 @@ particles reindex --verbose                         # per-entry progress (0.14.5
 
 `--extractor-id` is especially useful when an upstream change to the extractor's prompt (rather than a code version bump) warrants re-extraction across all of its outputs.
 
-### Reindex algorithm
+#### Reindex algorithm
 
 1. **Resolve scope** from CLI flags or auto-discovery. Compute the set of `(corpus_entry_id, snapshot_id)` tuples to re-extract.
 2. **For each scoped entry,** query the particle store for all ACTIVE particles whose `provenance.snapshot_id` is in scope and whose `extractor_ref.version` is the prior version. These are candidates for supersession.
@@ -2129,7 +2179,7 @@ particles reindex --verbose                         # per-entry progress (0.14.5
 | --- |
 | When a high-trust domain-specific extractor is registered that covers a large number of existing corpus entries, the resulting Reindex scope may be very large. Rate limiting and chunk-hash carry-forward ensure the particle store remains queryable throughout. Operators should monitor the extraction quality dashboard during large Reindex jobs and review the post-Reindex Lint report before promoting the new extractor to `MUST` status in their registry. |
 
-### Re-anchoring a claim whose state was superseded
+#### Re-anchoring a claim whose state was superseded
 
 A claim can refer to a current circumstance, of the speaker, another person, a project or a system, in two ways: through a relative or possessive reference ("a ten-minute walk from the user's flat", "near my office", "my manager"), or through a definite description its source ties to that circumstance ("the database container" in a note that says which database the project uses), including a claim its source gives that circumstance as the reason for. When the circumstance has a stated limit or is temporary (a stay, a leave, a freeze), a claim can also depend on it by stating how it ends: a return from it, its last day, a check-out, or the departure or reopening that ends it, marked by the claim's own words or presented by its source as that end ("the user flies back to Delhi on Thursday" in a note that says the user is in Mumbai for a week). A plan that is only located where the circumstance began or will end, another person's travel, or a later visit does not depend on it. When a same-lineage update retires the state claim such a reference relied on (§6.4 rung 2.5), the claim stops being true while still reading as current. An implementation SHOULD re-examine the claims extracted from the retired claim's snapshot and replace each one that depended on the retired state with a restatement that no longer does. A claim that states the retired value itself, rather than relying on it, is not restated: it is retired as another phrasing of that value (§6.4 rung 2.5, *Other phrasings of a retired value*). Dependence is read from the claim and its source passage, never from general knowledge of what goes with the retired circumstance. An `ALEATORY` claim (a plan or a schedule that relied on the retired circumstance) is re-examined like any other: a restatement keeps the claim and dates it, adjudicating nothing, and it keeps the original's `uncertainty_nature`. Whether a claim depended on the state is a judgment no test vector can pin, which is why this is not a MUST.
 
@@ -2142,11 +2192,11 @@ When an implementation does re-anchor a claim, the result MUST have this shape:
 
 `SUPERSEDED_BY_REANCHOR` records that the circumstance the claim referred to or relied on changed, not a judgment on its value, so it does not trigger the retired-value rule (§6.10).
 
-## 9.6 Review
+### 9.6 Review
 
 Review is a human-in-the-loop operation for resolving `INCONSISTENCY` particles and generating durable `SourceTrustStatement` records from those resolutions. It is the mechanism by which operator judgment becomes reusable trust policy rather than one-time manual fixes.
 
-### Review workflow
+#### Review workflow
 
 1. **Retrieve** `INCONSISTENCY` particles, ordered by domain and confidence impact (highest-impact first).
 2. **For each `INCONSISTENCY`,** present the conflicting particles side by side:
@@ -2182,16 +2232,16 @@ REVIEW:
 
 5. **Co-evidential offer.** If the two conflicting particles turn out to be paraphrases of the same claim (rather than genuine contradiction), the reviewer may instead create a `CO_EVIDENTIAL` link (§6.10) and dismiss the `INCONSISTENCY`. The Review UI should surface this as a fifth implicit action: *"these aren't contradictory, they're the same claim."*
 
-### UGC author trust
+#### UGC author trust
 
 For UGC sources, when a reviewer chooses `PREFER_A`/`PREFER_B`, the Review UI offers to persist the resolution as an `AUTHOR`-scoped `SourceTrustStatement` for the domain (rather than just a one-time particle-level resolution). A reviewer who consistently prefers a GitHub project maintainer over anonymous commenters is implicitly building author-scoped trust policy; the offer makes that explicit and durable.
 
-### Core vs Extension B behaviour
+#### Core vs Extension B behaviour
 
 - **Core (annotation-only).** Each `INCONSISTENCY` requires its own Review action. The `PREFER_*` resolution sets the lower-trust particle `PROVENANCE_STALE` and records the `REVIEW` particle. The new `SourceTrustStatement` is stored but does *not* automatically cascade to other open `INCONSISTENCY` particles. Each conflict is resolved individually.
 - **Extension B (auto-cascade, shipped).** After writing a new `SourceTrustStatement`, re-evaluate all open `INCONSISTENCY` particles in the same domain against the new statement. For each record that now resolves automatically, the lower-trust claim is set `PROVENANCE_STALE` and the record is retracted under the §6.6 wrapper-terminal rule, as a Review resolution retracts it; a `REVIEW` particle records the auto-resolution and the triggering `statement_id`. The cascade is policy-gated: `OPERATOR_DIRECT` statements cascade unconditionally; `REVIEWER_DERIVED` statements require N ≥ 3 reviewer confirmations (operator-configurable) before they cascade. Auto-cascade is bounded by `max_cascade` (default 500) per statement.
 
-### Release of a held claim
+#### Release of a held claim
 
 When rung 3 holds a newer claim quarantined behind a stored one and an autonomous pass later retires the stored claim (an update supersession, §6.4 rung 2.5; a re-anchoring; a document supersession, §6.4 rung 1.5), the record is left with no `ACTIVE` side. An implementation MAY close such a write-time record without a Review, by re-checking the held claim against the current `ACTIVE` set with the same pair selection and contradiction check the write path uses. A record whose stored side a person retired (`EXPLICIT_RETRACTION`, `EXPLICIT_SUPERSESSION`, a Review) is not eligible, and neither is a census record or a retired-value hold. An implementation that does so:
 
@@ -2209,7 +2259,7 @@ It is a MAY because the cost, a contradiction check per paired claim, is the imp
 | --- |
 | `SourceTrustStatement` records may only *demote* confidence, never silently suppress conflict visibility. Extension B's auto-cascade never promotes trust automatically; it only resolves conflicts by demoting the lower-trust particle to `PROVENANCE_STALE`. `INCONSISTENCY` particles created before a trust statement existed are retained in the audit log even after auto-resolution. |
 
-## 9.7 Operator Event Log
+### 9.7 Operator Event Log
 
 Every operator-initiated mutation, such as retraction,
 subject merge / split, trust change, review resolution, lens adoption,
@@ -2244,17 +2294,17 @@ an action, which no miner over actions can observe. The gesture is
 operator-only and promotion-only, and it affects projection ranking
 alone, never a particle's stored or effective confidence.
 
-# 10. Serialization, Standards Alignment, and Exporters
+## 10. Serialization, Standards Alignment, and Exporters
 
 §10 covers three closely-related surfaces: the on-wire serialization format (§10.1), the catalogue of external standards Particles aligns with (§10.2), and the renderings that turn particles into human-readable Markdown (§10.3 per-particle, §10.4 per-Subject). The exporter family is the user-facing layer that makes the standard's commitments visible to readers who do not run the SDK.
 
-## 10.1 Serialization Format
+### 10.1 Serialization Format
 
 Particles uses **JSON-LD** as the primary runtime serialization format: compact, self-describing via `@context`, natively compatible with RDF and PROV-O, and familiar to AI engineers. The canonical `@context` document is `artifacts/schemas/context.jsonld`; the JSON Schema for Core fields is `artifacts/schemas/particle.schema.json`. Both are normative per §6.1. The `@context` maps **every** key the interchange codec emits, so an exported unit expands fully to the `particles:` vocabulary with no dropped terms; the JSON-LD → RDF round-trip is a real, conformance-tested surface. A round-trip conformance test serializes a particle with provenance, expands it against the shipped `@context`, and validates the expanded graph against the SHACL shapes (including `ProvenanceChainShape`).
 
 A companion XMI serialization provides full PSUM compliance for OMG ecosystem tooling. The XMI form is generated from the JSON-LD form on demand; the JSON-LD is the authoritative storage representation.
 
-### Interchange and store export
+#### Interchange and store export
 
 Two store-level serialization surfaces build on the
 same JSON-LD `@context`: **particle interchange**, a stream of
@@ -2301,6 +2351,19 @@ key. A consumer validating a unit whose `schemaVersion` is a newer minor
 than the artifact it holds MUST NOT fail the unit for keys that artifact
 does not declare: it validates the unit with those keys removed and
 reports them.
+
+**Import and restore (normative).** A unit's `status` and `status_reason`
+state its lifecycle in the store that wrote it. An **import** adds a
+bundle's claims to the target store as new claims, reconciled there:
+it admits a unit only when its `status` is `ACTIVE`, sets
+every other unit aside before resolving its subjects, so a set-aside unit
+writes nothing, and SHOULD report how many it set aside per status. An
+admitted unit is stored with no `status_reason`, since its lifecycle in the
+target is whatever the target's reconciliation decides. A **restore** into
+an empty store rebuilds the bundle's own store and keeps both fields as
+written. The round-trip guarantee above is a restore's. An
+implementation whose store export carries ACTIVE units only, as the reference
+SDK's does, loses nothing when it imports its own export.
 
 **Serializations (normative).** Two standard serializations carry the
 interchange unit, both bound to the same JSON-LD `@context`:
@@ -2355,7 +2418,7 @@ reference implementation completes them. Import of a bundle is a
 sequence of single-store writes (invariant: no
 distributed transactions).
 
-## 10.2 Standards Alignment Map
+### 10.2 Standards Alignment Map
 
 | **Standard** | **Full Name & Reference** | **Role in Particles** |
 | --- | --- | --- |
@@ -2374,11 +2437,11 @@ distributed transactions).
 | **BitTorrent / IPFS** | BitTorrent: https://www.bittorrent.org/beps/bep_0003.html · IPFS CID: https://docs.ipfs.tech/concepts/content-addressing/ | Optional shared-archive transports for public corpus snapshots (§7.3, §14.2). `content_hash` (SHA-256) serves as the content address compatible with both BitTorrent info-hashes and IPFS CIDs. The whitepaper presents this as *"content-addressed shared archive"*; these are the reference-implementation transports. |
 | **MCP** | Model Context Protocol. Anthropic, 2024. https://www.anthropic.com/news/model-context-protocol | Transport layer for agent tool access. Particles can be carried over MCP; Particles adds the semantic knowledge layer above MCP's tool-call abstraction. |
 
-## 10.3 Markdown Bridge: Per-Particle Annotation
+### 10.3 Markdown Bridge: Per-Particle Annotation
 
 The Markdown Bridge is the per-particle rendering primitive: it turns a single particle into a Markdown blockquote with its metadata as inline annotations. This is the lowest-level human-readable view of a particle and the building block from which higher-level exporters (the per-Subject vault, the wiki article exporter) are composed.
 
-### Rendering format
+#### Rendering format
 
 A particle rendered via the Markdown Bridge appears as a Markdown blockquote with structured metadata in Obsidian-compatible callout syntax:
 
@@ -2395,7 +2458,7 @@ A particle rendered via the Markdown Bridge appears as a Markdown blockquote wit
 
 The rendering is generated by Jinja2 templates in `particles/exporters/markdown.py`. The template surface is operator-customisable for deployments that want different styling (color hints, different metadata fields surfaced, alternative callout type).
 
-### Composition
+#### Composition
 
 The per-particle rendering is composed into two higher-level exporters by the exporter plugin registry:
 
@@ -2408,17 +2471,17 @@ The wiki article exporter (§10.4) takes a different approach: rather than rende
 | --- |
 | The Markdown Bridge is not the answer to "how should I share a particle store with a non-technical reader." That role belongs to the wiki article exporter (§10.4). The Bridge is the building block: a stable, mechanical rendering of a single particle that higher-level exporters compose into views (per-Subject vaults, decks, articles). |
 
-## 10.4 Wiki Article Exporter: Per-Subject Synthesis
+### 10.4 Wiki Article Exporter: Per-Subject Synthesis
 
 The wiki article exporter is the primary read path for the common-case "show me what we know about Subject X" question. Where the Markdown Bridge (§10.3) renders particles individually, the wiki exporter *synthesises prose* from the particle set for a Subject, with every claim cited back to its particle ID and footnote-linked to the source URL. Per whitepaper §4.2, the wiki articles are the artefact that demonstrates Particles' differentiators without requiring the reader to install anything, understand the schema, or even know what a particle is.
 
 This section pins the normative slot and the load-bearing invariants the implementation satisfies; beyond them, the reference exporter fixes non-normative detail a conformant implementation is free to vary: the exact synthesis-prompt structure, the article frontmatter shape, and the regeneration/overwrite semantics. Topic-level (multi-subject) articles, article versioning, operator-tunable synthesis prompts, and tag-aware articles (once folksonomy tagging, §16.2, is in use) are recognised extensions deliberately left to future work.
 
-### Per-Subject scope and output shape
+#### Per-Subject scope and output shape
 
 For each `Subject` with at least `min_particles` ACTIVE particles (default 3, configurable), the exporter generates one Markdown file `{subject_slug}.md`. A top-level `index.md` lists every generated article. Output is a static directory of Markdown files suitable for emailing, hosting via a static-site generator, or browsing locally.
 
-### Synthesis with citation validation
+#### Synthesis with citation validation
 
 The exporter loads the Subject's ACTIVE particles, renders them as a structured LLM prompt, and synthesises an article in which every claim cites a particle by its short ID (`[^p-abc12345]`). Synthesis is followed by a **citation-validation pass**: every footnote reference must point at a real particle in the input set. Articles with un-cited claims or invented citations are flagged and regenerated with a stricter prompt; persistent failures fall back to a structural listing rendering.
 
@@ -2432,19 +2495,19 @@ The pass rule is deterministic given the verdicts: Layer B **passes** iff there 
 
 This invariant (*every claim cited; citations validated post-synthesis*) is what distinguishes Particles' wiki articles from prose-only LLM-Wiki: the article cannot drift from its sources because the citation validation forbids any claim that is not traceable to a particle.
 
-### Footnote collapse over co-evidential groups
+#### Footnote collapse over co-evidential groups
 
 When multiple particles in the input set are linked `CO_EVIDENTIAL` (§6.10), the synthesis collapses them into a single sentence with multiple footnotes: one sentence, N citations. This is the load-bearing mitigation for whitepaper Risk #10 (claim proliferation): five news articles reporting the same acquisition produce one synthesised sentence with five source citations, not five repetitive sentences.
 
 Effective confidence shown for the collapsed sentence is the merged value from §6.9 (trust-weighted noisy-OR), not the max or the average of the individual particles.
 
-### Incremental regeneration via input-hash caching
+#### Incremental regeneration via input-hash caching
 
 LLM-call cost dominates the wiki exporter. The exporter caches per-Subject article state via an `input_hash` (SHA-256 of the sorted-by-ID particle list that fed the article's generation). On re-run, articles whose input hash is unchanged are left untouched; only Subjects whose input set changed get re-rendered. The cache is bypassed with `--regenerate-all`.
 
 This is the article-scope analogue of chunk-hash carry-forward and is the load-bearing mitigation for whitepaper Risk #9 (query-time synthesis cost): the hot read path for "what do we know about Subject X" is `cat wiki/Subject-X.md`, not running an LLM.
 
-### Article synthesis as a cross-exporter capability
+#### Article synthesis as a cross-exporter capability
 
 The article-rendering machinery (active in v0.22.0)
 described above (synthesis prompt, citation validation (Layer A
@@ -2463,7 +2526,7 @@ cross-exporter `synthesis_cache` table (§10.6) so an
 operator who exports the same store via two or three formats pays
 LLM cost once per Subject, not once per exporter.
 
-### Cross-references
+#### Cross-references
 
 - Full design contract: synthesis prompt structure, frontmatter shape, regeneration semantics, deferred items like topic-level synthesis.
 - Article-synthesis-as-shared-helper refactor; binding location for the helper module's API.
@@ -2472,7 +2535,7 @@ LLM cost once per Subject, not once per exporter.
 - Whitepaper §4.2: the use-case framing.
 - Whitepaper Risks #9, #10: the failure modes this exporter mitigates.
 
-## 10.5 Logseq Exporter: Per-Subject Bullet Outline
+### 10.5 Logseq Exporter: Per-Subject Bullet Outline
 
 The Logseq exporter is the third per-Subject-vault format (after
 Obsidian and the wiki article exporter). Where Obsidian renders each
@@ -2488,7 +2551,7 @@ presentation detail a conformant implementation may vary: the exact
 block-ID format, the per-page frontmatter shape, and the
 particle-to-block rendering.
 
-### Output shape
+#### Output shape
 
 ```
 <output-dir>/
@@ -2503,7 +2566,7 @@ block carries the Subject's frontmatter metadata and `tags::`. Every
 particle is a child block whose `id:: <particle-uuid>` makes it
 addressable from any other page via `((<uuid>))`.
 
-### Cross-citation guarantee
+#### Cross-citation guarantee
 
 `((<particle-id>))` resolves natively in Logseq's UI to the cited
 block. The exporter's choice to emit particle IDs (UUIDs) as block
@@ -2515,7 +2578,7 @@ alongside Obsidian: its native data model (a graph of blocks with
 addressable IDs) maps more cleanly onto the particle store than
 Markdown wikilinks do.
 
-### Synthesis integration
+#### Synthesis integration
 
 `particles export logseq <dir> --with-synthesis` splices the
 synthesised prose article (via the shared `article_synthesis` helper)
@@ -2525,14 +2588,14 @@ this against the same store reuses synthesised articles produced by
 `particles export obsidian` or `particles export wiki` against the
 same Subject.
 
-### Cross-references
+#### Cross-references
 
 - Full design contract: block-ID format, frontmatter
   shape, particle-to-block rendering).
 - §10.4 Wiki Article Exporter: synthesis helper shared.
 - §10.6 Shared Synthesis Cache: cross-exporter LLM amortisation.
 
-## 10.6 Shared Synthesis Cache
+### 10.6 Shared Synthesis Cache
 
 The article-synthesis helper was specified to be shared
 across exporters. The *cache*
@@ -2580,7 +2643,7 @@ exists yet, so operators upgrading from pre-0.41 Obsidian vaults
 populate the cache on the first export without paying LLM cost
 twice.
 
-### Cross-references
+#### Cross-references
 
 - Full design contract: eviction, backfill, prompt_version
   bump semantics).
@@ -2588,7 +2651,7 @@ twice.
 - §10.5 Logseq Exporter: third consumer.
 - Whitepaper §3.5: the cross-exporter framing.
 
-# 11. Open Questions
+## 11. Open Questions
 
 §11 lists the **decisions v2 deliberately leaves open**: questions the working group has not (and should not yet) resolved, but which are tracked so that future versions can take them up. The 11 questions resolved between v1 and v2 have migrated into the relevant spec sections with ADR citations; only questions still open are retained here.
 
@@ -2598,7 +2661,7 @@ twice.
 | OQ-10 | What governance model applies to shared public archives (BitTorrent / IPFS swarms), and who is responsible for a snapshot that was accurate at archival time but is now misleading? | Recommendation: shared archives are immutable historical records; governance responsibility lies with the depositing operator, not the archive infrastructure. The Memento datetime on each snapshot makes temporal scope explicit (per §7.6). | Legal/regulatory question rather than a technical one. Mirrors existing web archiving norms (Internet Archive policy). Liability in regulated domains requires per-deployment counsel; the spec should not attempt to resolve it. |
 | OQ-12 | How should the `ACTION` particle_type be specified when introduced post-MVP? | Defer full specification to a post-v1.0 extension. Design constraint: `ACTION` particles must be able to reference epistemic `CLAIM` particles via provenance (enabling *"do X because of evidence Y"*). The `particle_type` field is reserved in v2 to ensure schema compatibility. GTD-style lifecycle states (`next_action`, `waiting`, `someday_maybe`, `done`) are the expected fields. | Conflating task management with epistemic knowledge in the Core schema would bloat the standard. The extensibility reservation is the right MVP posture. Operator demand will determine whether the full spec is worth writing. |
 
-# 12. Multi-Agent Discourse Protocol: Extension E (Summary)
+## 12. Multi-Agent Discourse Protocol: Extension E (Summary)
 
 The multi-agent discourse protocol is **Extension E** of the standard, planned for a future major version and summarised in §18. Single-agent scope is the current Core target; multi-agent is deferred so single-user value lands first.
 
@@ -2608,9 +2671,9 @@ The first piece of multi-agent groundwork to land is **context fingerprinting** 
 | --- |
 | Whitepaper §7.1 (Multi-Agent Knowledge Exchange) is the standard's user-facing vision statement for the multi-agent direction; §18 is the techspec-side message-type sketch. Risk #5 (whitepaper §5) catalogues ontology drift across agents as the known hard problem. |
 
-# 13. Phasing, Success Metrics, and Benchmark Suite Interface
+## 13. Phasing, Success Metrics, and Benchmark Suite Interface
 
-## 13.1 Phasing
+### 13.1 Phasing
 
 The phasing table is a **live tracker**: status badges reflect the
 current reference SDK release. For per-feature implementation status
@@ -2636,7 +2699,7 @@ see the companion `roadmap.md`.
 | --- |
 | v0.2 Core is the MVP and shipped as of v0.15.1. The primary hook is the core loop: deposit a corpus, extract particles, query them, lint contradictions, demonstrating provenance fidelity on a real corpus. The secondary hook (lint runs against existing LLM-Wiki content) shipped in v0.31.1 as the retrospective import path (`particles import vault`; see §9.4). Extensions A, B, and C are shipped on top. v0.3 closes the benchmark-harness commitment that the whitepaper §3.1.3 publicly stated. |
 
-### Extensions catalogue
+#### Extensions catalogue
 
 | **Extension** | **Title** | **Depends on** | **Status** |
 | --- | --- | --- | --- |
@@ -2647,7 +2710,7 @@ see the companion `roadmap.md`.
 | E | Multi-Agent Protocol | Core + A + B | 🔮 Deferred (v0.5+) |
 | F | Privacy and Consent | Core | 🔮 Deferred (forward-reference in §7.4 callout; whitepaper §3.10) |
 
-## 13.2 Success Metrics
+### 13.2 Success Metrics
 
 Metrics are organised by dimension. The **Measured?** column is the
 honest current state: most metrics are aspirational targets pending
@@ -2664,7 +2727,7 @@ level it targets and self-certifies with `particles conformance check`. That is
 the behavioural ground truth these success metrics measure progress *toward*,
 distinct from the §13.3 BenchmarkSuite, which measures extraction fidelity.
 
-### Adoption
+#### Adoption
 
 | Target | Measured? |
 |---|---|
@@ -2672,7 +2735,7 @@ distinct from the §13.3 BenchmarkSuite, which measures extraction fidelity.
 | 10+ production agent deployments using Particles as knowledge store within 24 months | Not yet |
 | 3+ independent implementations of the spec within 24 months | Not yet |
 
-### Extraction fidelity *(harness shipped in v0.21.0; suite coverage growing)*
+#### Extraction fidelity *(harness shipped in v0.21.0; suite coverage growing)*
 
 | Target | Measured? |
 |---|---|
@@ -2682,7 +2745,7 @@ distinct from the §13.3 BenchmarkSuite, which measures extraction fidelity.
 | Cross-extractor confidence interoperability: two `CALIBRATED_BENCHMARK` extractors using temperature scaling on the same suite produce confidence within 0.05 of each other for equivalent claims | Not yet: calibration shipped; cross-extractor interoperability not yet verified on a shared suite. |
 | General extractor recall: 70%+ on benchmark documents (floor) | Not yet: no general-extractor benchmark suite is published. |
 
-### Correctness
+#### Correctness
 
 | Target | Measured? |
 |---|---|
@@ -2690,7 +2753,7 @@ distinct from the §13.3 BenchmarkSuite, which measures extraction fidelity.
 | Uncertainty fidelity: confidence values survive round-trip encode/decode with < 0.01 absolute error | ✅ Tested |
 | Lint recall: 95%+ of injected contradictions detected without LLM assistance in structural benchmark tests | Not yet |
 
-### Source corpus
+#### Source corpus
 
 | Target | Measured? |
 |---|---|
@@ -2698,7 +2761,7 @@ distinct from the §13.3 BenchmarkSuite, which measures extraction fidelity.
 | Re-extraction correctness: particles re-extracted from unchanged corpus snapshot produce identical output with > 95% particle-level recall against the original extraction | Partial (chunk-hash carry-forward ensures byte-stable carry; recall across re-extraction not yet measured) |
 | Fetch efficiency: > 80% of LAZY re-fetches for stable sources result in REVISIT records | Not yet |
 
-### Risk-mitigation coverage
+#### Risk-mitigation coverage
 
 The whitepaper §5 risk table catalogues 12 risks. Each has a named
 mitigation in the spec; this column tracks whether the mitigation is
@@ -2719,7 +2782,7 @@ shipped or pending.
 | #11 Metadata theater | Extraction quality dashboards (§3.6); conformance validator (§14.5) | Shipped (in v0.19.0) |
 | #12 Governance fragmentation | Conformance contract (§14.5); machine-checkable applicability (§14.1); shared calibration baselines (§13.3) | Shipped (applicability + conformance + benchmark harness all shipped by v0.21.0) |
 
-### Source trust and review
+#### Source trust and review
 
 | Target | Measured? |
 |---|---|
@@ -2728,13 +2791,13 @@ shipped or pending.
 | Review throughput: a domain-familiar reviewer resolves a single `INCONSISTENCY` in under 60 seconds | Not yet |
 | Author trust propagation: `author_id` correctly extracted and surfaced in Review UI for 3+ UGC source types | ✅ Shipped (GitHub, Reddit) |
 
-## 13.3 Benchmark Suite Interface
+### 13.3 Benchmark Suite Interface
 
 The standard does not prescribe specific benchmark datasets. Instead it defines a **BenchmarkSuite** schema that community contributors conform to when publishing benchmark suites. This lets the ecosystem develop domain-specific benchmarks without requiring the standard to anticipate every domain.
 
 (This section was v1's §6.5 Benchmark Suite Interface. It moves here because a benchmark suite is a *testing* surface, not a particle-schema concept. The reference runner shipped in v0.21.0; see § Status below. The whitepaper §3.1.3 quotes the initial baseline numbers it has produced.)
 
-### BenchmarkSuite schema
+#### BenchmarkSuite schema
 
 ```yaml
 BenchmarkSuite:
@@ -2764,13 +2827,13 @@ RequiredMetric:
   definition: string              # how it is computed
 ```
 
-### Required metrics for all conformant benchmark runners
+#### Required metrics for all conformant benchmark runners
 
 - **recall**: `matched_required / total_required`. Only `required: true` expected particles count toward the denominator; optional expected particles count toward precision but their absence is not a recall miss.
 - **precision**: `matched_emitted / total_emitted`. Every emitted particle is either matched to an expected one or counted as spurious.
 - **calibration_error**: **Expected Calibration Error (ECE)** over 10 equal-width confidence bins: for each bin *b*, empirical accuracy `acc_b = matched_in_bin / total_in_bin` and mean stated confidence `conf_b`; ECE = Σ over bins of `(|b| / N) · |acc_b − conf_b|`. Lower is better; 0.0 is perfect calibration. Two conformant runners MUST use the same binning so their reported numbers are comparable.
 
-### Match semantics: when does an emitted particle match an expected one?
+#### Match semantics: when does an emitted particle match an expected one?
 
 The three metrics are only comparable across runners if the claim-equivalence test is pinned:
 
@@ -2781,7 +2844,7 @@ The three metrics are only comparable across runners if the claim-equivalence te
 
 Extractor authors report these metrics in their `calibration_history` entries (§14.3), referencing the `suite_id` of the benchmark used. The extractor conformance validator (§14.5) consumes the same benchmark output to compute conformance scores.
 
-### Status
+#### Status
 
 - **Specification:** frozen. The schema above is normative.
 - **Reference runner:** shipped in v0.21.0 as `particles extractor benchmark <extractor-id>`. As of v0.43.0, three suites ship under `tests/benchmark/suites/`: `numismatic-seed-001` (structured catalog extraction; ECE 0.0471 raw), `reddit-seed-001` (UGC LLM-driven; ECE 0.6389 raw), `hackernews-seed-001` (UGC LLM-driven; ECE 0.8024 raw). The three suites produce the §3.7 calibration evidence table in the whitepaper. Community suites for additional domains are invited.
@@ -2791,7 +2854,7 @@ Extractor authors report these metrics in their `calibration_history` entries (�
 | --- |
 | The reference SDK will ship a benchmark runner CLI that accepts any conformant `BenchmarkSuite` and produces a `CalibrationRecord` suitable for inclusion in an extractor's `calibration_history`. Temperature scaling (shipped in v0.33.0) is the recommended calibration method; the runner implements it as a one-shot post-processing step over the runner's raw outputs. |
 
-# 14. Extension A: Extractor Registry and Calibration
+## 14. Extension A: Extractor Registry and Calibration
 
 Extension A defines the extractor registry, the applicability and pipeline-selection model, the shared-archive interop layer, the Extractor Record Schema, the reference extractor catalogue, the conformance validator, and the extractor trust model. It builds on the general extractor and the Core extraction pipeline (§9.2) and adds the community-ecosystem layer.
 
@@ -2799,13 +2862,13 @@ Extension A defines the extractor registry, the applicability and pipeline-selec
 | --- |
 | The whitepaper §3.8 uses accessible terms for two mechanisms specified in this section: *"machine-checkable applicability scopes"* and *"content-addressed shared archive"*. The techspec keeps the formal mechanism names, **RFC 2119 applicability clauses** (§14.1) and **content-addressed transports including BitTorrent info-hashes and IPFS CIDs** (§14.2), because the techspec is where mechanism lives. Both registers refer to the same designs; a reader bouncing between whitepaper and techspec should not see them as different concepts. |
 
-## 14.1 Applicability and Pipeline Selection
+### 14.1 Applicability and Pipeline Selection
 
 | **APPLICABILITY OPERATES ON CLAIM DOMAINS, NOT URLs** |
 | --- |
 | RFC 2119 applicability clauses describe the *semantic claim domain* an extractor is suited for (*"biomedical literature"*, *"legal contract text"*, *"general web content"*), not the URL pattern of the source. URL-pattern dispatch (*"this URL is a GitHub gist, hand it to the gist importer"*) is the importer registry (§9.1), a separate mechanism. The two work in series: importers fetch and normalise the source; extractors then process the normalised text according to their applicability. A single source can be imported by one URL-pattern importer and processed by any number of extractors whose applicability matches. |
 
-### RFC 2119 applicability specifications
+#### RFC 2119 applicability specifications
 
 Extractor authors declare the scope and limitations of their extractor using RFC 2119 keywords (BCP 14, March 1997). The `applicability` field on an extractor record is a list of **`ApplicabilityClause`** objects. Each clause carries four fields:
 
@@ -2832,7 +2895,7 @@ The **domain vocabulary is IRIs, conventionally Wikidata QIDs**: `domain_uri` is
 
 (The **subject-authority registry** reuses this same `ApplicabilityClause` shape to scope which authorities fire on which claim domains; see §6.7.)
 
-### Pipeline selection algorithm
+#### Pipeline selection algorithm
 
 1. `MUST`: highest priority. Extractor is authoritative for this domain; prefer exclusively if trust weight permits.
 2. `SHOULD`: strong preference. Used when no `MUST` extractor applies.
@@ -2840,7 +2903,7 @@ The **domain vocabulary is IRIs, conventionally Wikidata QIDs**: `domain_uri` is
 4. `MUST_NOT`: hard exclusion. Never selected for this domain regardless of other factors.
 5. No matching clause: treated as `MAY` for selection purposes; the general extractor remains the unconditional fallback.
 
-### MUST-MUST conflict tiebreaking
+#### MUST-MUST conflict tiebreaking
 
 When two registered extractors both carry `MUST` clauses matching the same source domain, the pipeline applies a tiebreaker in order of precedence:
 
@@ -2849,7 +2912,7 @@ When two registered extractors both carry `MUST` clauses matching the same sourc
 3. If calibration history is absent for both, **higher operator-assigned trust_weight** (§14.6).
 4. If trust weights are equal, **run both** and merge their outputs via §6.9 trust-weighted noisy-OR; if the merge produces conflicting candidates, flag as `INCONSISTENCY` for Review (§9.6).
 
-## 14.2 Shared Archiving for Public Sources
+### 14.2 Shared Archiving for Public Sources
 
 §7.3 documents the standard's commitment to a content-addressed shared archive. §14.2 documents the Extension A operator-side interop: how a snapshot fetched from a shared archive is verified, recorded, and made available to extraction.
 
@@ -2873,11 +2936,11 @@ archive_location:
 | --- |
 | Shared archiving applies only to `STABLE` and `APPEND_ONLY` public sources. `EPHEMERAL` sources MUST NOT be submitted to shared archives (§7.4). `MUTABLE` sources require per-snapshot governance decisions before sharing, since older snapshots may contain content the origin has since revised or retracted. Per-snapshot ODRL metadata (§10.2) governs whether a snapshot may be redistributed. |
 
-## 14.3 Extractor Record Schema
+### 14.3 Extractor Record Schema
 
 An extractor is a registered artifact in the Particles ecosystem. The extractor record is the canonical description of an extractor's identity, domain coverage, applicability constraints, calibration history, and interface contract. It is the basis for pipeline selection (§14.1), trust evaluation (§14.6), and targeted re-extraction (§9.5).
 
-### Extractor record fields
+#### Extractor record fields
 
 | **Field** | **Type** | **Description** |
 | --- | --- | --- |
@@ -2895,7 +2958,7 @@ An extractor is a registered artifact in the Particles ecosystem. The extractor 
 | `registered_at` | ISO 8601 | Registration timestamp. |
 | `signature` | string (optional) | Cryptographic signature over the extractor record by `registered_by`. Enables PKI-style trust chain verification; W3C VC alignment is recommended (see §10.2). |
 
-### Extractor interface
+#### Extractor interface
 
 All registered extractors MUST implement the following interface. This standardisation makes extractors composable and portable across Particles implementations.
 
@@ -2921,7 +2984,7 @@ ExtractionResult:
 | --- |
 | the general extractor MUST implement `ExtractorInterface` and MUST accept any snapshot regardless of `source_type`. It MAY apply to all domains (no `MUST_NOT` clauses). Its `calibration_history` is maintained by the reference SDK and updated with each benchmark release (§13.3) using temperature scaling against TruthfulQA, HaluEval, and future Particles-specific benchmark suites. Domain-specific extractors override the general extractor when their applicability clauses match; the general extractor is the unconditional fallback. |
 
-## 14.4 Reference Extractors
+### 14.4 Reference Extractors
 
 The reference SDK ships a catalogue of extractors as evidence that the Extension A architecture works across diverse sources. The table below documents the catalogue as of v1.126.2; the `source_type` strings and default `trust_weight` values are the shipped ones; for the live status of each (shipped vs in-progress) and per-extractor configuration knobs, see `roadmap.md`.
 
@@ -2942,13 +3005,13 @@ The reference SDK ships a catalogue of extractors as evidence that the Extension
 
 The catalogue covers the design space (single-domain (Numista, Nomisma), general-knowledge (Wikidata), and multi-domain UGC (Reddit, GitHub gists with comments)), demonstrating that the architecture supports diverse extractor shapes without changes to Core.
 
-## 14.5 Extractor Conformance
+### 14.5 Extractor Conformance
 
 Whitepaper Risks #11 (metadata theater) and #12 (governance fragmentation) name the *conformance validator* as their primary mitigation. The validator's role is to make per-extractor field-population behaviour visible (uniformly populated fields vs missing fields vs mechanically filled fields) so operators can tell which extractors are taking the schema seriously and which are not.
 
 The full design contract is an internal record (active in v0.19.0); this section pins the techspec slot.
 
-### Conformance contract
+#### Conformance contract
 
 Particle schema fields are categorised as **required**, **recommended**, or **optional** for the purposes of conformance:
 
@@ -2962,7 +3025,7 @@ A `[]` token in a field path descends into list elements: `provenance[].snapshot
 
 **Measured population.** A field's rate is computed over every particle the run produced, *except* where the spec already says the field legitimately does not apply. Today that is one field: `subject_ids` is measured over the particles §9's subject-count table says should carry a subject, and the excluded particles are removed from the denominator rather than counted as failures. `FieldStat.excluded_count` reports how many were removed, so a rate is never read as wider than it is, and a field whose denominator collapses to zero reports **unevaluated** rather than 100 %. The exclusion is spec-derived, never extractor-declared: an extractor cannot widen its own exemption, and adding a class is a change to §9 and to the contract, the same distinction that made a self-declared extractor attribute an illegal key for conditional diversity application. Two reports are comparable only when their exclusion rules agree, which the contract version records.
 
-### Validator output and gating
+#### Validator output and gating
 
 The validator produces a per-field report (one `FieldStat` per
 contract entry, with rate / distinct-values / per-value counts /
@@ -3018,7 +3081,7 @@ coverage as the sole remaining one. Phase 3 (auto-discounting trust weights base
 conformance failures) is further deferred and would require a
 separate ADR.
 
-### CLI surface
+#### CLI surface
 
 ```bash
 particles extractor conform <extractor-id>                     # default fixture dir, table output
@@ -3045,19 +3108,19 @@ over `particles extractor list`; running all extractors at once is
 not privileged as a first-class verb because conformance reports are
 per-extractor decisions.
 
-## 14.6 Extractor Trust Model
+### 14.6 Extractor Trust Model
 
 The extractor trust model controls how much an operator's particle store trusts the `confidence` values produced by each extractor. It is the per-extractor input to the merge formula in §6.9: `effective_confidence` is `confidence.value × extractor.trust_weight × source_trust_rank × recency_factor`.
 
 §6.9 documents how the four factors combine into a per-particle and per-group `effective_confidence`. §14.6 documents the `trust_weight` factor specifically: how it is assigned, how it is propagated across registry endorsements, and how operators impose hard controls independent of trust weights.
 
-### Trust weight
+#### Trust weight
 
 Every extractor registration in an operator's store carries a `trust_weight` scalar in [0, 1], operator-assigned. A weight of 1.0 means the extractor's stated confidence is accepted as-is; 0.5 means the operator believes the extractor overstates confidence by roughly half. The general extractor receives a default weight of 0.7 in the reference implementation; operators may override.
 
 Trust weights affect confidence at query time, not storage. Low-trust extractor particles are stored and retained normally; they may be the only evidence available for a claim. The trust weight prevents them from misleading high-stakes queries, not from contributing to the knowledge base at all.
 
-### Trust chains
+#### Trust chains
 
 In enterprise, academic, or regulated deployments, operators may not evaluate individual extractors directly. **Trust chains** allow an operator to delegate trust evaluation to a registry, which in turn vouches for individual extractors.
 
@@ -3078,7 +3141,7 @@ Trust chains mirror PKI certificate chains in structure. Registries are analogou
 
 Chains deeper than 5 hops trigger a lint warning (per OQ-11 resolution): deep chains usually signal over-delegation or a misconfigured registry topology rather than a legitimate trust path.
 
-### Allowlists and denylists
+#### Allowlists and denylists
 
 Operators may impose hard controls independent of trust weights:
 
@@ -3091,17 +3154,17 @@ Allowlists and denylists are enforced at the operator level and do not propagate
 | --- |
 | The trust model defined here applies to extractors. Agent-to-agent trust in multi-agent deployments is a related but distinct problem, deferred (whitepaper §7.1). The extractor trust model is intentionally simpler: extractors are registered artifacts with stable identities, not autonomous agents with dynamic behaviour. The chain-of-trust mechanism is designed to be sufficient for single-agent deployments and to compose cleanly with the agent trust model when it is specified. |
 
-# 15. Extension B: Source Trust Automation
+## 15. Extension B: Source Trust Automation
 
 Extension B is **shipped** (implemented). It extends the Core Source Trust Model (§6.4) with automatic conflict cascade (re-evaluating open `INCONSISTENCY` particles against newly-written `SourceTrustStatement` records) and is enabled by default in the reference SDK. Extension B requires Extension A (for registry-endorsed trust statements).
 
-## 15.1 Automatic Conflict Cascade
+### 15.1 Automatic Conflict Cascade
 
 When Extension B is enabled, the conflict resolution ladder (§6.4) is extended: after a new `SourceTrustStatement` is written (by a Review session, by operator CLI, or by registry ingest), the system automatically re-evaluates all open `INCONSISTENCY` particles in the same domain against the new statement. For each record that now resolves, the lower-trust claim is set `PROVENANCE_STALE` with `status_reason = CONFLICT_RESOLVED` (a quarantined loser gets the reason-only update, and a cascade resolving in the *quarantined* candidate's favour promotes it by minting a new ACTIVE particle, exactly as a `PREFER_B` review would), and the record itself is retracted with `status_reason = CONFLICT_RESOLVED` (the §6.6 wrapper-terminal rule); a `REVIEW` particle records the auto-resolution and the triggering `statement_id`.
 
 The cascade is bounded by `max_cascade` (default 500 per statement, operator-configurable in `config.yaml`) to prevent runaway propagation when a high-impact statement is written. The trust-rank differential threshold (default 0.15) governs which conflicts resolve via cascade vs which remain for review.
 
-### Policy gating
+#### Policy gating
 
 Extension B's cascade is **policy-gated** by `policy_provenance` (§6.4):
 
@@ -3115,7 +3178,7 @@ The policy gate is the load-bearing mitigation for the policy-poisoning threat: 
 | --- |
 | The N ≥ 3 rule's protection holds only if "independent" is operationally enforced. Particles defines independence as **distinct `asserted_by` identities** across the `REVIEW` particles that confirm the resolution. Implementations SHOULD use cryptographic reviewer identity (signed assertions, OAuth tokens, hardware-bound keys); a deployment that cannot enforce identity SHOULD raise the N threshold above 3 (or disable `REVIEWER_DERIVED` cascade entirely) rather than rely on honour-system distinctness. A single human operating three accounts under different `asserted_by` strings is not independent in any meaningful sense; the operator is responsible for ensuring the identity primitive matches the deployment's adversary model. |
 
-## 15.2 Adversarial Threat Model
+### 15.2 Adversarial Threat Model
 
 Extension B introduces attack surfaces not present in Core. The mitigations below are specified for the reference SDK and, where implemented, SHOULD be preserved in any conformant implementation (implementation status is noted per row; one, `L-SEC-01`, remains proposed and not yet specified):
 
@@ -3131,13 +3194,13 @@ Extension B introduces attack surfaces not present in Core. The mitigations belo
 | --- |
 | No `SourceTrustStatement` records are required at deployment time. The system functions with `INCONSISTENCY` surfacing as the default conflict behaviour. Trust statements accumulate organically through human Review; the cascade activates as the N ≥ 3 threshold is crossed for `REVIEWER_DERIVED` statements. Operators with strong domain knowledge may pre-configure `OPERATOR_DIRECT` statements that cascade immediately. |
 
-# 16. Extension C: Taxonomy and Context Fingerprinting
+## 16. Extension C: Taxonomy and Context Fingerprinting
 
 Extension C defines two independent features that enhance retrieval and reproducibility without being required for the Core epistemic model: **TaxonomyDefinition** for user-defined folksonomy tagging, and **context fingerprinting** for delta compression and reproducibility in multi-agent deployments.
 
 Extension C is **shipped**. Context fingerprinting is active in v0.16.0; taxonomy and tag-aware query expansion is active in v0.25.0. The spec text below is the standard-level statement of intent; implementation details belong to those records.
 
-## 16.1 Context Fingerprinting
+### 16.1 Context Fingerprinting
 
 | **EXTENSION C: SHIPPED (v0.16.0)** |
 | --- |
@@ -3152,7 +3215,7 @@ A context fingerprint is a **SHA-256 digest over the whole-store `ACTIVE` set**:
 
 Fingerprint algorithm: (1) identify all `ACTIVE` particles in the asserting agent's store at the moment of assertion; (2) sort UUIDs lexicographically; (3) compute SHA-256 of the concatenated sorted UUIDs (no delimiter). The algorithm is deterministic and MUST be followed exactly to ensure cross-agent fingerprint compatibility. Incremental computation and storage strategies are documented. The procedure is machine-checkable: the Conformance Profile carries a `context_fingerprint` **L2 test-vector family** (`artifacts/conformance/profile.yaml`; `docs/spec/conformance-profile.md` §5.1) whose cases pin each of the three steps, and `particles conformance check --level L2` recomputes them.
 
-## 16.2 Taxonomy Definition
+### 16.2 Taxonomy Definition
 
 | **EXTENSION C: SHIPPED (v0.25.0)** |
 | --- |
@@ -3186,13 +3249,13 @@ TagNode:
 | --- |
 | Tags are deliberately operator-defined and informal. The standard does not mandate a vocabulary. Standard taxonomies (MeSH for biomedical, DDC for library classification, etc.) may be expressed as `TaxonomyDefinition` artefacts and shared via the corpus, but their adoption is always operator-voluntary. This preserves the expressiveness of personal knowledge organisation while enabling optional standardisation. |
 
-# 17. Extension D: Shared Archiving
+## 17. Extension D: Shared Archiving
 
 Extension D defines full **WARC** format alignment, **Memento Protocol** integration, and shared public archiving via content-addressed transports (BitTorrent / IPFS). It extends the Core corpus model (§7) with tooling interoperability for the web archival ecosystem and community-contributed shared archives for public stable sources.
 
 §7.3 (Shared Archive) is the Core commitment; §14.2 is the Extension A operator-side interop layer. §17 documents the full Extension D scope: complete WARC interop, full Memento HTTP interface, and shared-swarm tooling. Extension D is **deferred**; Core ships content-addressed storage with `content_hash` and `archive_path` directly, without requiring WARC tooling interoperability.
 
-## 17.1 WARC Alignment
+### 17.1 WARC Alignment
 
 The corpus snapshot format aligns with the WARC standard (ISO 28500:2017). The `warc_record_type` field maps directly to WARC record types:
 
@@ -3201,7 +3264,7 @@ The corpus snapshot format aligns with the WARC standard (ISO 28500:2017). The `
 
 Implementations may store corpus content in native WARC files, enabling interoperability with existing web archival tooling (Wayback Machine, warcio, Common Crawl pipelines). The corpus entry and snapshot metadata layer sits above WARC, adding Particles-specific fields (`mutability`, `extraction_status`, `entry_id`) that WARC does not carry.
 
-## 17.2 Memento Protocol Alignment
+### 17.2 Memento Protocol Alignment
 
 Corpus entries align with the Memento Protocol (RFC 7089) as described in §7.6. Extension D additionally specifies a **Memento-compatible HTTP interface** over the corpus (endpoints for URI-R lookup, TimeMap retrieval, and URI-M dereferencing), enabling third-party Memento tooling to query a particle store's corpus as if it were a web archive.
 
@@ -3209,7 +3272,7 @@ Corpus entries align with the Memento Protocol (RFC 7089) as described in §7.6.
 | --- |
 | The Memento HTTP interface is Extension D, not Core. A Core-conformant implementation aligns its data shapes with Memento concepts (URI-R / URI-M / TimeMap) but is not required to expose them via HTTP. The interface is a v1.0 candidate deliverable per §13.1. |
 
-## 17.3 Shared Public Archiving (BitTorrent / IPFS)
+### 17.3 Shared Public Archiving (BitTorrent / IPFS)
 
 §14.2 documents the operator-side interop: `archive_location` schema, content_hash verification, ODRL gating. §17.3 documents the swarm-side tooling: contributing snapshots to a swarm, fetching from a swarm, governance for public stable sources.
 
@@ -3217,7 +3280,7 @@ Corpus entries align with the Memento Protocol (RFC 7089) as described in §7.6.
 | --- |
 | Shared archiving applies only to `STABLE` and `APPEND_ONLY` public sources. `EPHEMERAL` sources MUST NOT be submitted to shared archives. `MUTABLE` sources require per-snapshot governance decisions before sharing. Archive governance for shared swarms is an implementation concern (OQ-10 still open); the spec defines the `archive_location` schema and the `content_hash` verification requirement only. |
 
-# 18. Extension E: Multi-Agent Discourse Protocol
+## 18. Extension E: Multi-Agent Discourse Protocol
 
 Extension E defines the multi-agent discourse protocol for exchanging particles between autonomous agents. It depends on Core, Extension A (extractor registry), and Extension B (source trust automation), and is **deferred** to a future major version (single-agent scope first).
 
@@ -3233,7 +3296,7 @@ Whitepaper §7.1 frames the user-facing vision; this section sketches the messag
 | `RETRACT` | Agent withdraws a prior particle. Sets status `RETRACTED`. Lazy propagation sets `PROVENANCE_STALE` on dependents per §6.6. |
 | `CHECKPOINT` | Agent serialises the current shared epistemic state (particle set + context fingerprint per §16.1) for persistence or transmission to a new agent session. |
 
-### Deferred work items
+#### Deferred work items
 
 The following are catalogued in Appendix A and in whitepaper §7.1, listed here for traceability:
 
@@ -3243,7 +3306,7 @@ The following are catalogued in Appendix A and in whitepaper §7.1, listed here 
 - Incentive alignment for cooperative exchange in open systems.
 - Ontology drift mitigations across agents (whitepaper Risk #5; partially addressed by context fingerprinting).
 
-# Appendix A: Future Features
+## Appendix A: Future Features
 
 Features identified as potentially valuable but deferred beyond the current versioning horizon. Recorded here to preserve the ideas and ensure current design decisions do not foreclose them.
 
@@ -3264,7 +3327,7 @@ Features identified as potentially valuable but deferred beyond the current vers
 | Compound trust predicates | Current `SourceRef` types in `SourceTrustStatement` are atomic: `SOURCE_TYPE` *or* `CORPUS_ENTRY` *or* `AUTHOR`. Operators are likely to want *compound* predicates that combine scopes, e.g. *"within this organisation's repositories, trust verified maintainers over anonymous contributors"*, a per-author rule scoped to a corpus subset. The current model expresses this only by writing one trust statement per (author × organisation) pair. | Out of scope for v0.3; reconsider when an operator surfaces a concrete need. Extends the existing trust model rather than rewriting it (likely a new `SourceRef` type like `AUTHOR_IN_CORPUS_SCOPE`, plus a small predicate language). |
 | HTML / Wikipedia article chunk-hash carry-forward | Chunk-hash carry-forward is shipped for Reddit and GitHub via `extract_with_carry_forward()`; both have domain-specific chunk units (body + comment groups) where unchanged units hash identically across re-deposits. The general extractor's `WEB_PAGE` path (which handles Wikipedia, news articles, and arbitrary HTML via the generic-HTTP importer) does **not** route through `extract_with_carry_forward()`. Its `_extract_html_chunked()` splits on **line boundaries** at a character budget (~15K), not on paragraph or HTML-block boundaries; a minor edit anywhere in a Wikipedia article triggers full re-extraction of every chunk. | A fix requires three pieces: (1) a structural chunker that breaks on paragraph (`\n\n`) or HTML-block boundaries instead of line boundaries, so unchanged paragraphs produce stable chunks; (2) a normalisation pass before hashing to absorb cosmetic noise (Wikipedia `[edit]` markers, generation timestamps, link attribute drift) that otherwise causes spurious hash mismatches; (3) wiring `GeneralExtractor._extract_html_chunked()` to `extract_with_carry_forward()`. v0.4 candidate; would have the largest impact of any carry-forward extension because Wikipedia is the canonical large-stable-localised-edits source. |
 
-# Appendix B: Core Implementation Checklist
+## Appendix B: Core Implementation Checklist
 
 A Core-conformant implementation must complete every item in this checklist and nothing more. Extension sections (§14–18) may be ignored entirely without affecting Core conformance. The checklist is normative.
 
@@ -3276,7 +3339,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 | --- |
 | A small team should be able to implement Core in a single quarter using only this checklist and the Core sections of the spec. If any item on this list requires reading an Extension section to understand, that is a spec defect to be corrected. |
 
-### 1. Source Corpus
+#### 1. Source Corpus
 
 - Implement corpus Deposit operation (§9.1): accept any source material, assign entry_id, compute content_hash (SHA-256), write Snapshot with warc_record_type = RESPONSE and extraction_status = PENDING.
 
@@ -3286,7 +3349,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Store corpus content as content-addressed blobs by SHA-256. Corpus entries and snapshot metadata stored in queryable form (relational or document store).
 
-### 2. Particle Schema (Core fields only)
+#### 2. Particle Schema (Core fields only)
 
 - Support all Core particle fields: id, content, confidence (with value, variance, calibration_source, calibration_method, calibration_ref), uncertainty_nature, provenance (ProvenanceRef array), extractor_ref (omitted only for operator-asserted particles), asserted_by, asserted_at, status, status_reason, schema_version. Particle_type defaults to CLAIM.
 
@@ -3294,7 +3357,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Implement all status values and transitions per §6.6 normative table. Set status_reason on every status-changing operation.
 
-### 3. Extraction
+#### 3. Extraction
 
 - Ship a general-purpose extractor that accepts any source_type, produces EXTRACTOR_DIRECT confidence particles, and implements the ExtractorInterface (§6.8): extract() and accepts() methods.
 
@@ -3302,7 +3365,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Apply calibration_source = EXTRACTOR_DIRECT to all general extractor outputs. Implement temperature scaling calibration utility for operators who want CALIBRATED_BENCHMARK particles.
 
-### 4. Query
+#### 4. Query
 
 - Implement Query operation (§9.3): semantic search over ACTIVE particles; apply effective_confidence (confidence.value only for Core; extractor and source trust weights are Extension features); rank and return results; include coverage_gap disclosure for PENDING corpus entries; apply schema_version mismatch guard.
 
@@ -3310,7 +3373,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Generate audience-appropriate natural language response with confidence disclosure.
 
-### 5. Lint
+#### 5. Lint
 
 - Implement all structural Lint checks (§9.4): staleness detection (valid_until), retraction propagation (PROVENANCE_STALE cascade), corpus link integrity, confidence decay flagging, orphan detection, extraction quality report, pending extraction report, schema version audit.
 
@@ -3318,7 +3381,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Produce machine-readable (JSON-LD) and human-readable (Markdown Bridge) lint report.
 
-### 6. Review
+#### 6. Review
 
 - Implement Review operation (§9.6) in v0.2 annotation-only mode: present INCONSISTENCY particles; support four resolution actions (PREFER A, PREFER B, BOTH VALID, DEFER); write REVIEW particle recording outcome; write SourceTrustStatement on PREFER resolutions. No automatic cascade (Extension B).
 
@@ -3326,11 +3389,11 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - SourceTrustStatements: implement schema including policy_provenance field (§6.5). Enforce demotion-only rule.
 
-### 7. Reindex
+#### 7. Reindex
 
 - Implement Reindex operation (§9.5): identify scoped corpus entries, enqueue rate-limited Extract jobs, supersede prior particles from old extractor versions, run post-Reindex Lint pass.
 
-### 8. Conformance
+#### 8. Conformance
 
 - Validate all particles against the five normative SHACL shapes (v0.1 deliverable + SubjectShape, 0.52.1): ParticleShape, SubjectShape, CorpusSnapshotShape, ProvenanceChainShape, TrustStatementShape.
 
@@ -3340,7 +3403,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 
 - Implement Markdown Bridge renderer: render particle metadata as human-readable annotations in markdown output.
 
-### What is explicitly NOT required for Core conformance
+#### What is explicitly NOT required for Core conformance
 
 - Context fingerprinting (§16.1): Extension C
 - `TaxonomyDefinition` and tag-based retrieval (§16.2): Extension C
@@ -3352,7 +3415,7 @@ A Core-conformant implementation must complete every item in this checklist and 
 - Spreading activation graph traversal: Appendix A
 - Adaptive re-fetch backoff: Appendix A
 
-### Deferred deliverables (originally scoped to v0.2 Core; now v0.3)
+#### Deferred deliverables (originally scoped to v0.2 Core; now v0.3)
 
 These items appeared in the original v1-techspec Appendix B as v0.2 deliverables but have been intentionally re-prioritised to v0.3 to focus the Core release on the shipping core loop. None are blockers for Core conformance.
 
@@ -3361,13 +3424,13 @@ These items appeared in the original v1-techspec Appendix B as v0.2 deliverables
 - **Retrospective LLM-Wiki parser.** Enables the §9.4 "lint runs on day one against existing markdown" workflow. Shipped in v0.31.1 as `particles import vault`: existing vaults are deposited unmodified as `LOCAL_MARKDOWN` corpus sources and converted to particles by the standard extraction pass. The originally-sketched deterministic treat-markdown-as-low-confidence-particles mode was rejected in favour of extraction; see the §9.4 callout for the rationale.
 - **Per-Subject wiki article exporter** (§10.4). Shipped in v0.20.0. Refactored in v0.22.0 so the article-rendering machinery is now shared across exporters via `particles/exporters/article_synthesis.py`; the Obsidian exporter consumes it via `--with-synthesis`.
 
-# Appendix C: Reference Implementation Guide
+## Appendix C: Reference Implementation Guide
 
 This appendix records technology preferences and implementation decisions for the **reference** Python SDK. It is not part of the standard; conformant implementations may use any technology stack. It is intended to orient contributors and to give Claude Code sufficient context to begin implementation without ambiguity.
 
 Per the project's versioning policy (root `AGENTS.md`), the technology stack itself is governed by the reference implementation Python stack decision; operator configuration is governed by the consolidated YAML config decision. When the prose below disagrees with those records, the records are authoritative.
 
-## C.1 Language and Runtime
+### C.1 Language and Runtime
 
 | **Concern** | **Decision** | **ADR** | **Rationale** |
 | --- | --- | --- | --- |
@@ -3377,7 +3440,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | Testing | pytest + hypothesis | 0030 | pytest for unit/integration; hypothesis for property-based testing of schema round-trips and status-transition invariants. |
 | Configuration | YAML via `particles/config.py` Pydantic models | 0055 | `config.yaml` (gitignored) overrides compiled defaults; env vars override `config.yaml`. Secrets remain env-var-only, read through the single `particles/secrets.py` seam (`ANTHROPIC_API_KEY`, `NUMISTA_API_KEY`, `GITHUB_API_KEY`, `NOTION_API_KEY`, `PARTICLES_API_KEY`, `PARTICLES_ENGINE_TOKEN`, `PARTICLES_LLM_API_KEY_<NAME>` per named completion provider (legacy `PARTICLES_LOCAL_LLM_API_KEY` honoured for `local`), `PARTICLES_OTEL_EXPORTER_HEADERS`). |
 
-## C.2 Storage Backends
+### C.2 Storage Backends
 
 | **Subsystem** | **Default choice** | **Notes** |
 | --- | --- | --- |
@@ -3387,7 +3450,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | Embedding model | sentence-transformers/all-MiniLM-L6-v2 (local, no API dependency). | 384-dimensional embeddings, the standard's **reference profile** (§8.5). Swap to a larger model for production by declaring a new `embedding_profile`. The structured `embedding_profile = {model, dim, normalization}` MUST be recorded in particle-store metadata (§8.5, normative, not merely this non-normative appendix); changing the profile requires re-embedding. |
 | Trust policy store | Same database as particle store (separate table). | SourceTrustStatements are rows with all schema fields including policy_provenance. |
 
-## C.3 Corpus Fetching
+### C.3 Corpus Fetching
 
 | **Concern** | **Decision** |
 | --- | --- |
@@ -3396,7 +3459,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | Re-fetch scheduling | APScheduler for background re-fetch jobs. Default re-fetch floor: 1 hour for WEB_PAGE; 24 hours for DATA_EXPORT; 7 days for STABLE sources (see OQ-8). |
 | Rate limiting | Configurable per-domain rate limit. Default: 1 request/second per domain. Robots.txt respected. |
 
-## C.4 Extraction
+### C.4 Extraction
 
 | **Concern** | **Decision** |
 | --- | --- |
@@ -3406,7 +3469,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | Calibration utility | scipy.optimize for temperature scaling. Requires a calibration dataset; ships with a small general-domain calibration set for bootstrapping. |
 | Extractor registry | JSON file on disk for v0.2 Core. Registry entries include extractor_id, version, applicability clauses, and calibration_history. Upgrade path to a hosted registry in v0.3. |
 
-## C.5 Query and Lint
+### C.5 Query and Lint
 
 | **Concern** | **Decision** |
 | --- | --- |
@@ -3416,7 +3479,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | JSON-LD serialization | pyld library for JSON-LD processing. Canonical @context loaded from the v0.1 artifact once published. |
 | SHACL validation | pyshacl library. Shapes loaded from the v0.1 artifact. Validation runs on write (optional, configurable) and on lint pass (always). |
 
-## C.6 API Layer
+### C.6 API Layer
 
 | **Concern** | **Decision** |
 | --- | --- |
@@ -3425,7 +3488,7 @@ Per the project's versioning policy (root `AGENTS.md`), the technology stack its
 | Endpoints (Core) | POST /corpus/deposit; GET /corpus/{entry_id}; POST /extract; POST /query; POST /lint; GET /lint/report; POST /review; POST /reindex; GET /health. |
 | CLI | Typer-based CLI wrapping the same operations. Primary interface for local personal knowledge base deployments. |
 
-## C.7 Project Structure
+### C.7 Project Structure
 
 The directory tree this section used to carry described the v0.2
 sketch and drifted badly as the SDK grew (the Client/Engine
@@ -3439,7 +3502,7 @@ boundary annotations, and is kept in lockstep with the code by the
 repo's documentation-maintenance rules. Appendix C is non-normative;
 the pointer is the contract.
 
-## C.8 Implementation Order (Suggested)
+### C.8 Implementation Order (Suggested)
 
 The following order minimises rework and ensures each layer has a stable foundation before the next is built. Each phase produces a runnable, testable artifact.
 
@@ -3461,53 +3524,53 @@ The following order minimises rework and ensures each layer has a stable foundat
 
 - Phase 9, Conformance: SHACL shape validation against v0.1 artifacts once published; BenchmarkSuite runner CLI; conformance test suite.
 
-# Appendix D: Implementation Discoveries
+## Appendix D: Implementation Discoveries
 
 Things the original v1 spec did not know that the reference implementation surfaced. The most valuable thing a v2 spec can carry forward for the next implementer.
 
-### D.1 Chunked extraction is unavoidable for UGC sources
+#### D.1 Chunked extraction is unavoidable for UGC sources
 
 Reddit threads and gist comments routinely exceed single-LLM-call context windows once you raise the comment cap. The adaptive chunking pattern is the dominant operational mode for any source with user-generated discussion. Don't try to extract the whole thread in one call; page through it.
 
-### D.2 Subject canonicalisation is harder than it looks
+#### D.2 Subject canonicalisation is harder than it looks
 
 Naive name matching produces phantom subjects, prefix-expansion false positives (`"POET"` collapsing with `"POET Technologies Inc."` correctly but also with `"POET"` the poetry term), and word-continuation false positives. The Subject resolver's ladder (§6.7), local match → external ontology → bare local, was not initially obvious; v1 implicit. The `PHANTOM_SUBJECT` lint check (§9.4) and Wikidata link confidence (§6.3) emerged from these failure modes.
 
-### D.3 `EXTRACTOR_DIRECT` dominates `calibration_source` in practice
+#### D.3 `EXTRACTOR_DIRECT` dominates `calibration_source` in practice
 
 `EXTRACTOR_DIRECT` is the dominant calibration source today; `CALIBRATED_BENCHMARK` is theoretical until the benchmark suite ships (§13.3). Operators should treat `effective_confidence` numbers from `EXTRACTOR_DIRECT` particles as ordinal (this is more confident than that) rather than calibrated absolute values. Whitepaper §3.1.3 makes this commitment publicly.
 
-### D.4 The Karpathy gist comes full circle
+#### D.4 The Karpathy gist comes full circle
 
 The whitepaper's §1.1 motivating example is Karpathy's LLM-Wiki gist. The GitHub-gist extractor now ingests that very gist (including its comment section, which contains substantial practitioner critique) and produces particles from it. The standard is testable against the artefact that motivated it. This is the cleanest worked-example for demos.
 
-### D.5 `gh/{login}` → `@{login}` content normalisation
+#### D.5 `gh/{login}` → `@{login}` content normalisation
 
 The pattern of using a token-shaped prefix (`gh/karpathy`) to coax the LLM into emitting subject-eligible names, then rewriting to the canonical form (`@karpathy` or `github:karpathy`) in a post-extraction pass, is a discovered technique worth documenting. It generalises: pre-extraction normalisation that makes the LLM's job easier without forcing the operator's vocabulary into the particle content.
 
-### D.6 Reddit threading is deeper than one level
+#### D.6 Reddit threading is deeper than one level
 
 The original Reddit extractor walked comment threads to depth 1. v0.15.x walks BFS to depth N with a configurable cap. The standard SHOULD NOT over-constrain extraction-depth choices for UGC sources; per-extractor configuration is the right surface.
 
-### D.7 Reindex with chunk-hash carry-forward is the dominant re-extraction pattern
+#### D.7 Reindex with chunk-hash carry-forward is the dominant re-extraction pattern
 
 Full re-extraction (re-running the LLM on every chunk) is the fallback; chunk-hash carry-forward (§9.5) is the default. Most operational reindex runs touch only a handful of chunks. The chunk-hash surface (`provenance.chunk_hash` on each particle) was not in v1; it was discovered as the only way to keep reindex tractable at scale.
 
-### D.8 Operators want per-Subject prose, not just per-particle annotations
+#### D.8 Operators want per-Subject prose, not just per-particle annotations
 
 v1 §10 (Markdown Bridge) was framed as a per-particle annotation primitive. Operators consistently asked for *per-Subject prose synthesis* (*"give me an article about Subject X with every claim cited"*), which is a different artefact entirely. The Wiki Article Exporter (§10.4) was written in response. The Markdown Bridge remains the primitive; the wiki exporter is the user-facing read path (whitepaper §4.2).
 
-### D.9 Operator review surfaces author identity, not just source identity
+#### D.9 Operator review surfaces author identity, not just source identity
 
 For UGC sources, the `INCONSISTENCY` resolution that operators want to encode is almost always *"trust this author"* or *"distrust this author"* rather than *"trust this source domain"*. The author-scoped `SourceTrustStatement` design (§6.4, §6.5) was a v1 sketch that the implementation pushed into production-grade. The Review UI's offer to persist author-scoped statements (§9.6) is the load-bearing UX detail.
 
-### D.10 The whitepaper / techspec split is a sustained editorial discipline
+#### D.10 The whitepaper / techspec split is a sustained editorial discipline
 
 the published split is whitepaper + techspec. The whitepaper has been through one major version transition (v1 → v2) plus three review-driven revision passes; each pass surfaced *some* status leakage from whitepaper into techspec territory and vice versa. The discipline is not "split once, done"; it's an ongoing editorial pass with every spec change.
 
 ---
 
-# References
+## References
 
 - **LLM-Wiki. **Andrej Karpathy. GitHub Gist, April 4, 2026. [https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 
