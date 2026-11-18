@@ -12,7 +12,7 @@
 
 ---
 
-## Reader's Guide
+### Reader's Guide
 
 This document is the **whitepaper**, Part I of the Particles
 publication. The Technical Specification (Part II) is a separate
@@ -33,7 +33,7 @@ directly to the techspec.
 
 ---
 
-## What Particles Is
+### What Particles Is
 
 **The standard.** Particles is an open standard and reference SDK for
 storing AI agent knowledge as *claim-granularity particles*:
@@ -254,13 +254,13 @@ separately.
 
 ---
 
-# Part I: Thesis
+## Part I: Thesis
 
-## The Case for Structured Agent Knowledge
+### The Case for Structured Agent Knowledge
 
 ---
 
-# 1. Motivation
+## 1. Motivation
 
 Structuring an agent's knowledge so that a machine can reason about it
 reliably is not a new problem. Frame-based expert systems, RDF and the
@@ -286,7 +286,7 @@ attempts, the LLM-Wiki pattern, because it is the closest in spirit
 to the Particles thesis and the limits of its prose-based storage are
 the limits Particles directly addresses.
 
-## 1.1 The LLM-Wiki Pattern
+### 1.1 The LLM-Wiki Pattern
 
 On April 4, 2026, Andrej Karpathy published a design pattern for
 persistent agent knowledge bases ([GitHub Gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)).
@@ -322,7 +322,7 @@ the bookkeeping that causes humans to abandon wikis.
 > what that demonstrates. See the techspec §14.4 reference-
 > extractors table and the companion `roadmap.md`.
 
-## 1.2 The Core Limitation: Natural Language as the Intermediate Representation
+### 1.2 The Core Limitation: Natural Language as the Intermediate Representation
 
 LLM-Wiki uses natural language markdown as the storage format for
 synthesized knowledge. This choice is pragmatic: it is human-readable
@@ -360,7 +360,7 @@ rather than unstructured prose paragraphs whose interpretation has
 already drifted. Bounding the judge's input is what makes the
 remaining drift inspectable; it does not make the drift go away.
 
-## 1.3 Why Incremental Alternatives Are Insufficient
+### 1.3 Why Incremental Alternatives Are Insufficient
 
 An incremental path exists: augment markdown with the above rather
 than replace it. Examples include YAML frontmatter for metadata,
@@ -393,7 +393,7 @@ always can. Particles is the index card layer.
 
 ---
 
-# 2. The Architectural Inversion
+## 2. The Architectural Inversion
 
 The central architectural shift Particles proposes:
 
@@ -431,7 +431,7 @@ This inversion has four important consequences:
 > without it, neither the audit loop nor the wiki has a substrate to
 > operate on.
 
-## 2.1 A Worked Example
+### 2.1 A Worked Example
 
 To make the inversion concrete, here is the full round-trip for a
 single source.
@@ -508,7 +508,7 @@ these signals: no per-claim confidence, no lifecycle status, no
 provenance graph, no mechanical path from a source update to a claim
 update.
 
-## 2.2 Trade-offs of the Inversion
+### 2.2 Trade-offs of the Inversion
 
 The inversion is not free. Three architectural tensions are
 load-bearing and acknowledged here rather than buried in later
@@ -551,9 +551,9 @@ risk mitigations in §5, but the trade-offs themselves remain.
 
 ---
 
-# 3. Design Principles
+## 3. Design Principles
 
-## 3.1 High-Fidelity Extraction
+### 3.1 High-Fidelity Extraction
 
 The architectural inversion only delivers on its promise if particle
 extraction is high-fidelity. Inaccurate extraction moves the drift
@@ -580,13 +580,13 @@ Extraction is harder than it may appear for four specific reasons:
 > hypothesis the architecture is designed against, substantiated for a
 > handful of domains and in active expansion.
 
-### 3.1.1 Original mitigations
+#### 3.1.1 Original mitigations
 
 - **Particles err toward granular and source-faithful.** When in doubt, extract narrower particles rather than fewer broader ones. Narrow particles are easier to retract precisely.
 - **Extraction quality is measured and surfaced like any other operational metric** (latency, error rate), not buried as an internal implementation detail. The benchmark suite includes extraction fidelity tests with recall and precision targets; see the techspec's success-metrics section.
 - **The source corpus is always preserved.** Because every particle carries a provenance reference back into the immutable corpus, a failed extraction can be re-run against the original source without data loss. The corpus is the ground truth; the particle store is always a derived view.
 
-### 3.1.2 Engineering mitigations from implementation experience
+#### 3.1.2 Engineering mitigations from implementation experience
 
 Implementation experience surfaced four additional extraction
 principles, now considered baseline:
@@ -599,7 +599,7 @@ principles, now considered baseline:
 The techspec's "Implementation Discoveries" appendix documents the
 concrete patterns.
 
-### 3.1.3 Measurement
+#### 3.1.3 Measurement
 
 A benchmark harness measuring extraction fidelity (precision, recall,
 and calibration error against curated gold-standard particles, broken
@@ -620,7 +620,7 @@ end-to-end and say something real about the bundled extractors; they do
 *not* establish that the standard meets its overall fidelity targets.
 Current per-suite numbers as they accumulate are in `roadmap.md`.
 
-## 3.2 Extraction as a Product Subsystem
+### 3.2 Extraction as a Product Subsystem
 
 High-quality extraction requires more than a general-purpose LLM prompt
 over source documents. The general extractor (see §3.8) provides a
@@ -640,7 +640,7 @@ quality can be improved through:
 > extraction quality is domain-specific and improves incrementally as
 > the extractor ecosystem matures.
 
-## 3.3 Subjects: The Knowledge Graph Backbone
+### 3.3 Subjects: The Knowledge Graph Backbone
 
 Every claim is *about something*. The Subject store is the standard's
 catalogue of those somethings: canonical real-world entities against
@@ -711,7 +711,7 @@ domain-agnostic; subject resolution is domain-specific and improves
 incrementally as the resolver gains adapters for new identifier
 systems.
 
-## 3.4 Claim Granularity
+### 3.4 Claim Granularity
 
 The granularity of a particle is the most consequential design decision
 in the schema. Two failure modes bound the acceptable range:
@@ -758,7 +758,7 @@ is a separate, deferred benchmark category not yet shipped.
 > reasoning more inspectable and easier to validate than prose-only
 > representations; the prose content is what keeps the system humane.
 
-### 3.4.1 Claim Identity and the Relation Graph
+#### 3.4.1 Claim Identity and the Relation Graph
 
 Claim granularity creates a second-order question: when two sources
 assert the same underlying claim in slightly different words, are
@@ -808,7 +808,7 @@ trade-off is honesty: the system is not a triplestore, but it is
 also not free of the hard problems triplestores were built to
 solve.
 
-## 3.5 Markdown Exporters
+### 3.5 Markdown Exporters
 
 Particles does not require teams to abandon existing tooling. The
 Markdown Exporters are a *family* of renderings that present particles
@@ -845,7 +845,7 @@ extraction pass converts the notes into particles. The lint tool
 then runs against the existing knowledge base without the operator
 rebuilding it by hand; the notes themselves are never modified.
 
-## 3.6 Consistency Checking: Reliable, Not Deterministic
+### 3.6 Consistency Checking: Reliable, Not Deterministic
 
 Graph traversal alone cannot detect semantic contradiction. Full
 consistency checking requires semantic equivalence detection, ontology
@@ -896,7 +896,7 @@ acquisition-vs-rumour distinction) or silently contradict (and the
 contradiction would sit in two paragraphs of unrelated wiki pages
 that no lint pass would think to compare).
 
-## 3.7 Calibrated Confidence
+### 3.7 Calibrated Confidence
 
 Structured metadata creates a specific failure mode absent from prose
 systems: epistemic overconfidence, operators calibrating their trust
@@ -953,7 +953,7 @@ principles in the standard's design contain the risk:
 - **Query-time rendering surfaces uncertainty.** Systems must not generate confident-sounding prose from low-confidence particles without disclosure.
 - **Temporal validity is filtered lazily.** A particle's `valid_until` timestamp is enforced at query time: expired particles are filtered out of the candidate set without active retraction. Active retraction is reserved for source-driven invalidation (the source has been superseded or its author downgraded); time-bound claims simply expire.
 
-## 3.8 The Extractor Ecosystem
+### 3.8 The Extractor Ecosystem
 
 Extraction quality is not solely an engineering problem; it is a
 community coordination problem. No single general-purpose extractor will
@@ -962,7 +962,7 @@ defines an extractor ecosystem: a framework in which the community can
 develop, share, evaluate, and compose extractors, with the general
 extractor as a universal fallback.
 
-### General extractor as fallback
+#### General extractor as fallback
 
 Every conformant Particles implementation MUST provide a general-purpose
 extractor. The general extractor requires no configuration, applies to
@@ -995,7 +995,7 @@ establishing the incentive structures and validation pipelines that
 let the community contribute and maintain extractors across the long
 tail of sources.
 
-## 3.9 Link-Shaped Sources Preserve Curation Signal
+### 3.9 Link-Shaped Sources Preserve Curation Signal
 
 The Source Corpus is more than a passive archive. Many high-value
 sources today are *link-shaped*: a small envelope of platform
@@ -1046,9 +1046,9 @@ Hacker News, and Mastodon.
 
 ---
 
-# Part II: Implications
+## Part II: Implications
 
-## 3.10 Privacy Boundary
+### 3.10 Privacy Boundary
 
 Particles provides composable privacy primitives; operators set the
 policy that combines them. The standard separates *mechanism* (what
@@ -1076,7 +1076,7 @@ responsibility.
 > regulated deployments. This is acknowledged as a gap for production
 > use cases involving personal health, financial, or identity data.
 
-## 3.11 Navigation by embedding, not by traversal
+### 3.11 Navigation by embedding, not by traversal
 
 A common critique of ontology and knowledge-graph approaches is that
 even a well-modelled structure becomes unusable at runtime: agents
@@ -1113,11 +1113,11 @@ relevant claims about a subject and synthesising them with provenance
 intact, which is the agent-knowledge problem in practice, not the
 classical-AI reasoning problem the Semantic Web targeted.
 
-## Use cases, risks, comparisons, and future directions
+### Use cases, risks, comparisons, and future directions
 
 ---
 
-# 4. Primary Use Cases: AI Memory You Can Audit and Trust
+## 4. Primary Use Cases: AI Memory You Can Audit and Trust
 
 The launch wedge is one sentence: **AI memory you can audit and
 trust.** Capture and recall (persisting what an agent saw and
@@ -1162,7 +1162,7 @@ and the as-of instant are applied per observer at query time, never
 baked into the stored record, so different observers can rank the same
 immutable claims differently without rewriting anyone's history.
 
-## 4.1 The audit-and-harvest loop (for AI engineers and their agents)
+### 4.1 The audit-and-harvest loop (for AI engineers and their agents)
 
 Two failure modes shape this door's design, both observed in the
 field rather than hypothesised. Agents forget to pull: a second brain
@@ -1265,7 +1265,7 @@ and every delete becomes a retraction with an audit trail rather than
 a destruction. The deviations from reference behaviour are disclosed
 in the tool descriptions themselves.
 
-## 4.2 Cited projections outward (for everyone else)
+### 4.2 Cited projections outward (for everyone else)
 
 The second door needs no agent at all. The core loop is three verbs:
 `particles deposit <url-or-file>` writes the source into the
@@ -1321,7 +1321,7 @@ the agent's next digest, and a contradiction between the two surfaces
 as an `INCONSISTENCY` for review instead of whichever writer got
 there last winning silently.
 
-## 4.3 An operator's week
+### 4.3 An operator's week
 
 §4.1 and §4.2 name the two front doors; this section walks
 through what *operating* a Particles store looks like across a
@@ -1378,7 +1378,7 @@ path is the compiled projection, served from cache.
 
 ---
 
-# 5. Known Risks and Failure Modes
+## 5. Known Risks and Failure Modes
 
 The following risks are acknowledged explicitly. They do not invalidate
 the proposal but must be managed actively. Each risk is paired with the
@@ -1401,7 +1401,7 @@ design principles (§3) and primary use cases (§4) that mitigate it.
 
 ---
 
-# 6. Why Existing Approaches Are Insufficient
+## 6. Why Existing Approaches Are Insufficient
 
 > **A note on the KG and Nanopublications columns.** The Knowledge
 > Graph column is a compressed summary of a tradition with
@@ -1463,13 +1463,13 @@ design principles (§3) and primary use cases (§4) that mitigate it.
 
 ---
 
-# 7. Future Directions
+## 7. Future Directions
 
 The single-agent particle store described in Parts I and II is the
 foundation. Several extensions are in scope for future versions of the
 standard; they are sketched here so readers can see the trajectory.
 
-## 7.1 Multi-Agent Knowledge Exchange
+### 7.1 Multi-Agent Knowledge Exchange
 
 Complex operational workflows are increasingly built from multiple
 specialised agents rather than a single monolithic model. Particles
@@ -1492,7 +1492,7 @@ remains in scope for a future major version and is summarised in the
 techspec §12. Risk #5 (ontology drift across agents) catalogues the
 known hard problems.
 
-## 7.2 Other extensions
+### 7.2 Other extensions
 
 Passage-level provenance (Extension B), richer validity scope
 (Extension E), and normative privacy controls (a possible Extension

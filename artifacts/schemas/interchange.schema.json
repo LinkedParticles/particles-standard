@@ -66,7 +66,8 @@
         "assertedBy": { "type": "string" },
         "assertedAt": { "type": "string", "format": "date-time" },
         "status": {
-          "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED", "PROVENANCE_STALE", "INCONSISTENCY"]
+          "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED", "PROVENANCE_STALE", "INCONSISTENCY"],
+          "description": "The particle's lifecycle status in the store that wrote the unit. An importer admits ACTIVE units only and sets the rest aside; a restore into an empty store keeps the value."
         },
         "provenance": {
           "type": "array",
@@ -81,7 +82,7 @@
         "calibrationRef": { "type": "string" },
         "statusReason": {
           "type": "string",
-          "description": "Why the particle holds its status (e.g. CONFLICT_PENDING, TRUST_DEMOTED). Open string on the wire — the value set grows over time."
+          "description": "Why the particle holds its status (e.g. CONFLICT_PENDING, TRUST_DEMOTED). Open string on the wire — the value set grows over time. An importer stores an admitted unit with no reason; a restore keeps it."
         },
         "uncertaintyKind": { "type": "string" },
         "validUntil": { "type": "string", "format": "date-time" },

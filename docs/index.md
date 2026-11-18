@@ -19,10 +19,11 @@ hide:
   scratch store that deposited and extracted a README, then deposited and
   extracted it again after its Deploying section was edited. Every claim, id,
   status pair and event line is copied from that store, and the collapsed
-  block shows every command that built it. The query block under the demo is
-  that store's answer to one question, also captured, not written. Re-capture
-  all of it together if
-  the CLI's output or the claim text changes. Its styles are the .p-demo rules
+  block shows every command that built it. The query block, folded under the
+  demo, is that store's answer to one question, also captured, not written.
+  Re-capture all of it together if the CLI's output or the claim text changes.
+  Raw terminal output stays folded: a visitor reads the demo and the
+  sentences, and opens the output only to check them. Its styles are the .p-demo rules
   in stylesheets/particles.css; it needs no script.
 
   Both sidebars are hidden here (front matter `hide`) so the hero and the demo
@@ -30,7 +31,7 @@ hide:
 -->
 <div class="p-hero" markdown>
 
-# Your agent remembers what used to be true
+# Your agent still believes what used to be true
 
 Particles gives your agent a memory you can inspect and correct: see where a
 remembered claim came from, what changed, and what replaced it.
@@ -42,9 +43,7 @@ An agent that remembers by writing to a notes file keeps the line and loses
 the rest: where it came from, when it stopped being true, what replaced it.
 
 [Connect Claude Code](https://docs.linkedparticles.org/user-guide/claude-code/){ .md-button .md-button--primary }
-[Get started](https://docs.linkedparticles.org/user-guide/getting-started/){ .md-button }
 [See it work](walkthrough.md){ .md-button }
-[Why Particles?](why.md){ .md-button }
 
 ## Watch a README change
 
@@ -97,31 +96,38 @@ the service on the production host.</pre></div>
 </div>
 </div>
 
-Then ask the store how to deploy. It answers from the current claims only:
-the replaced one stays on record, and is no longer offered.
+Ask the store how to deploy and it answers from the current claim only. The
+replaced one stays on record and is no longer offered. This works when the
+store can match the changed line to an earlier claim from the same document.
+A change stated in a *separate* document is not caught this way yet: the old
+claim and the new one both stay active.
 
-``` { .console .p-wrap }
-$ particles query "How do we deploy Tally?" --show-particles
- CONF    EFF     AGE  EXTRACTOR                     CONTENT
-----------------------------------------------------------------------------------------------------
- 0.93   0.65      1d  general-extractor             Tally's production deploys run through the `deploy` GitHub A
- 0.88   0.62      1d  general-extractor             Running `make dev` makes Tally available locally at http://l
- 0.93   0.65      1d  general-extractor             Tally is a small web app for splitting shared expenses.
- 0.93   0.65      1d  general-extractor             `deploy.sh` is retired.
- 0.93   0.65      1d  general-extractor             The `deploy` GitHub Actions workflow starts on every merge t
+??? example "The store's answer, as captured"
 
-Tally's production deploys run through the `deploy` GitHub Actions workflow. That workflow starts on every merge to `main`, so merging to `main` is what triggers a production deploy. The old `deploy.sh` script is retired and should no longer be used.
+    ``` { .console .p-wrap }
+    $ particles query "How do we deploy Tally?" --show-particles
+     CONF    EFF     AGE  EXTRACTOR                     CONTENT
+    ----------------------------------------------------------------------------------------------------
+     0.93   0.65      1d  general-extractor             Tally's production deploys run through the `deploy` GitHub A
+     0.88   0.62      1d  general-extractor             Running `make dev` makes Tally available locally at http://l
+     0.93   0.65      1d  general-extractor             Tally is a small web app for splitting shared expenses.
+     0.93   0.65      1d  general-extractor             `deploy.sh` is retired.
+     0.93   0.65      1d  general-extractor             The `deploy` GitHub Actions workflow starts on every merge t
 
-For local use, running `make dev` makes Tally available at http://localhost:3000. That is for local development, not production deployment.
+    Tally's production deploys run through the `deploy` GitHub Actions workflow. That workflow starts on every merge to `main`, so merging to `main` is what triggers a production deploy. The old `deploy.sh` script is retired and should no longer be used.
 
-The knowledge base doesn't cover other details, such as manual triggers, approval steps, or rollback procedures. Some of these particles are also uncalibrated, so the answer may be incomplete.
-```
+    For local use, running `make dev` makes Tally available at http://localhost:3000. That is for local development, not production deployment.
 
-These are the store's records, copied as they are; the demo above is limited
-to the claims about deploying. The changed line is one the store can match to
-an earlier claim from the same document. A change stated in a *separate*
-document, such as a decision record that never mentions the README, is not
-caught this way yet: today the old claim and the new one both stay active.
+    The knowledge base doesn't cover other details, such as manual triggers, approval steps, or rollback procedures. Some of these particles are also uncalibrated, so the answer may be incomplete.
+    ```
+
+    `CONF` is the confidence stored with each claim, which never changes.
+    `EFF` is the value the answer was ranked with: the stored one after
+    extractor trust, source trust and age are applied at read time. An
+    extractor starts at a trust weight of 0.7, so every row reads lower than
+    it was stored. The answer's last sentence says the same thing: these
+    confidences are the extractor's own, not yet calibrated against labelled
+    data.
 
 ??? example "Every command that built the store, with real output"
 
@@ -161,16 +167,67 @@ caught this way yet: today the old claim and the new one both stay active.
 ## 92% of full-history accuracy from 1.3% of the tokens
 
 <div class="p-stats">
-<div class="p-stat"><span class="p-stat__value">80.4%</span><span class="p-stat__label">answered correctly from the claims Particles retrieves: a 2,149-token read, 1.3% of the full history</span></div>
-<div class="p-stat"><span class="p-stat__value">87.8%</span><span class="p-stat__label">answered correctly by the same model handed the entire conversation history</span></div>
+<div class="p-stat">
+<span class="p-stat__name">Particles: the claims it retrieves</span>
+<span class="p-stat__figure"><span class="p-stat__value">2,149</span> tokens read</span>
+<span class="p-stat__meter" aria-hidden="true"><span style="width: 1.3%"></span></span>
+<span class="p-stat__figure"><span class="p-stat__value">80.4%</span> answered correctly</span>
+<span class="p-stat__meter" aria-hidden="true"><span style="width: 80.4%"></span></span>
+</div>
+<div class="p-stat">
+<span class="p-stat__name">The entire conversation history</span>
+<span class="p-stat__figure"><span class="p-stat__value">166,725</span> tokens read</span>
+<span class="p-stat__meter" aria-hidden="true"><span style="width: 100%"></span></span>
+<span class="p-stat__figure"><span class="p-stat__value">87.8%</span> answered correctly</span>
+<span class="p-stat__meter" aria-hidden="true"><span style="width: 87.8%"></span></span>
+</div>
 </div>
 
-Measured on a stratified 150-question sample of LongMemEval, a long-term
-conversational-memory benchmark (the full-history run was scored over 148 of
-the 150). Given the same token budget, session notes
-answer **70.0%** and transcript retrieval **60.0%**. With no budget at all,
-session notes come out ahead.
+The same model answered the same questions both ways, on a stratified
+150-question sample of LongMemEval, a long-term conversational-memory
+benchmark (the full-history run was scored over 148 of the 150). Given
+Particles' token budget, session notes answer **70.0%** and transcript
+retrieval **60.0%**. With no budget at all, session notes come out ahead.
 [The numbers and their caveats →](why.md#measured-not-just-argued)
+
+Whether a memory keeps up as facts change is measured separately, in
+[trip versus move](https://docs.linkedparticles.org/benchmarks/trip-vs-move/)
+and [memory rot](https://docs.linkedparticles.org/benchmarks/rot/).
+
+## Take your agent's memory out of its hands
+
+One command moves Claude Code's memory out of its notes file and into a
+Particles store:
+
+```bash
+pip install linkedparticles
+particles init claude-code
+```
+
+Each session *ends* by harvesting what happened into the store, so nothing
+depends on the agent choosing to save it. Each session *starts* with a small
+ranked digest of the store's standing beliefs, contradictions flagged rather
+than hidden. On first run, it also audits the memory you already have:
+
+```text
+Audited 23 memory files → 212 beliefs about 58 subjects.
+
+  4 potential contradictions        (2 across files, 2 contested at extract time)
+  11 likely-duplicate belief pairs  (unjudged similarity candidates; --judge to verify)
+  7 probably-stale facts            (5 aged past their source's decay horizon, 2 expired)
+
+  Also: 3 cited sources never captured · 6 beliefs have no resolvable subject
+```
+
+It needs Python 3.11 or later and a model to read sources with: an Anthropic
+API key, or any OpenAI-compatible endpoint, local models included. The audit
+prints its cost estimate before it spends anything; measured on the default
+hosted model, it came to about five US cents a memory file
+([what a run costs](https://docs.linkedparticles.org/benchmarks/cost/)). The
+store is a file on your machine, and the same one serves
+[Codex](https://docs.linkedparticles.org/user-guide/codex/) and
+[Cursor and other MCP clients](https://docs.linkedparticles.org/user-guide/coding-agents/).
+[Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)
 
 ## What makes it different
 
@@ -212,82 +269,18 @@ mem0, Letta, Supermemory, Hindsight), none documented all four.
 [See the comparison](why.md#how-it-compares). The same store works for a
 person, too, as a sourced, dated second brain.
 
-## Take your agent's memory out of its hands
-
-One command moves Claude Code's memory out of its notes file and into a
-Particles store. It needs Python 3.11 or later and a model to read sources
-with: an Anthropic API key, or any OpenAI-compatible endpoint, local models
-included. The command creates the store itself.
-
-```bash
-pip install linkedparticles
-particles init claude-code
-```
-
-The same store also
-[connects to Codex, Cursor and other MCP clients](https://docs.linkedparticles.org/user-guide/coding-agents/).
-
-Each session *ends* by harvesting what happened into the store, so nothing
-depends on the agent choosing to save it. Each session *starts* with a small
-ranked digest of the store's standing beliefs, contradictions flagged rather
-than hidden; everything else stays out of the prompt until it is asked for.
-On first run, it also audits the memory you already have:
-
-```text
-Audited 23 memory files → 212 beliefs about 58 subjects.
-
-  4 potential contradictions        (2 across files, 2 contested at extract time)
-  11 likely-duplicate belief pairs  (unjudged similarity candidates; --judge to verify)
-  7 probably-stale facts            (5 aged past their source's decay horizon, 2 expired)
-
-  Also: 3 cited sources never captured · 6 beliefs have no resolvable subject
-```
-
-When your agent gets something wrong, you can see which claim it used, which
-source that claim came from, and what has replaced it since, and fix it at
-the source.
-[Claude Code memory →](https://docs.linkedparticles.org/user-guide/claude-code/)
-
 ## Where to go next
 
-<div class="grid cards" markdown>
-
--   **Use it**
-
-    ---
-
-    `pip install linkedparticles`, then run the deposit → extract → query
-    loop against your own sources. The reference implementation lives in
-    [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py),
-    the repository to star, watch, and file issues against.
-
-    [Getting started →](https://docs.linkedparticles.org/user-guide/getting-started/)
-
--   **Read the argument**
-
-    ---
-
-    Why knowledge systems keep failing in the same two ways, what a particle
-    is, and the tradeoff this design accepts on purpose.
-
-    [Why Particles? →](why.md)
-
--   **See it work**
-
-    ---
-
-    One store end to end: sources in, an answer that cites its evidence, and
-    a store asked what it believed in 2000.
-
-    [See it work →](walkthrough.md)
-
--   **Read the specification**
-
-    ---
-
-    The whitepaper, the technical specification, the conformance profile, and
-    the machine-readable schemas, independent of any one implementation.
-
-    [The specification →](specification.md)
-
-</div>
+- **Use it:** [Getting started](https://docs.linkedparticles.org/user-guide/getting-started/)
+  runs the deposit, extract and query loop on your own sources. The reference
+  implementation lives in
+  [`particles-engine-py`](https://github.com/LinkedParticles/particles-engine-py),
+  the repository to star, watch, and file issues against.
+- **Read the argument:** [Why Particles?](why.md) covers why knowledge systems
+  keep failing in the same two ways, and the tradeoff this design accepts on
+  purpose.
+- **See it work:** [the walkthrough](walkthrough.md) follows one store end to
+  end, including a store asked what it believed in 2000.
+- **Read the specification:** [the specification](specification.md) holds the
+  whitepaper, the technical specification, the conformance profile and the
+  machine-readable schemas, independent of any one implementation.

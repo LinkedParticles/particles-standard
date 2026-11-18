@@ -16,7 +16,7 @@
 #     breaking the frontmatter parse.
 #   * Generated files would otherwise need their generators taught to emit a
 #     header — `docs/cli-reference.md`, `artifacts/openapi.json`,
-#     `docs/ADR/README.md`, `docs/vocab.md`, and the whole committed web-UI
+#     `docs/vocab.md`, and the whole committed web-UI
 #     bundle under `clients/web-ui/dist/`.
 #   * `design/logo-mark.svg` is byte-compared against its tracked copy in
 #     `overrides/.icons/particles/mark.svg` by a docs-build hook, so a header

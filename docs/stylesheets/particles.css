@@ -395,12 +395,50 @@ body[data-md-color-scheme="slate"] {
   color: var(--p-accent);
 }
 .md-typeset .p-stat__label { font-size: 0.85em; line-height: 1.45; color: var(--p-text-muted); }
+/* A card that compares two measures the same way in each card: a name, then
+   per measure a figure and a meter. Each meter is that measure on its own
+   zero-based scale (tokens against the larger read, accuracy against 100%),
+   so the cards compare meter to meter. The figure carries the number in text
+   ink; the meter alone wears the accent. */
+.md-typeset .p-stat__name {
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--p-text-muted);
+}
+.md-typeset .p-stat__figure {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: var(--p-text-muted);
+}
+.md-typeset .p-stat__figure .p-stat__value {
+  margin-right: 0.15em;
+  font-size: 2.1em;
+  color: var(--p-text);
+}
+.md-typeset .p-stat__meter {
+  display: block;
+  height: 0.5em;
+  border-radius: var(--p-radius-pill);
+  background: var(--p-surface-3);
+}
+.md-typeset .p-stat__meter > span {
+  display: block;
+  min-width: 4px;
+  height: 100%;
+  border-radius: var(--p-radius-pill);
+  background: var(--p-accent);
+}
 
 /* ---- Landing width (index.md hides both sidebars) ------------------------ */
 /* :has(> .p-hero) matches only the landing, so every other page keeps the
    documentation layout. The demo and the cards use the width; running prose
    keeps a readable measure. */
-.md-content__inner:has(> .p-hero) { max-width: 56rem; margin-inline: auto; }
+/* The auto margins centre the page and replace the theme's side margin, so the
+   width is capped at the viewport less that margin (0.8rem a side): without
+   the cap the text touches the screen edge on a phone, and the theme's
+   full-bleed code blocks (margin-inline: -0.8rem) overflow it. */
+.md-content__inner:has(> .p-hero) { max-width: min(56rem, calc(100% - 1.6rem)); margin-inline: auto; }
 .md-content__inner:has(> .p-hero) > p { max-width: 38rem; }
 .md-content__inner:has(> .p-hero) > .grid.cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
 

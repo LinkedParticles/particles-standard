@@ -70,6 +70,14 @@ constants:
     level: L2
     spec: "§6.4"
 
+  # rung 2.5 retirements one source entry may win in any
+  # rolling 24 hours, across every route; past it a pair goes to rung 3.
+  - name: max_retirements_per_entry
+    value: 5
+    config_path: reconciliation.update_supersession.max_retirements_per_entry
+    level: L2
+    spec: "§6.4"
+
   - name: trust_differential_threshold
     value: 0.15
     config_path: trust.differential_threshold
